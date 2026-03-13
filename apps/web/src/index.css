@@ -30,9 +30,18 @@
       radial-gradient(circle at top, rgba(32, 48, 80, 0.6), transparent 55%),
       radial-gradient(circle at 20% 20%, rgba(94, 234, 212, 0.15), transparent 40%),
       linear-gradient(160deg, rgba(11, 13, 18, 0.98), rgba(7, 9, 14, 0.98));
+    color-scheme: dark;
   }
 
   code {
     @apply font-mono;
   }
+
+  pre {
+    @apply font-mono;
+  }
+}
+
+.shiki {
+  background: transparent !important;
 }
