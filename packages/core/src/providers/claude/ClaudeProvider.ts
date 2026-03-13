@@ -78,7 +78,17 @@ export class ClaudeProvider implements SessionProvider {
   }
 
   filePathToSessionId(filePath: string): string | null {
-    return this.filePathToSessionIdMap.get(filePath) ?? null;
+    const existing = this.filePathToSessionIdMap.get(filePath);
+    if (existing) return existing;
+    if (filePath.endsWith('.jsonl')) {
+      const sessionId = path.basename(filePath).replace(/\.jsonl$/i, '');
+      if (sessionId.length > 0) {
+        this.sessionIdToFilePath.set(sessionId, filePath);
+        this.filePathToSessionIdMap.set(filePath, sessionId);
+        return sessionId;
+      }
+    }
+    return null;
   }
 
   private async ensureHistoryCache(): Promise<void> {

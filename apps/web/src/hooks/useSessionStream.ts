@@ -8,25 +8,50 @@ export function useSessionStream() {
   const [status, setStatus] = useState<StreamStatus>('connecting');
 
   useEffect(() => {
-    const source = new EventSource('/api/sessions/stream');
+    let source: EventSource | null = null;
+    let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+    let closed = false;
 
-    source.addEventListener('sessions', (event) => {
-      const data = safeParse(event.data);
-      if (!Array.isArray(data)) return;
-      setSessions(data as SessionDTO[]);
-    });
+    const connect = () => {
+      if (closed) return;
+      setStatus('connecting');
+      source?.close();
+      source = new EventSource('/api/sessions/stream');
 
-    source.addEventListener('sessionsUpdate', (event) => {
-      const data = safeParse(event.data);
-      if (!Array.isArray(data)) return;
-      setSessions((prev) => mergeSessions(prev, data as SessionDTO[]));
-    });
+      source.addEventListener('sessions', (event) => {
+        const data = safeParse(event.data);
+        if (!Array.isArray(data)) return;
+        setSessions(data as SessionDTO[]);
+      });
 
-    source.onopen = () => setStatus('open');
-    source.onerror = () => setStatus('closed');
+      source.addEventListener('sessionsUpdate', (event) => {
+        const data = safeParse(event.data);
+        if (!Array.isArray(data)) return;
+        setSessions((prev) => mergeSessions(prev, data as SessionDTO[]));
+      });
+
+      source.onopen = () => setStatus('open');
+      source.onerror = () => {
+        if (closed) return;
+        setStatus('closed');
+        scheduleReconnect();
+      };
+    };
+
+    const scheduleReconnect = () => {
+      if (reconnectTimer) return;
+      reconnectTimer = setTimeout(() => {
+        reconnectTimer = null;
+        connect();
+      }, 1000);
+    };
+
+    connect();
 
     return () => {
-      source.close();
+      closed = true;
+      if (reconnectTimer) clearTimeout(reconnectTimer);
+      source?.close();
     };
   }, []);
 

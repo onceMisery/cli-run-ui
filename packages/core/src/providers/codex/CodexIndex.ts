@@ -51,6 +51,16 @@ export class CodexIndex {
     return this.filePathToSessionId.get(filePath);
   }
 
+  refreshFileSync(filePath: string): CodexSessionMeta | null {
+    const meta = readSessionMetaSync(filePath);
+    if (!meta) return null;
+    const sessionId = meta.sessionId;
+    this.sessionIdToFilePath.set(sessionId, filePath);
+    this.filePathToSessionId.set(filePath, sessionId);
+    this.sessionMeta.set(sessionId, meta);
+    return meta;
+  }
+
   async refreshFile(filePath: string): Promise<void> {
     const meta = await readSessionMeta(filePath);
     if (!meta) return;
@@ -115,6 +125,32 @@ async function readSessionMeta(filePath: string): Promise<CodexSessionMeta | nul
   return null;
 }
 
+function readSessionMetaSync(filePath: string): CodexSessionMeta | null {
+  const lines = readFirstLinesSync(filePath, 16384);
+  for (const line of lines) {
+    const parsed = safeJsonParse(line) as Record<string, unknown> | null;
+    if (!parsed) continue;
+    if (parsed.type !== 'session_meta') continue;
+    const payload = parsed.payload as Record<string, unknown> | undefined;
+    if (!payload) continue;
+    const sessionId = typeof payload.id === 'string' ? payload.id : undefined;
+    if (!sessionId) continue;
+    const cwd = typeof payload.cwd === 'string' ? payload.cwd : undefined;
+    const startedAt =
+      parseTimeMs(payload.timestamp) ??
+      parseTimeMs(parsed.timestamp) ??
+      parseTimeMs(payload.started_at) ??
+      undefined;
+    return {
+      sessionId,
+      cwd,
+      startedAtMs: startedAt,
+      filePath,
+    };
+  }
+  return null;
+}
+
 async function readFirstLines(filePath: string, maxBytes: number): Promise<string[]> {
   const stream = fs.createReadStream(filePath, { start: 0, end: maxBytes });
   const chunks: Buffer[] = [];
@@ -130,6 +166,22 @@ async function readFirstLines(filePath: string, maxBytes: number): Promise<strin
     .split(/\r?\n/)
     .map((line) => line.trim())
     .filter((line) => line.length > 0);
+}
+
+function readFirstLinesSync(filePath: string, maxBytes: number): string[] {
+  try {
+    const fd = fs.openSync(filePath, 'r');
+    const buffer = Buffer.allocUnsafe(maxBytes);
+    const bytesRead = fs.readSync(fd, buffer, 0, maxBytes, 0);
+    fs.closeSync(fd);
+    const content = buffer.subarray(0, bytesRead).toString('utf8');
+    return content
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .filter((line) => line.length > 0);
+  } catch {
+    return [];
+  }
 }
 
 export function toProjectNameFromCwd(cwd?: string): string {

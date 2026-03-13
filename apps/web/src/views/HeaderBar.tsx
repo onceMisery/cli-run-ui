@@ -24,11 +24,7 @@ export function HeaderBar({ session, sessionStatus, conversationStatus }: Header
             <div className="header-sub">
               <span>Started: {formatDate(session.startedAtMs)}</span>
               <span>Updated: {formatDate(session.updatedAtMs)}</span>
-              {session.usage?.input || session.usage?.output ? (
-                <span>
-                  Tokens: {session.usage?.input ?? 0} / {session.usage?.output ?? 0}
-                </span>
-              ) : null}
+              {renderUsage(session)}
             </div>
           </>
         ) : (
@@ -56,6 +52,23 @@ function copyResume(session: SessionDTO) {
     ? `cd ${session.projectPath} && ${session.resumeCommand}`
     : session.resumeCommand;
   void navigator.clipboard.writeText(command);
+}
+
+function renderUsage(session: SessionDTO) {
+  const usage = session.usage;
+  if (!usage) return null;
+  const hasIO = usage.input !== undefined || usage.output !== undefined;
+  if (hasIO) {
+    return (
+      <span>
+        Tokens: {usage.input ?? 0} / {usage.output ?? 0}
+      </span>
+    );
+  }
+  if (usage.total !== undefined) {
+    return <span>Tokens: {usage.total}</span>;
+  }
+  return null;
 }
 
 function formatDate(timestampMs: number): string {

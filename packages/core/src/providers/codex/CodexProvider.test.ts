@@ -16,6 +16,7 @@ describe('CodexProvider', () => {
     expect(sessions.length).toBe(1);
     expect(sessions[0].uid).toBe('codex:codex-1');
     expect(sessions[0].projectPath).toBe('/tmp/codexproj');
+    expect(sessions[0].usage?.total).toBe(123);
   });
 
   it('joins tool call and output', async () => {

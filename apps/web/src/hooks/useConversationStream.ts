@@ -19,25 +19,52 @@ export function useConversationStream(sessionUid: string | null) {
     setStatus('connecting');
     offsetRef.current = 0;
 
-    const source = new EventSource(`/api/conversation/${encodeURIComponent(sessionUid)}/stream?offset=0`);
+    let source: EventSource | null = null;
+    let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+    let closed = false;
 
-    source.addEventListener('messages', (event) => {
-      const data = safeParse(event.data);
-      if (!data || typeof data !== 'object') return;
-      const payload = data as { messages?: MessageDTO[]; nextOffset?: number };
-      if (Array.isArray(payload.messages) && payload.messages.length > 0) {
-        setMessages((prev) => [...prev, ...payload.messages!]);
-      }
-      if (typeof payload.nextOffset === 'number' && Number.isFinite(payload.nextOffset)) {
-        offsetRef.current = payload.nextOffset;
-      }
-    });
+    const connect = (offset: number) => {
+      if (closed) return;
+      setStatus('connecting');
+      source?.close();
+      source = new EventSource(
+        `/api/conversation/${encodeURIComponent(sessionUid)}/stream?offset=${offset}`
+      );
 
-    source.onopen = () => setStatus('open');
-    source.onerror = () => setStatus('closed');
+      source.addEventListener('messages', (event) => {
+        const data = safeParse(event.data);
+        if (!data || typeof data !== 'object') return;
+        const payload = data as { messages?: MessageDTO[]; nextOffset?: number };
+        if (Array.isArray(payload.messages) && payload.messages.length > 0) {
+          setMessages((prev) => [...prev, ...payload.messages!]);
+        }
+        if (typeof payload.nextOffset === 'number' && Number.isFinite(payload.nextOffset)) {
+          offsetRef.current = payload.nextOffset;
+        }
+      });
+
+      source.onopen = () => setStatus('open');
+      source.onerror = () => {
+        if (closed) return;
+        setStatus('closed');
+        scheduleReconnect();
+      };
+    };
+
+    const scheduleReconnect = () => {
+      if (reconnectTimer) return;
+      reconnectTimer = setTimeout(() => {
+        reconnectTimer = null;
+        connect(offsetRef.current);
+      }, 1000);
+    };
+
+    connect(0);
 
     return () => {
-      source.close();
+      closed = true;
+      if (reconnectTimer) clearTimeout(reconnectTimer);
+      source?.close();
     };
   }, [sessionUid]);
 

@@ -38,6 +38,7 @@ export class CodexProvider implements SessionProvider {
       const projectName = toProjectNameFromCwd(projectPath);
       const title = `session-${sessionId.slice(0, 8)}`;
       const resumeCommand = `codex --resume ${sessionId}`;
+      const usage = await readTokenUsage(filePath);
 
       sessions.push({
         uid: `${this.id}:${sessionId}`,
@@ -48,6 +49,7 @@ export class CodexProvider implements SessionProvider {
         projectName: projectName ?? basenameSafe(projectPath),
         startedAtMs,
         updatedAtMs,
+        usage: usage ?? undefined,
         resumeCommand,
         source: { filePath },
       });
@@ -95,7 +97,10 @@ export class CodexProvider implements SessionProvider {
   }
 
   filePathToSessionId(filePath: string): string | null {
-    return this.index.getSessionIdByFile(filePath) ?? null;
+    const existing = this.index.getSessionIdByFile(filePath);
+    if (existing) return existing;
+    const meta = this.index.refreshFileSync(filePath);
+    return meta?.sessionId ?? null;
   }
 
   private consumeEvent(
@@ -286,4 +291,68 @@ function parseArguments(value: unknown): unknown {
     }
   }
   return value ?? null;
+}
+
+async function readTokenUsage(filePath: string): Promise<SessionDTO['usage'] | null> {
+  const stat = await fs.promises.stat(filePath).catch(() => null);
+  if (!stat) return null;
+  const tailSize = 65536;
+  const start = Math.max(0, stat.size - tailSize);
+  const stream = fs.createReadStream(filePath, { start });
+  const chunks: Buffer[] = [];
+
+  try {
+    for await (const chunk of stream) {
+      chunks.push(Buffer.from(chunk));
+    }
+  } catch {
+    return null;
+  }
+
+  const content = Buffer.concat(chunks).toString('utf8');
+  const lines = content
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0);
+
+  for (let i = lines.length - 1; i >= 0; i -= 1) {
+    const parsed = safeJsonParse(lines[i]) as Record<string, unknown> | null;
+    if (!parsed) continue;
+    if (parsed.type !== 'event_msg') continue;
+    const payload = parsed.payload as Record<string, unknown> | undefined;
+    if (!payload || payload.type !== 'token_count') continue;
+    const usage = parseTokenUsage(payload);
+    if (usage) return usage;
+  }
+
+  return null;
+}
+
+function parseTokenUsage(payload: Record<string, unknown>): SessionDTO['usage'] | null {
+  const total = payload.total_token_usage;
+  const last = payload.last_token_usage;
+
+  const usage: SessionDTO['usage'] = {};
+
+  if (typeof total === 'number' && Number.isFinite(total)) {
+    usage.total = total;
+  } else if (total && typeof total === 'object') {
+    const input = (total as Record<string, unknown>).input;
+    const output = (total as Record<string, unknown>).output;
+    if (typeof input === 'number') usage.input = input;
+    if (typeof output === 'number') usage.output = output;
+    if (usage.input !== undefined && usage.output !== undefined) {
+      usage.total = usage.input + usage.output;
+    }
+  }
+
+  if (last && typeof last === 'object') {
+    const input = (last as Record<string, unknown>).input;
+    const output = (last as Record<string, unknown>).output;
+    if (typeof input === 'number') usage.input ??= input;
+    if (typeof output === 'number') usage.output ??= output;
+  }
+
+  if (usage.total === undefined && usage.input === undefined && usage.output === undefined) return null;
+  return usage;
 }
