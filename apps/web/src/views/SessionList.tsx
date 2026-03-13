@@ -1,6 +1,7 @@
 import { useRef } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import type { SessionDTO } from '@cli-run-ui/core';
+import { Badge } from '@/components/ui/badge';
 
 interface SessionListProps {
   sessions: SessionDTO[];
@@ -18,28 +19,40 @@ export function SessionList({ sessions, activeUid, onSelect }: SessionListProps)
   });
 
   return (
-    <div className="session-list" ref={parentRef}>
-      {sessions.length === 0 && <div className="empty">No sessions yet</div>}
-      <div className="session-spacer" style={{ height: rowVirtualizer.getTotalSize() }}>
+    <div ref={parentRef} className="relative flex-1 overflow-auto pr-2">
+      {sessions.length === 0 && <div className="text-sm text-muted-foreground">No sessions yet</div>}
+      <div className="relative w-full" style={{ height: rowVirtualizer.getTotalSize() }}>
         {rowVirtualizer.getVirtualItems().map((virtualRow) => {
           const session = sessions[virtualRow.index];
           const isActive = session.uid === activeUid;
           return (
             <button
               key={session.uid}
-              className={`session-item ${isActive ? 'active' : ''}`}
+              className={`
+                absolute left-0 w-full rounded-xl border px-3 py-2 text-left shadow-sm transition
+                ${isActive ? 'border-primary/60 bg-primary/5' : 'border-border/60 bg-card/70 hover:bg-card'}
+              `}
               onClick={() => onSelect(session.uid)}
               style={{ transform: `translateY(${virtualRow.start}px)` }}
               ref={rowVirtualizer.measureElement}
               data-index={virtualRow.index}
             >
-              <div className="session-title">
-                <span className={`provider-badge ${session.provider}`}>{session.provider}</span>
-                <span>{session.title}</span>
+              <div className="flex items-center gap-2 text-sm font-semibold">
+                <Badge
+                  variant="outline"
+                  className={
+                    session.provider === 'claude'
+                      ? 'border-sky-400/40 text-sky-300'
+                      : 'border-pink-400/40 text-pink-300'
+                  }
+                >
+                  {session.provider}
+                </Badge>
+                <span className="truncate">{session.title}</span>
               </div>
-              <div className="session-meta">
-                <span>{session.projectName}</span>
-                <span className="muted">{formatRelative(session.updatedAtMs)}</span>
+              <div className="mt-1 flex items-center justify-between text-xs text-muted-foreground">
+                <span className="truncate">{session.projectName}</span>
+                <span>{formatRelative(session.updatedAtMs)}</span>
               </div>
             </button>
           );

@@ -1,5 +1,7 @@
 import type { SessionDTO } from '@cli-run-ui/core';
 import type { StreamStatus } from '../hooks/useSessionStream.ts';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 
 interface HeaderBarProps {
   session: SessionDTO | null;
@@ -12,35 +14,52 @@ export function HeaderBar({ session, sessionStatus, conversationStatus }: Header
   const conversationText = conversationStatus === 'open' ? 'Live' : 'Idle';
 
   return (
-    <header className="header">
+    <header className="flex items-center justify-between border-b border-border/60 bg-card/70 px-6 py-4 backdrop-blur">
       <div>
         {session ? (
           <>
-            <div className="header-title">
-              <span className={`provider-pill ${session.provider}`}>{session.provider}</span>
+            <div className="flex items-center gap-3 text-lg font-semibold">
+              <Badge
+                variant="outline"
+                className={
+                  session.provider === 'claude'
+                    ? 'border-sky-400/40 text-sky-300'
+                    : 'border-pink-400/40 text-pink-300'
+                }
+              >
+                {session.provider}
+              </Badge>
               <span>{session.projectName}</span>
-              <span className="muted">{session.sessionId}</span>
+              <span className="text-xs text-muted-foreground">{session.sessionId}</span>
             </div>
-            <div className="header-sub">
+            <div className="mt-1 flex flex-wrap gap-4 text-xs text-muted-foreground">
               <span>Started: {formatDate(session.startedAtMs)}</span>
               <span>Updated: {formatDate(session.updatedAtMs)}</span>
               {renderUsage(session)}
             </div>
           </>
         ) : (
-          <div className="header-title">Select a session</div>
+          <div className="text-lg font-semibold">Select a session</div>
         )}
       </div>
-      <div className="header-actions">
+      <div className="flex items-center gap-3 text-xs">
         {session && (
-          <button className="btn" onClick={() => copyResume(session)}>
+          <Button variant="outline" size="sm" onClick={() => copyResume(session)}>
             &gt;_ Resume
-          </button>
+          </Button>
         )}
-        <div className="status">
-          <span className={`status-dot ${sessionStatus}`}></span>
+        <div className="flex items-center gap-2">
+          <span
+            className={`h-2 w-2 rounded-full ${
+              sessionStatus === 'open'
+                ? 'bg-emerald-400'
+                : sessionStatus === 'closed'
+                  ? 'bg-rose-500'
+                  : 'bg-amber-400'
+            }`}
+          ></span>
           <span>{statusText}</span>
-          <span className="muted">{conversationText}</span>
+          <span className="text-muted-foreground">{conversationText}</span>
         </div>
       </div>
     </header>
