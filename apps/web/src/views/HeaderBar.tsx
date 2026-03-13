@@ -5,6 +5,13 @@ import type { StreamStatus } from '../hooks/useSessionStream.ts';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import {
+  formatCompactNumber,
+  formatDateTime,
+  formatShortDateTime,
+  useI18n,
+  type Language,
+} from '@/lib/i18n';
 
 interface HeaderBarProps {
   session: SessionDTO | null;
@@ -19,6 +26,8 @@ export function HeaderBar({
   conversationStatus,
   messageCount,
 }: HeaderBarProps) {
+  const { isChinese, language } = useI18n();
+
   return (
     <header className="border-b border-white/10 px-6 py-5">
       <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
@@ -27,9 +36,9 @@ export function HeaderBar({
             <>
               <div className="flex flex-wrap items-center gap-2">
                 <Badge className={providerBadgeClass(session.provider)}>{session.provider}</Badge>
-                <StreamBadge label={statusText(sessionStatus)} status={sessionStatus} />
+                <StreamBadge label={statusText(sessionStatus, isChinese)} status={sessionStatus} />
                 <StreamBadge
-                  label={conversationText(conversationStatus)}
+                  label={conversationText(conversationStatus, isChinese)}
                   status={conversationStatus}
                 />
               </div>
@@ -40,11 +49,17 @@ export function HeaderBar({
                 </div>
                 <div className="mt-1 text-sm text-slate-300">{session.title}</div>
                 <div className="mt-2 flex flex-wrap gap-x-5 gap-y-2 text-xs text-slate-400">
-                  <MetaItem icon={FolderTree} text={session.projectPath ?? 'Unknown workspace'} />
-                  <MetaItem icon={Workflow} text={`Session ${session.sessionId}`} />
+                  <MetaItem
+                    icon={FolderTree}
+                    text={session.projectPath ?? (isChinese ? '未知工作区' : 'Unknown workspace')}
+                  />
+                  <MetaItem
+                    icon={Workflow}
+                    text={`${isChinese ? '会话' : 'Session'} ${session.sessionId}`}
+                  />
                   <MetaItem
                     icon={RadioTower}
-                    text={`Updated ${formatDate(session.updatedAtMs)}`}
+                    text={`${isChinese ? '更新于' : 'Updated'} ${formatDateTime(session.updatedAtMs, language)}`}
                   />
                 </div>
               </div>
@@ -52,23 +67,28 @@ export function HeaderBar({
           ) : (
             <div>
               <div className="text-2xl font-semibold tracking-tight text-white">
-                Run workspace
+                {isChinese ? '运行工作区' : 'Run workspace'}
               </div>
               <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-300">
-                左侧选择一个会话后，这里会显示项目级元数据、恢复命令和实时对话流。
+                {isChinese
+                  ? '先从左侧选择一个会话，这里就会显示项目元信息、恢复命令和实时对话流。'
+                  : 'Choose a session from the left to view project metadata, resume commands, and the live conversation stream.'}
               </p>
             </div>
           )}
         </div>
 
         <div className="grid gap-3 sm:grid-cols-2 xl:w-[340px]">
-          <HeaderStat label="Turns" value={String(messageCount)} />
-          <HeaderStat label="Tokens" value={formatUsage(session?.usage) ?? 'n/a'} />
+          <HeaderStat label={isChinese ? '轮次' : 'Turns'} value={String(messageCount)} />
           <HeaderStat
-            label="Started"
-            value={session ? formatShortDate(session.startedAtMs) : '--'}
+            label={isChinese ? 'Tokens' : 'Tokens'}
+            value={formatUsage(session?.usage, language) ?? 'n/a'}
           />
-          <HeaderStat label="Source" value={session?.provider ?? '--'} />
+          <HeaderStat
+            label={isChinese ? '开始时间' : 'Started'}
+            value={session ? formatShortDateTime(session.startedAtMs, language) : '--'}
+          />
+          <HeaderStat label={isChinese ? '来源' : 'Source'} value={session?.provider ?? '--'} />
         </div>
       </div>
 
@@ -81,7 +101,7 @@ export function HeaderBar({
             onClick={() => copyResume(session)}
           >
             <Terminal className="h-4 w-4" />
-            Copy resume command
+            {isChinese ? '复制恢复命令' : 'Copy resume command'}
           </Button>
           <Button
             variant="ghost"
@@ -90,7 +110,7 @@ export function HeaderBar({
             onClick={() => void navigator.clipboard.writeText(session.source.filePath)}
           >
             <Copy className="h-4 w-4" />
-            Copy transcript path
+            {isChinese ? '复制 transcript 路径' : 'Copy transcript path'}
           </Button>
         </div>
       ) : null}
@@ -151,12 +171,26 @@ function providerBadgeClass(provider: SessionDTO['provider']) {
     : 'border-emerald-400/30 bg-emerald-400/10 text-emerald-100';
 }
 
-function statusText(status: StreamStatus): string {
+function statusText(status: StreamStatus, isChinese: boolean): string {
+  if (isChinese) {
+    return status === 'open' ? '会话同步中' : status === 'closed' ? '同步已暂停' : '连接中';
+  }
   return status === 'open' ? 'Session sync live' : status === 'closed' ? 'Sync paused' : 'Connecting';
 }
 
-function conversationText(status: StreamStatus): string {
-  return status === 'open' ? 'Conversation streaming' : status === 'closed' ? 'Conversation idle' : 'Opening stream';
+function conversationText(status: StreamStatus, isChinese: boolean): string {
+  if (isChinese) {
+    return status === 'open'
+      ? '对话流已连接'
+      : status === 'closed'
+        ? '对话流空闲'
+        : '正在打开流';
+  }
+  return status === 'open'
+    ? 'Conversation streaming'
+    : status === 'closed'
+      ? 'Conversation idle'
+      : 'Opening stream';
 }
 
 function copyResume(session: SessionDTO) {
@@ -166,29 +200,9 @@ function copyResume(session: SessionDTO) {
   void navigator.clipboard.writeText(command);
 }
 
-function formatUsage(usage?: SessionDTO['usage']): string | null {
+function formatUsage(usage: SessionDTO['usage'] | undefined, language: Language): string | null {
   if (!usage) return null;
-  if (typeof usage.total === 'number') return compactNumber(usage.total);
+  if (typeof usage.total === 'number') return formatCompactNumber(usage.total, language);
   const total = (usage.input ?? 0) + (usage.output ?? 0);
-  return total > 0 ? compactNumber(total) : null;
-}
-
-function compactNumber(value: number): string {
-  return new Intl.NumberFormat(undefined, {
-    notation: value >= 1000 ? 'compact' : 'standard',
-    maximumFractionDigits: 1,
-  }).format(value);
-}
-
-function formatDate(timestampMs: number): string {
-  return new Date(timestampMs).toLocaleString();
-}
-
-function formatShortDate(timestampMs: number): string {
-  return new Date(timestampMs).toLocaleDateString(undefined, {
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
+  return total > 0 ? formatCompactNumber(total, language) : null;
 }

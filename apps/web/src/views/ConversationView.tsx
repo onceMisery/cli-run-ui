@@ -23,6 +23,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { cn } from '@/lib/utils';
+import { formatRelativeTime, useI18n } from '@/lib/i18n';
 
 interface ConversationViewProps {
   session: SessionDTO | null;
@@ -30,6 +31,7 @@ interface ConversationViewProps {
 }
 
 export function ConversationView({ session, messages }: ConversationViewProps) {
+  const { isChinese } = useI18n();
   const parentRef = useRef<HTMLDivElement | null>(null);
   const [stickToBottom, setStickToBottom] = useState(true);
 
@@ -64,9 +66,13 @@ export function ConversationView({ session, messages }: ConversationViewProps) {
           <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-cyan-300/20 bg-cyan-300/10">
             <Sparkles className="h-6 w-6 text-cyan-200" />
           </div>
-          <h2 className="mt-5 text-xl font-semibold text-white">Choose a live transcript</h2>
+          <h2 className="mt-5 text-xl font-semibold text-white">
+            {isChinese ? '选择一个实时 transcript' : 'Choose a live transcript'}
+          </h2>
           <p className="mt-2 text-sm leading-6 text-slate-400">
-            从左侧选择 Claude 或 Codex 会话后，这里会渲染消息流、工具调用与恢复信息。
+            {isChinese
+              ? '从左侧选择 Claude 或 Codex 会话后，这里会展示消息流、工具调用和恢复相关信息。'
+              : 'Choose a Claude or Codex session from the left to render the message stream, tool calls, and resume context here.'}
           </p>
         </div>
       </div>
@@ -79,7 +85,7 @@ export function ConversationView({ session, messages }: ConversationViewProps) {
 
       {messages.length === 0 ? (
         <div className="mt-6 rounded-[28px] border border-dashed border-white/10 bg-black/20 px-8 py-12 text-center text-sm text-slate-400">
-          Waiting for transcript lines to arrive.
+          {isChinese ? '等待 transcript 内容到达中。' : 'Waiting for transcript lines to arrive.'}
         </div>
       ) : (
         <div className="relative mt-6 w-full" style={{ height: rowVirtualizer.getTotalSize() }}>
@@ -110,6 +116,8 @@ function ConversationHero({
   session: SessionDTO;
   messageCount: number;
 }) {
+  const { isChinese, language } = useI18n();
+
   return (
     <section className="overflow-hidden rounded-[28px] border border-white/10 bg-[linear-gradient(135deg,rgba(16,30,48,0.92),rgba(8,14,24,0.88))]">
       <div className="grid gap-4 px-5 py-5 lg:grid-cols-[1.5fr_repeat(3,minmax(0,1fr))]">
@@ -122,12 +130,19 @@ function ConversationHero({
           </div>
           <div className="mt-4 text-xl font-semibold text-white">{session.title}</div>
           <div className="mt-2 max-w-2xl text-sm leading-6 text-slate-300">
-            Transcript source: {session.source.filePath}
+            {isChinese ? 'Transcript 来源：' : 'Transcript source: '}
+            {session.source.filePath}
           </div>
         </div>
-        <HeroStat label="Messages" value={String(messageCount)} />
-        <HeroStat label="Updated" value={formatRelative(session.updatedAtMs)} />
-        <HeroStat label="Resume" value={session.provider === 'codex' ? 'codex --resume' : 'claude --resume'} />
+        <HeroStat label={isChinese ? '消息数' : 'Messages'} value={String(messageCount)} />
+        <HeroStat
+          label={isChinese ? '最近更新' : 'Updated'}
+          value={formatRelativeTime(session.updatedAtMs, language)}
+        />
+        <HeroStat
+          label={isChinese ? '恢复命令' : 'Resume'}
+          value={session.provider === 'codex' ? 'codex --resume' : 'claude --resume'}
+        />
       </div>
     </section>
   );
@@ -143,6 +158,7 @@ function HeroStat({ label, value }: { label: string; value: string }) {
 }
 
 function MessageCard({ message }: { message: MessageDTO }) {
+  const { isChinese } = useI18n();
   const toolGroups = useMemo(() => groupToolParts(message.parts), [message.parts]);
   const accentClass =
     message.role === 'user'
@@ -174,15 +190,15 @@ function MessageCard({ message }: { message: MessageDTO }) {
             )}
           </div>
           <div>
-            <div className="text-sm font-medium capitalize text-white">{message.role}</div>
+            <div className="text-sm font-medium text-white">{roleLabel(message.role, isChinese)}</div>
             <div className="text-xs text-slate-400">
               {new Date(message.createdAtMs).toLocaleTimeString()}
-              {message.model ? `  ·  ${message.model}` : ''}
+              {message.model ? ` / ${message.model}` : ''}
             </div>
           </div>
         </div>
         <Badge variant="muted" className="border-white/10 bg-white/[0.04] text-slate-300">
-          {message.parts.length} part{message.parts.length > 1 ? 's' : ''}
+          {message.parts.length} {isChinese ? '段' : `part${message.parts.length > 1 ? 's' : ''}`}
         </Badge>
       </div>
 
@@ -270,6 +286,8 @@ function ToolBlock({
   call: Extract<ContentPart, { kind: 'tool_call' }>;
   result?: Extract<ContentPart, { kind: 'tool_result' }>;
 }) {
+  const { isChinese } = useI18n();
+
   return (
     <Accordion type="single" collapsible className="w-full">
       <AccordionItem
@@ -279,14 +297,14 @@ function ToolBlock({
         <AccordionTrigger className="rounded-xl px-3 py-3 text-left text-slate-100">
           <div className="flex items-center gap-2">
             <ChevronRight className="h-4 w-4 text-slate-500" />
-            <span>Tool: {call.name}</span>
+            <span>{isChinese ? '工具' : 'Tool'}: {call.name}</span>
             {result?.isError ? (
               <Badge className="border-rose-400/30 bg-rose-400/10 text-rose-100">
-                error
+                {isChinese ? '错误' : 'error'}
               </Badge>
             ) : (
               <Badge className="border-emerald-400/30 bg-emerald-400/10 text-emerald-100">
-                complete
+                {isChinese ? '完成' : 'complete'}
               </Badge>
             )}
           </div>
@@ -294,13 +312,17 @@ function ToolBlock({
         <AccordionContent className="mt-1 px-3 pb-3">
           <div className="grid gap-3 xl:grid-cols-2">
             <div>
-              <div className="text-xs uppercase tracking-[0.2em] text-slate-500">Input</div>
+              <div className="text-xs uppercase tracking-[0.2em] text-slate-500">
+                {isChinese ? '输入' : 'Input'}
+              </div>
               <pre className="mt-2 whitespace-pre-wrap rounded-2xl border border-white/10 bg-black/40 p-3 text-xs font-mono text-slate-200">
                 {JSON.stringify(call.input, null, 2)}
               </pre>
             </div>
             <div>
-              <div className="text-xs uppercase tracking-[0.2em] text-slate-500">Output</div>
+              <div className="text-xs uppercase tracking-[0.2em] text-slate-500">
+                {isChinese ? '输出' : 'Output'}
+              </div>
               <pre className="mt-2 whitespace-pre-wrap rounded-2xl border border-white/10 bg-black/40 p-3 text-xs font-mono text-emerald-100">
                 {result?.output ?? ''}
               </pre>
@@ -317,9 +339,13 @@ function ToolResultBlock({
 }: {
   result: Extract<ContentPart, { kind: 'tool_result' }>;
 }) {
+  const { isChinese } = useI18n();
+
   return (
     <div className="rounded-2xl border border-white/10 bg-black/30 p-3 text-xs">
-      <div className="text-xs uppercase tracking-[0.18em] text-slate-500">Tool output</div>
+      <div className="text-xs uppercase tracking-[0.18em] text-slate-500">
+        {isChinese ? '工具输出' : 'Tool output'}
+      </div>
       <pre className="mt-2 whitespace-pre-wrap font-mono text-emerald-100">
         {result.output}
       </pre>
@@ -332,7 +358,8 @@ function ReasoningBlock({
 }: {
   part: Extract<ContentPart, { kind: 'reasoning' }>;
 }) {
-  const label = part.summary || 'Reasoning';
+  const { isChinese } = useI18n();
+  const label = part.summary || (isChinese ? '推理' : 'Reasoning');
   return (
     <Collapsible>
       <div className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/[0.03] px-3 py-2.5">
@@ -343,12 +370,18 @@ function ReasoningBlock({
             size="sm"
             className="text-slate-300 hover:bg-white/[0.06] hover:text-white"
           >
-            Toggle
+            {isChinese ? '展开/收起' : 'Toggle'}
           </Button>
         </CollapsibleTrigger>
       </div>
       <CollapsibleContent className="mt-2 rounded-2xl border border-white/10 bg-black/20 p-3 text-xs text-slate-400">
-        {part.encrypted ? 'Encrypted reasoning' : 'Reasoning details hidden'}
+        {part.encrypted
+          ? isChinese
+            ? '加密推理内容'
+            : 'Encrypted reasoning'
+          : isChinese
+            ? '推理细节已隐藏'
+            : 'Reasoning details hidden'}
       </CollapsibleContent>
     </Collapsible>
   );
@@ -401,6 +434,7 @@ function MarkdownCode({
 }
 
 function CopyButton({ value }: { value: string }) {
+  const { isChinese } = useI18n();
   const [copied, setCopied] = useState(false);
 
   const onCopy = async () => {
@@ -419,7 +453,7 @@ function CopyButton({ value }: { value: string }) {
       size="icon"
       onClick={onCopy}
       className="absolute right-2 top-2 h-7 w-7 border border-white/10 bg-black/40 opacity-0 transition group-hover:opacity-100"
-      aria-label="Copy code"
+      aria-label={isChinese ? '复制代码' : 'Copy code'}
       disabled={!value}
     >
       {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
@@ -445,10 +479,14 @@ function providerBadgeClass(provider: SessionDTO['provider']) {
     : 'border-emerald-400/30 bg-emerald-400/10 text-emerald-100';
 }
 
-function formatRelative(timestampMs: number): string {
-  const diff = Date.now() - timestampMs;
-  if (diff < 60_000) return 'just now';
-  if (diff < 3_600_000) return `${Math.round(diff / 60_000)}m ago`;
-  if (diff < 86_400_000) return `${Math.round(diff / 3_600_000)}h ago`;
-  return `${Math.round(diff / 86_400_000)}d ago`;
+function roleLabel(role: MessageDTO['role'], isChinese: boolean): string {
+  if (!isChinese) {
+    return role.charAt(0).toUpperCase() + role.slice(1);
+  }
+
+  if (role === 'user') return '用户';
+  if (role === 'assistant') return '助手';
+  if (role === 'system') return '系统';
+  if (role === 'tool') return '工具';
+  return '开发者';
 }

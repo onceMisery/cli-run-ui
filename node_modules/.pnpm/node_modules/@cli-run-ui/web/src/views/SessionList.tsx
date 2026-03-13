@@ -1,8 +1,10 @@
 import { useRef } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import type { SessionDTO } from '@cli-run-ui/core';
+
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import { formatCompactNumber, formatRelativeTime, useI18n, type Language } from '@/lib/i18n';
 
 interface SessionListProps {
   sessions: SessionDTO[];
@@ -11,6 +13,7 @@ interface SessionListProps {
 }
 
 export function SessionList({ sessions, activeUid, onSelect }: SessionListProps) {
+  const { isChinese, language } = useI18n();
   const parentRef = useRef<HTMLDivElement | null>(null);
   const rowVirtualizer = useVirtualizer({
     count: sessions.length,
@@ -23,7 +26,7 @@ export function SessionList({ sessions, activeUid, onSelect }: SessionListProps)
     <div ref={parentRef} className="relative h-[52vh] overflow-auto pr-2">
       {sessions.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-white/10 bg-black/20 px-4 py-8 text-center text-sm text-slate-400">
-          No sessions match the current filter.
+          {isChinese ? '当前筛选条件下没有匹配的会话。' : 'No sessions match the current filter.'}
         </div>
       ) : null}
       <div className="relative w-full" style={{ height: rowVirtualizer.getTotalSize() }}>
@@ -77,16 +80,18 @@ export function SessionList({ sessions, activeUid, onSelect }: SessionListProps)
               <div className="mt-3 grid grid-cols-2 gap-2 text-xs text-slate-400">
                 <div className="rounded-xl border border-white/10 bg-black/20 px-2.5 py-2">
                   <div className="uppercase tracking-[0.18em] text-[10px] text-slate-500">
-                    Updated
+                    {isChinese ? '更新时间' : 'Updated'}
                   </div>
-                  <div className="mt-1 text-slate-200">{formatRelative(session.updatedAtMs)}</div>
+                  <div className="mt-1 text-slate-200">
+                    {formatRelativeTime(session.updatedAtMs, language)}
+                  </div>
                 </div>
                 <div className="rounded-xl border border-white/10 bg-black/20 px-2.5 py-2">
                   <div className="uppercase tracking-[0.18em] text-[10px] text-slate-500">
                     Tokens
                   </div>
                   <div className="mt-1 text-slate-200">
-                    {formatUsage(session.usage) ?? 'n/a'}
+                    {formatUsage(session.usage, language) ?? 'n/a'}
                   </div>
                 </div>
               </div>
@@ -104,24 +109,9 @@ function providerBadgeClass(provider: SessionDTO['provider']) {
     : 'border-emerald-400/30 bg-emerald-400/10 text-emerald-100';
 }
 
-function formatUsage(usage?: SessionDTO['usage']): string | null {
+function formatUsage(usage: SessionDTO['usage'] | undefined, language: Language): string | null {
   if (!usage) return null;
-  if (typeof usage.total === 'number') return compactNumber(usage.total);
+  if (typeof usage.total === 'number') return formatCompactNumber(usage.total, language);
   const total = (usage.input ?? 0) + (usage.output ?? 0);
-  return total > 0 ? compactNumber(total) : null;
-}
-
-function compactNumber(value: number): string {
-  return new Intl.NumberFormat(undefined, {
-    notation: value >= 1000 ? 'compact' : 'standard',
-    maximumFractionDigits: 1,
-  }).format(value);
-}
-
-function formatRelative(timestampMs: number): string {
-  const diff = Date.now() - timestampMs;
-  if (diff < 60_000) return 'just now';
-  if (diff < 3_600_000) return `${Math.round(diff / 60_000)}m ago`;
-  if (diff < 86_400_000) return `${Math.round(diff / 3_600_000)}h ago`;
-  return `${Math.round(diff / 86_400_000)}d ago`;
+  return total > 0 ? formatCompactNumber(total, language) : null;
 }

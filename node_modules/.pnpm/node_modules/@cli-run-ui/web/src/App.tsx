@@ -19,18 +19,27 @@ import { HeaderBar } from './views/HeaderBar.tsx';
 import { Badge } from './components/ui/badge.tsx';
 import { Button } from './components/ui/button.tsx';
 import { cn } from './lib/utils.ts';
+import {
+  formatCompactNumber,
+  formatRelativeTime,
+  useI18n,
+  type Language,
+} from './lib/i18n.tsx';
 
 type ProviderFilter = 'all' | SessionDTO['provider'];
+
 const ConversationView = lazy(async () => {
   const module = await import('./views/ConversationView.tsx');
   return { default: module.ConversationView };
 });
+
 const AgentWorkbenchPanel = lazy(async () => {
   const module = await import('./views/AgentWorkbenchPanel.tsx');
   return { default: module.AgentWorkbenchPanel };
 });
 
 export default function App() {
+  const { language, isChinese, setLanguage } = useI18n();
   const { sessions, status: sessionStatus } = useSessionStream();
   const { runs, status: runStatus } = useRunSessions();
   const { terminals, status: terminalStatus } = useTerminalSessions();
@@ -121,7 +130,7 @@ export default function App() {
     >();
 
     for (const session of filteredSessions) {
-      const key = session.projectName || 'Unknown project';
+      const key = session.projectName || (isChinese ? '未知项目' : 'Unknown project');
       const current = grouped.get(key) ?? {
         count: 0,
         updatedAtMs: 0,
@@ -142,7 +151,7 @@ export default function App() {
       }))
       .sort((a, b) => b.updatedAtMs - a.updatedAtMs)
       .slice(0, 4);
-  }, [filteredSessions]);
+  }, [filteredSessions, isChinese]);
 
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(242,201,76,0.14),transparent_20%),radial-gradient(circle_at_top_right,rgba(78,205,196,0.14),transparent_24%),linear-gradient(145deg,#08111c_0%,#0d1726_45%,#060b12_100%)] text-foreground">
@@ -153,45 +162,79 @@ export default function App() {
               <div className="flex items-start justify-between gap-4">
                 <div className="space-y-2">
                   <Badge className="w-fit border-cyan-400/30 bg-cyan-400/10 text-cyan-100">
-                    Multi-agent runboard
+                    {isChinese ? '多 Agent 工作台' : 'Multi-agent runboard'}
                   </Badge>
                   <div>
                     <h1 className="text-2xl font-semibold tracking-tight text-white">
                       cli-run-ui
                     </h1>
                     <p className="mt-1 text-sm text-slate-300">
-                      Aggregate local Claude and Codex sessions into one polished runboard for
-                      fast browsing, resuming, and orchestration.
+                      {isChinese
+                        ? '把本地 Claude 与 Codex 会话聚合到同一个精致工作台里，便于浏览、恢复和继续协作。'
+                        : 'Aggregate local Claude and Codex sessions into one polished runboard for fast browsing, resuming, and orchestration.'}
                     </p>
                   </div>
                 </div>
-                <StatusBeacon status={sessionStatus} />
+
+                <div className="flex flex-col items-end gap-3">
+                  <div className="inline-flex rounded-full border border-white/10 bg-white/[0.03] p-1">
+                    <button
+                      onClick={() => setLanguage('en')}
+                      className={cn(
+                        'rounded-full px-3 py-1 text-xs transition',
+                        language === 'en'
+                          ? 'bg-cyan-300/15 text-cyan-50'
+                          : 'text-slate-400 hover:text-slate-100'
+                      )}
+                    >
+                      EN
+                    </button>
+                    <button
+                      onClick={() => setLanguage('zh-CN')}
+                      className={cn(
+                        'rounded-full px-3 py-1 text-xs transition',
+                        language === 'zh-CN'
+                          ? 'bg-cyan-300/15 text-cyan-50'
+                          : 'text-slate-400 hover:text-slate-100'
+                      )}
+                    >
+                      中文
+                    </button>
+                  </div>
+                  <StatusBeacon status={sessionStatus} isChinese={isChinese} />
+                </div>
               </div>
 
               <div className="mt-5 grid grid-cols-2 gap-3">
                 <MetricCard
                   icon={Activity}
-                  label="Live sessions"
+                  label={isChinese ? '活跃会话' : 'Live sessions'}
                   value={sessions.length}
-                  helper={`${filteredSessions.length} visible`}
+                  helper={
+                    isChinese ? `当前可见 ${filteredSessions.length}` : `${filteredSessions.length} visible`
+                  }
                 />
                 <MetricCard
                   icon={FolderKanban}
-                  label="Projects"
+                  label={isChinese ? '项目数' : 'Projects'}
                   value={projectCount}
-                  helper="grouped workspaces"
+                  helper={isChinese ? '按工作区聚合' : 'grouped workspaces'}
                 />
                 <MetricCard
                   icon={Bot}
                   label="Claude"
                   value={providerCounts.claude}
-                  helper="indexed sessions"
+                  helper={isChinese ? '已索引会话' : 'indexed sessions'}
                 />
                 <MetricCard
                   icon={TerminalSquare}
                   label="Codex"
                   value={providerCounts.codex}
-                  helper={`${runningCount} runs · ${activeTerminalCount} terminals`}
+                  helper={
+                    isChinese
+                      ? `${runningCount} 个 run / ${activeTerminalCount} 个 terminal`
+                      : `${runningCount} runs / ${activeTerminalCount} terminals`
+                  }
                 />
               </div>
             </div>
@@ -203,7 +246,9 @@ export default function App() {
                   <input
                     value={query}
                     onChange={(event) => setQuery(event.target.value)}
-                    placeholder="Search project, session, path..."
+                    placeholder={
+                      isChinese ? '搜索项目、会话、路径...' : 'Search project, session, path...'
+                    }
                     className="w-full bg-transparent text-sm text-slate-100 outline-none placeholder:text-slate-500"
                   />
                 </div>
@@ -213,7 +258,7 @@ export default function App() {
                     active={providerFilter === 'all'}
                     onClick={() => setProviderFilter('all')}
                   >
-                    All
+                    {isChinese ? '全部' : 'All'}
                   </FilterChip>
                   <FilterChip
                     active={providerFilter === 'claude'}
@@ -233,10 +278,13 @@ export default function App() {
               <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-3">
                 <div className="mb-3 flex items-center justify-between">
                   <div>
-                    <div className="text-sm font-medium text-white">Sessions</div>
+                    <div className="text-sm font-medium text-white">
+                      {isChinese ? '会话列表' : 'Sessions'}
+                    </div>
                     <div className="text-xs text-slate-400">
-                      Sorted by recent activity so it feels closer to a `claude-run` style
-                      workspace switcher.
+                      {isChinese
+                        ? '按最近活动排序，更接近 `claude-run` 那种快速切换上下文的使用方式。'
+                        : 'Sorted by recent activity so it feels closer to a `claude-run` style workspace switcher.'}
                     </div>
                   </div>
                   <Badge variant="muted" className="bg-white/5 text-slate-300">
@@ -259,7 +307,15 @@ export default function App() {
               conversationStatus={conversationStatus}
               messageCount={messages.length}
             />
-            <Suspense fallback={<PanelFallback text="Loading conversation workspace..." />}>
+            <Suspense
+              fallback={
+                <PanelFallback
+                  text={
+                    isChinese ? '正在加载对话工作区...' : 'Loading conversation workspace...'
+                  }
+                />
+              }
+            >
               <ConversationView session={activeSession} messages={messages} />
             </Suspense>
           </main>
@@ -272,7 +328,13 @@ export default function App() {
                 totalUsage={totalUsage}
               />
 
-              <Suspense fallback={<PanelFallback text="Loading agent workspace..." />}>
+              <Suspense
+                fallback={
+                  <PanelFallback
+                    text={isChinese ? '正在加载 Agent 工作台...' : 'Loading agent workspace...'}
+                  />
+                }
+              >
                 <AgentWorkbenchPanel
                   activeSession={activeSession}
                   runs={runs}
@@ -285,11 +347,11 @@ export default function App() {
               <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
                 <div className="flex items-center gap-2 text-sm font-medium text-white">
                   <Sparkles className="h-4 w-4 text-amber-300" />
-                  Spotlight Projects
+                  {isChinese ? '重点项目' : 'Spotlight Projects'}
                 </div>
                 <div className="mt-3 space-y-3">
                   {highlightedProjects.length === 0 ? (
-                    <EmptyMiniState text="No indexed sessions yet." />
+                    <EmptyMiniState text={isChinese ? '还没有可展示的会话。' : 'No indexed sessions yet.'} />
                   ) : (
                     highlightedProjects.map((project) => (
                       <div
@@ -302,7 +364,8 @@ export default function App() {
                               {project.name}
                             </div>
                             <div className="mt-1 text-xs text-slate-400">
-                              Updated {formatRelative(project.updatedAtMs)}
+                              {isChinese ? '更新于 ' : 'Updated '}
+                              {formatRelativeTime(project.updatedAtMs, language)}
                             </div>
                           </div>
                           <Badge variant="muted" className="bg-white/5 text-slate-300">
@@ -334,8 +397,10 @@ export default function App() {
 
 function StatusBeacon({
   status,
+  isChinese,
 }: {
   status: 'connecting' | 'open' | 'closed';
+  isChinese: boolean;
 }) {
   const palette =
     status === 'open'
@@ -344,8 +409,17 @@ function StatusBeacon({
         ? 'border-rose-400/30 bg-rose-400/10 text-rose-100'
         : 'border-amber-400/30 bg-amber-400/10 text-amber-100';
 
-  const label =
-    status === 'open' ? 'Live sync' : status === 'closed' ? 'Reconnect' : 'Connecting';
+  const label = isChinese
+    ? status === 'open'
+      ? '实时同步'
+      : status === 'closed'
+        ? '等待重连'
+        : '连接中'
+    : status === 'open'
+      ? 'Live sync'
+      : status === 'closed'
+        ? 'Reconnect'
+        : 'Connecting';
 
   return (
     <div className={cn('rounded-full border px-3 py-1 text-xs font-medium', palette)}>
@@ -410,6 +484,7 @@ function InsightPanel({
   messages: MessageDTO[];
   totalUsage: number;
 }) {
+  const { language, isChinese } = useI18n();
   const assistantMessages = messages.filter((message) => message.role === 'assistant').length;
   const toolMessages = messages.filter((message) => message.role === 'tool').length;
   const latestModel = [...messages]
@@ -420,23 +495,29 @@ function InsightPanel({
     <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
       <div className="flex items-center gap-2 text-sm font-medium text-white">
         <Clock3 className="h-4 w-4 text-emerald-300" />
-        Session Insights
+        {isChinese ? '会话洞察' : 'Session Insights'}
       </div>
       {activeSession ? (
         <div className="mt-4 space-y-3">
-          <InsightStat label="Provider" value={activeSession.provider} />
-          <InsightStat label="Messages" value={String(messages.length)} />
-          <InsightStat label="Assistant turns" value={String(assistantMessages)} />
-          <InsightStat label="Tool outputs" value={String(toolMessages)} />
+          <InsightStat label={isChinese ? '提供方' : 'Provider'} value={activeSession.provider} />
+          <InsightStat label={isChinese ? '消息数' : 'Messages'} value={String(messages.length)} />
           <InsightStat
-            label="Token volume"
-            value={formatUsage(activeSession.usage) ?? 'n/a'}
+            label={isChinese ? '助手回复' : 'Assistant turns'}
+            value={String(assistantMessages)}
           />
-          <InsightStat label="Latest model" value={latestModel ?? 'unknown'} />
           <InsightStat
-            label="Transcript"
-            value={truncateMiddle(activeSession.source.filePath, 36)}
+            label={isChinese ? '工具输出' : 'Tool outputs'}
+            value={String(toolMessages)}
           />
+          <InsightStat
+            label={isChinese ? 'Token 体量' : 'Token volume'}
+            value={formatUsage(activeSession.usage, language) ?? 'n/a'}
+          />
+          <InsightStat
+            label={isChinese ? '最新模型' : 'Latest model'}
+            value={latestModel ?? (isChinese ? '未知' : 'unknown')}
+          />
+          <InsightStat label="Transcript" value={truncateMiddle(activeSession.source.filePath, 36)} />
           <div className="pt-2">
             <Button
               variant="outline"
@@ -444,25 +525,27 @@ function InsightPanel({
               className="w-full border-white/10 bg-white/[0.03] text-slate-100 hover:bg-white/[0.08]"
               onClick={() => void navigator.clipboard.writeText(activeSession.resumeCommand)}
             >
-              Copy resume command
+              {isChinese ? '复制恢复命令' : 'Copy resume command'}
             </Button>
           </div>
         </div>
       ) : (
         <div className="mt-4">
-          <EmptyMiniState text="Select a session to inspect details." />
+          <EmptyMiniState text={isChinese ? '选择一个会话查看详情。' : 'Select a session to inspect details.'} />
         </div>
       )}
 
       <div className="mt-5 rounded-2xl border border-white/10 bg-black/20 p-3">
         <div className="text-xs uppercase tracking-[0.18em] text-slate-500">
-          Indexed footprint
+          {isChinese ? '索引规模' : 'Indexed footprint'}
         </div>
         <div className="mt-2 text-2xl font-semibold text-white">
-          {formatCompactNumber(totalUsage)}
+          {formatCompactNumber(totalUsage, language)}
         </div>
         <div className="mt-1 text-xs text-slate-400">
-          Total token usage observed across indexed providers
+          {isChinese
+            ? '当前已索引 provider 的总 token 使用量'
+            : 'Total token usage observed across indexed providers'}
         </div>
       </div>
     </section>
@@ -500,34 +583,19 @@ function providerBadgeClass(provider: SessionDTO['provider']) {
     : 'border-emerald-400/30 bg-emerald-400/10 text-emerald-100';
 }
 
-function formatUsage(usage?: SessionDTO['usage']): string | null {
+function formatUsage(usage: SessionDTO['usage'] | undefined, language: Language): string | null {
   if (!usage) return null;
-  if (typeof usage.total === 'number') return formatCompactNumber(usage.total);
+  if (typeof usage.total === 'number') return formatCompactNumber(usage.total, language);
   const input = usage.input ?? 0;
   const output = usage.output ?? 0;
   if (input === 0 && output === 0) return null;
-  return `${formatCompactNumber(input)} / ${formatCompactNumber(output)}`;
-}
-
-function formatCompactNumber(value: number): string {
-  return new Intl.NumberFormat(undefined, {
-    notation: value >= 1000 ? 'compact' : 'standard',
-    maximumFractionDigits: 1,
-  }).format(value);
+  return `${formatCompactNumber(input, language)} / ${formatCompactNumber(output, language)}`;
 }
 
 function truncateMiddle(value: string, maxLength: number): string {
   if (value.length <= maxLength) return value;
   const keep = Math.max(6, Math.floor((maxLength - 3) / 2));
   return `${value.slice(0, keep)}...${value.slice(-keep)}`;
-}
-
-function formatRelative(timestampMs: number): string {
-  const diff = Date.now() - timestampMs;
-  if (diff < 60_000) return 'just now';
-  if (diff < 3_600_000) return `${Math.round(diff / 60_000)}m ago`;
-  if (diff < 86_400_000) return `${Math.round(diff / 3_600_000)}h ago`;
-  return `${Math.round(diff / 86_400_000)}d ago`;
 }
 
 export type { SessionDTO, MessageDTO };

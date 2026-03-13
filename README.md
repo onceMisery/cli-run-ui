@@ -2,6 +2,8 @@
 
 Local runboard for Claude Code and Codex sessions.
 
+[简体中文说明](./README.zh-CN.md)
+
 ## Features
 - Aggregates local Claude and Codex transcripts into one dashboard
 - Streams session and conversation updates over SSE

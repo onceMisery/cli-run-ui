@@ -31,6 +31,7 @@ import { useRunStream } from '@/hooks/useRunStream';
 import { useTerminalStream } from '@/hooks/useTerminalStream';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { useI18n } from '@/lib/i18n';
 import { cn } from '@/lib/utils';
 
 type LaunchSurface = 'run' | 'terminal';
@@ -62,6 +63,7 @@ export function AgentWorkbenchPanel({
   terminals,
   terminalStatus,
 }: AgentWorkbenchPanelProps) {
+  const { isChinese } = useI18n();
   const savedPreferences = useMemo(readWorkbenchPreferences, []);
   const [surface, setSurface] = useState<LaunchSurface>(savedPreferences?.surface ?? 'run');
   const [provider, setProvider] = useState<SessionDTO['provider']>(
@@ -154,8 +156,8 @@ export function AgentWorkbenchPanel({
     (mode === 'task' || canResume);
 
   const presets = useMemo(
-    () => buildPresets(activeSession, provider),
-    [activeSession, provider]
+    () => buildPresets(activeSession, provider, isChinese),
+    [activeSession, isChinese, provider]
   );
 
   const launchRun = async () => {
@@ -243,19 +245,21 @@ export function AgentWorkbenchPanel({
         <div>
           <div className="flex items-center gap-2 text-sm font-medium text-white">
             <Sparkles className="h-4 w-4 text-cyan-300" />
-            Agent Workspace
+            {isChinese ? 'Agent 工作台' : 'Agent Workspace'}
           </div>
           <div className="mt-1 text-xs text-slate-400">
-            Unified controls for headless runs and interactive terminals, synced to the
-            active session and remembered locally.
+            {isChinese
+              ? '统一管理 headless run 与 interactive terminal，自动跟随当前会话并记住本地草稿。'
+              : 'Unified controls for headless runs and interactive terminals, synced to the active session and remembered locally.'}
           </div>
         </div>
         <div className="flex gap-2">
           <Badge className={streamBadgeClass(runStatus)}>
-            runs {runStatus === 'open' ? 'live' : 'syncing'}
+            {isChinese ? 'runs' : 'runs'} {runStatus === 'open' ? (isChinese ? '实时' : 'live') : isChinese ? '同步中' : 'syncing'}
           </Badge>
           <Badge className={streamBadgeClass(terminalStatus)}>
-            terminals {terminalStatus === 'open' ? 'live' : 'syncing'}
+            {isChinese ? 'terminals' : 'terminals'}{' '}
+            {terminalStatus === 'open' ? (isChinese ? '实时' : 'live') : isChinese ? '同步中' : 'syncing'}
           </Badge>
         </div>
       </div>
@@ -264,13 +268,15 @@ export function AgentWorkbenchPanel({
         <div className="space-y-4">
           <section className="rounded-2xl border border-white/10 bg-black/20 p-3">
             <div className="flex items-center justify-between gap-3">
-              <div className="text-xs uppercase tracking-[0.18em] text-slate-500">Launch</div>
+              <div className="text-xs uppercase tracking-[0.18em] text-slate-500">
+                {isChinese ? '启动' : 'Launch'}
+              </div>
               <button
                 onClick={resetDraft}
                 className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/[0.03] px-2.5 py-1 text-[11px] text-slate-300 transition hover:bg-white/[0.08] hover:text-white"
               >
                 <RotateCcw className="h-3.5 w-3.5" />
-                Reset draft
+                {isChinese ? '重置草稿' : 'Reset draft'}
               </button>
             </div>
 
@@ -287,18 +293,22 @@ export function AgentWorkbenchPanel({
               />
             </div>
             <div className="mt-2 flex gap-2">
-              <ModeChip active={mode === 'task'} onClick={() => setMode('task')} label="New task" />
+              <ModeChip
+                active={mode === 'task'}
+                onClick={() => setMode('task')}
+                label={isChinese ? '新任务' : 'New task'}
+              />
               <ModeChip
                 active={mode === 'resume'}
                 onClick={() => setMode('resume')}
-                label="Resume"
+                label={isChinese ? '恢复' : 'Resume'}
                 disabled={!canResume}
               />
             </div>
 
             <label className="mt-3 block">
               <div className="mb-1 text-xs uppercase tracking-[0.18em] text-slate-500">
-                Workspace
+                {isChinese ? '工作区' : 'Workspace'}
               </div>
               <input
                 value={cwd}
@@ -310,14 +320,14 @@ export function AgentWorkbenchPanel({
 
             <div className="mt-3">
               <div className="mb-1 flex items-center justify-between text-xs uppercase tracking-[0.18em] text-slate-500">
-                <span>Prompt</span>
+                <span>{isChinese ? '提示词' : 'Prompt'}</span>
                 {mode === 'resume' && activeSession ? (
                   <span className="normal-case tracking-normal text-slate-400">
-                    session {activeSession.sessionId}
+                    {isChinese ? '会话' : 'session'} {activeSession.sessionId}
                   </span>
                 ) : (
                   <span className="normal-case tracking-normal text-slate-400">
-                    saved locally
+                    {isChinese ? '已保存到本地' : 'saved locally'}
                   </span>
                 )}
               </div>
@@ -326,14 +336,18 @@ export function AgentWorkbenchPanel({
                 onChange={(event) => setPrompt(event.target.value)}
                 rows={5}
                 className="w-full resize-none rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 text-sm text-slate-100 outline-none placeholder:text-slate-500"
-                placeholder="Continue implementation, explain changes, or review the current code."
+                placeholder={
+                  isChinese
+                    ? '继续实现、解释改动，或者审查当前代码。'
+                    : 'Continue implementation, explain changes, or review the current code.'
+                }
               />
             </div>
 
             <div className="mt-3">
               <div className="mb-2 flex items-center gap-2 text-xs uppercase tracking-[0.18em] text-slate-500">
                 <Command className="h-3.5 w-3.5" />
-                Prompt presets
+                {isChinese ? '预设提示词' : 'Prompt presets'}
               </div>
               <div className="flex flex-wrap gap-2">
                 {presets.map((preset) => (
@@ -350,7 +364,9 @@ export function AgentWorkbenchPanel({
 
             {!canResume && mode === 'resume' ? (
               <InlineNotice tone="warn">
-                Select a session from the same provider before trying to resume it.
+                {isChinese
+                  ? '请先选择同一 provider 的会话，再尝试恢复。'
+                  : 'Select a session from the same provider before trying to resume it.'}
               </InlineNotice>
             ) : null}
             {runError ? <InlineNotice tone="error">{runError}</InlineNotice> : null}
@@ -367,7 +383,7 @@ export function AgentWorkbenchPanel({
                 ) : (
                   <Play className="h-4 w-4" />
                 )}
-                Start headless run
+                {isChinese ? '启动 headless run' : 'Start headless run'}
               </Button>
               <Button
                 onClick={() => void launchTerminal()}
@@ -379,7 +395,7 @@ export function AgentWorkbenchPanel({
                 ) : (
                   <Monitor className="h-4 w-4" />
                 )}
-                Open interactive terminal
+                {isChinese ? '打开交互式终端' : 'Open interactive terminal'}
               </Button>
             </div>
           </section>
@@ -387,7 +403,7 @@ export function AgentWorkbenchPanel({
           <section className="rounded-2xl border border-white/10 bg-black/20 p-3">
             <div className="mb-2 flex items-center justify-between gap-3">
               <div className="text-xs uppercase tracking-[0.18em] text-slate-500">
-                Activity history
+                {isChinese ? '活动历史' : 'Activity history'}
               </div>
               <Badge variant="muted" className="bg-white/5 text-slate-300">
                 {runs.length + terminals.length}
@@ -424,7 +440,9 @@ export function AgentWorkbenchPanel({
               ))}
               {runs.length === 0 && terminals.length === 0 ? (
                 <div className="rounded-xl border border-dashed border-white/10 bg-white/[0.03] px-3 py-5 text-sm text-slate-400">
-                  No activity yet. Launch a run or terminal to begin.
+                  {isChinese
+                    ? '还没有活动记录，先启动一个 run 或 terminal 吧。'
+                    : 'No activity yet. Launch a run or terminal to begin.'}
                 </div>
               ) : null}
             </div>
@@ -437,13 +455,13 @@ export function AgentWorkbenchPanel({
               active={surface === 'run'}
               onClick={() => setSurface('run')}
               icon={Play}
-              label="Headless run"
+              label={isChinese ? 'Headless run' : 'Headless run'}
             />
             <SurfaceChip
               active={surface === 'terminal'}
               onClick={() => setSurface('terminal')}
               icon={Monitor}
-              label="Interactive terminal"
+              label={isChinese ? '交互式终端' : 'Interactive terminal'}
             />
           </div>
 
@@ -484,6 +502,7 @@ function HeadlessRunPane({
   onPick: (id: string) => void;
   onStop: (id: string) => Promise<void>;
 }) {
+  const { isChinese } = useI18n();
   const viewportRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -496,9 +515,11 @@ function HeadlessRunPane({
     <section className="rounded-2xl border border-white/10 bg-black/20 p-3">
       <div className="mb-3 flex items-center justify-between">
         <div>
-          <div className="text-xs uppercase tracking-[0.18em] text-slate-500">Console</div>
+          <div className="text-xs uppercase tracking-[0.18em] text-slate-500">
+            {isChinese ? '控制台' : 'Console'}
+          </div>
           <div className="mt-1 text-sm text-slate-300">
-            {run ? `${run.provider} - ${run.status}` : 'Select a run'}
+            {run ? `${run.provider} - ${run.status}` : isChinese ? '选择一个 run' : 'Select a run'}
           </div>
         </div>
         {run && (run.status === 'starting' || run.status === 'running') ? (
@@ -509,7 +530,7 @@ function HeadlessRunPane({
             onClick={() => void onStop(run.id)}
           >
             <Square className="h-4 w-4" />
-            Stop
+            {isChinese ? '停止' : 'Stop'}
           </Button>
         ) : null}
       </div>
@@ -519,7 +540,11 @@ function HeadlessRunPane({
         className="h-[320px] overflow-auto rounded-2xl border border-white/10 bg-black/40 p-3"
       >
         {logs.length === 0 ? (
-          <div className="text-sm text-slate-500">Launch a headless run to see output here.</div>
+          <div className="text-sm text-slate-500">
+            {isChinese
+              ? '启动一个 headless run 后，这里会显示输出。'
+              : 'Launch a headless run to see output here.'}
+          </div>
         ) : (
           <div className="space-y-2 font-mono text-xs leading-6">
             {logs.map((entry) => (
@@ -566,6 +591,7 @@ function InteractiveTerminalPane({
   onPick: (id: string) => void;
   onStop: (id: string) => Promise<void>;
 }) {
+  const { isChinese } = useI18n();
   const hostRef = useRef<HTMLDivElement | null>(null);
   const termRef = useRef<XTermTerminal | null>(null);
   const fitRef = useRef<XTermFitAddon | null>(null);
@@ -664,9 +690,15 @@ function InteractiveTerminalPane({
     <section className="rounded-2xl border border-white/10 bg-black/20 p-3">
       <div className="mb-3 flex items-center justify-between">
         <div>
-          <div className="text-xs uppercase tracking-[0.18em] text-slate-500">Terminal</div>
+          <div className="text-xs uppercase tracking-[0.18em] text-slate-500">
+            {isChinese ? '终端' : 'Terminal'}
+          </div>
           <div className="mt-1 text-sm text-slate-300">
-            {terminal ? `${terminal.provider} - ${terminal.status}` : 'Select a terminal session'}
+            {terminal
+              ? `${terminal.provider} - ${terminal.status}`
+              : isChinese
+                ? '选择一个终端会话'
+                : 'Select a terminal session'}
           </div>
         </div>
         {terminal && terminal.status === 'open' ? (
@@ -677,7 +709,7 @@ function InteractiveTerminalPane({
             onClick={() => void onStop(terminal.id)}
           >
             <SquareTerminal className="h-4 w-4" />
-            Stop
+            {isChinese ? '停止' : 'Stop'}
           </Button>
         ) : null}
       </div>
@@ -840,25 +872,47 @@ async function resizeTerminal(terminalId: string, cols: number, rows: number) {
   });
 }
 
-function buildPresets(activeSession: SessionDTO | null, provider: SessionDTO['provider']) {
-  const projectLabel = activeSession?.projectName ?? 'this workspace';
-  const sessionHint = activeSession ? `Continue the existing ${activeSession.provider} session.` : '';
+function buildPresets(
+  activeSession: SessionDTO | null,
+  provider: SessionDTO['provider'],
+  isChinese: boolean
+) {
+  const projectLabel = activeSession?.projectName ?? (isChinese ? '当前工作区' : 'this workspace');
+  const sessionHint = activeSession
+    ? isChinese
+      ? `继续当前的 ${activeSession.provider} 会话。`
+      : `Continue the existing ${activeSession.provider} session.`
+    : '';
   return [
     {
-      label: 'Continue build',
-      value: `${sessionHint} Continue implementing the next slice in ${projectLabel}, make code changes directly, then summarize the outcome.`,
+      label: isChinese ? '继续实现' : 'Continue build',
+      value: isChinese
+        ? `${sessionHint}继续推进 ${projectLabel} 的下一部分实现，直接修改代码，完成后简要总结结果。`
+        : `${sessionHint} Continue implementing the next slice in ${projectLabel}, make code changes directly, then summarize the outcome.`,
     },
     {
-      label: 'Review risks',
-      value: `Review the latest changes in ${projectLabel}, focus on bugs, regressions, and missing tests, and report findings first.`,
+      label: isChinese ? '审查风险' : 'Review risks',
+      value: isChinese
+        ? `审查 ${projectLabel} 的最新改动，重点关注 bug、行为回归和缺失的测试，并优先报告发现。`
+        : `Review the latest changes in ${projectLabel}, focus on bugs, regressions, and missing tests, and report findings first.`,
     },
     {
-      label: 'Fix failures',
-      value: `Investigate the current build or test failures in ${projectLabel}, fix them end-to-end, and explain what changed.`,
+      label: isChinese ? '修复失败' : 'Fix failures',
+      value: isChinese
+        ? `排查 ${projectLabel} 当前的构建或测试失败，完整修复后说明改动内容。`
+        : `Investigate the current build or test failures in ${projectLabel}, fix them end-to-end, and explain what changed.`,
     },
     {
-      label: provider === 'codex' ? 'Codex handoff' : 'Claude handoff',
-      value: `Pick up the next best task in ${projectLabel}, preserve existing patterns, and leave a concise handoff note when done.`,
+      label: isChinese
+        ? provider === 'codex'
+          ? 'Codex 交接'
+          : 'Claude 交接'
+        : provider === 'codex'
+          ? 'Codex handoff'
+          : 'Claude handoff',
+      value: isChinese
+        ? `接手 ${projectLabel} 当前最值得推进的下一项任务，保持现有模式，并在完成后留下简洁交接说明。`
+        : `Pick up the next best task in ${projectLabel}, preserve existing patterns, and leave a concise handoff note when done.`,
     },
   ];
 }
