@@ -1,0 +1,23 @@
+{
+  "name": "@cli-run-ui/server",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js",
+    "lint": "echo 'no lint yet'",
+    "test": "echo 'no tests yet'"
+  },
+  "dependencies": {
+    "@cli-run-ui/core": "workspace:*",
+    "@hono/node-server": "^1.11.1",
+    "@hono/cors": "^1.2.0",
+    "hono": "^4.6.3"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.2",
+    "typescript": "^5.6.3"
+  }
+}

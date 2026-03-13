@@ -1,0 +1,2 @@
+{"type":"user","message":{"role":"user","created_at":1710000001000,"content":[{"type":"text","text":"Hello"}]}}
+{"type":"assistant","message":{"role":"assistant","created_at":1710000002000,"content":[{"type":"tool_use","id":"tool-1","name":"execute_bash","input":{"cmd":"ls"}},{"type":"tool_result","tool_use_id":"tool-1","content":"file1\nfile2"},{"type":"text","text":"Done"}]}}
