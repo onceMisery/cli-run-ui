@@ -3,7 +3,6 @@ import type { ContentPart, MessageDTO, SessionDTO } from '@cli-run-ui/core';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import rehypeShiki from '@shikijs/rehype';
 import {
   Bot,
   Check,
@@ -24,8 +23,6 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { cn } from '@/lib/utils';
-
-const markdownPlugins = [[rehypeShiki, { theme: 'vitesse-dark' }]] as const;
 
 interface ConversationViewProps {
   session: SessionDTO | null;
@@ -196,7 +193,6 @@ function MessageCard({ message }: { message: MessageDTO }) {
               <div key={`${message.id}-text-${index}`} className="leading-relaxed text-slate-100">
                 <ReactMarkdown
                   remarkPlugins={[remarkGfm]}
-                  rehypePlugins={markdownPlugins}
                   components={{
                     pre: MarkdownPre,
                     code: MarkdownCode,
@@ -213,7 +209,6 @@ function MessageCard({ message }: { message: MessageDTO }) {
               <div key={`${message.id}-code-${index}`} className="leading-relaxed">
                 <ReactMarkdown
                   remarkPlugins={[remarkGfm]}
-                  rehypePlugins={markdownPlugins}
                   components={{
                     pre: MarkdownPre,
                     code: MarkdownCode,

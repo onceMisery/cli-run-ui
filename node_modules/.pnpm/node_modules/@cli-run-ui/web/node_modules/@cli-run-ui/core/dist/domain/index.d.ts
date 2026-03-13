@@ -116,6 +116,7 @@ export interface StartTerminalRequestDTO {
     mode: TerminalMode;
     cwd: string;
     sessionUid?: string;
+    bootPrompt?: string;
     cols?: number;
     rows?: number;
 }

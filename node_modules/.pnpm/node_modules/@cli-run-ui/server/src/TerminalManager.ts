@@ -13,9 +13,12 @@ import type {
 type TerminalListener = (session: TerminalSessionDTO) => void;
 type OutputListener = (output: TerminalOutputDTO) => void;
 
-interface InternalTerminal {
+export interface PersistedTerminalRecord {
   summary: TerminalSessionDTO;
   outputs: TerminalOutputDTO[];
+}
+
+interface InternalTerminal extends PersistedTerminalRecord {
   ptyProcess?: pty.IPty;
 }
 
@@ -23,6 +26,10 @@ export class TerminalManager {
   private readonly terminals = new Map<string, InternalTerminal>();
   private readonly sessionListeners = new Set<TerminalListener>();
   private readonly outputListeners = new Set<OutputListener>();
+
+  constructor(restoredSessions: PersistedTerminalRecord[] = []) {
+    this.restore(restoredSessions);
+  }
 
   listSessions(): TerminalSessionDTO[] {
     return Array.from(this.terminals.values())
@@ -36,6 +43,15 @@ export class TerminalManager {
 
   getOutputs(terminalId: string): TerminalOutputDTO[] {
     return this.terminals.get(terminalId)?.outputs ?? [];
+  }
+
+  listPersistedSessions(): PersistedTerminalRecord[] {
+    return Array.from(this.terminals.values())
+      .map((terminal) => ({
+        summary: terminal.summary,
+        outputs: [...terminal.outputs],
+      }))
+      .sort((a, b) => b.summary.createdAtMs - a.summary.createdAtMs);
   }
 
   onSession(listener: TerminalListener): () => void {
@@ -106,6 +122,16 @@ export class TerminalManager {
       setTimeout(() => {
         const terminal = this.terminals.get(terminalId);
         terminal?.ptyProcess?.write(`${spec.initialCommand}\r`);
+        const bootPrompt = request.bootPrompt?.trim();
+        if (bootPrompt) {
+          setTimeout(() => {
+            this.appendOutput(
+              terminalId,
+              `\r\n[cli-run-ui] Sending boot prompt.\r\n`
+            );
+            terminal?.ptyProcess?.write(`${bootPrompt}\r`);
+          }, 700);
+        }
       }, 80);
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
@@ -177,6 +203,28 @@ export class TerminalManager {
   private emitSession(session: TerminalSessionDTO): void {
     for (const listener of this.sessionListeners) {
       listener(session);
+    }
+  }
+
+  private restore(restoredSessions: PersistedTerminalRecord[]): void {
+    const restoredAtMs = Date.now();
+    for (const entry of restoredSessions) {
+      const summary = normalizeRestoredTerminal(entry.summary, restoredAtMs);
+      const outputs = normalizeTerminalOutputs(entry.outputs, summary.id);
+
+      if (summary.status === 'closed' && wasActiveTerminal(entry.summary.status)) {
+        outputs.push({
+          id: randomUUID(),
+          terminalId: summary.id,
+          data: '\r\n[cli-run-ui] Restored after server restart. The original PTY is no longer attached.\r\n',
+          timestampMs: restoredAtMs,
+        });
+      }
+
+      this.terminals.set(summary.id, {
+        summary,
+        outputs,
+      });
     }
   }
 }
@@ -266,4 +314,30 @@ function toWindowsCommand(parts: string[]): string {
 
 function toPosixCommand(parts: string[]): string {
   return parts.map((part) => `'${part.replace(/'/g, `'\\''`)}'`).join(' ');
+}
+
+function normalizeRestoredTerminal(
+  summary: TerminalSessionDTO,
+  restoredAtMs: number
+): TerminalSessionDTO {
+  const status = wasActiveTerminal(summary.status) ? 'closed' : summary.status;
+  return {
+    ...summary,
+    status,
+    startedAtMs: summary.startedAtMs ?? summary.createdAtMs,
+    endedAtMs: status === 'closed' ? summary.endedAtMs ?? restoredAtMs : summary.endedAtMs,
+  };
+}
+
+function normalizeTerminalOutputs(
+  outputs: TerminalOutputDTO[],
+  terminalId: string
+): TerminalOutputDTO[] {
+  return outputs
+    .filter((entry) => entry.terminalId === terminalId)
+    .slice(-2000);
+}
+
+function wasActiveTerminal(status: TerminalSessionDTO['status']): boolean {
+  return status === 'starting' || status === 'open';
 }

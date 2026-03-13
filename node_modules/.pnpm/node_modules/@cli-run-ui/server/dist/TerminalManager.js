@@ -6,6 +6,9 @@ export class TerminalManager {
     terminals = new Map();
     sessionListeners = new Set();
     outputListeners = new Set();
+    constructor(restoredSessions = []) {
+        this.restore(restoredSessions);
+    }
     listSessions() {
         return Array.from(this.terminals.values())
             .map((terminal) => terminal.summary)
@@ -16,6 +19,14 @@ export class TerminalManager {
     }
     getOutputs(terminalId) {
         return this.terminals.get(terminalId)?.outputs ?? [];
+    }
+    listPersistedSessions() {
+        return Array.from(this.terminals.values())
+            .map((terminal) => ({
+            summary: terminal.summary,
+            outputs: [...terminal.outputs],
+        }))
+            .sort((a, b) => b.summary.createdAtMs - a.summary.createdAtMs);
     }
     onSession(listener) {
         this.sessionListeners.add(listener);
@@ -75,6 +86,13 @@ export class TerminalManager {
             setTimeout(() => {
                 const terminal = this.terminals.get(terminalId);
                 terminal?.ptyProcess?.write(`${spec.initialCommand}\r`);
+                const bootPrompt = request.bootPrompt?.trim();
+                if (bootPrompt) {
+                    setTimeout(() => {
+                        this.appendOutput(terminalId, `\r\n[cli-run-ui] Sending boot prompt.\r\n`);
+                        terminal?.ptyProcess?.write(`${bootPrompt}\r`);
+                    }, 700);
+                }
             }, 80);
         }
         catch (error) {
@@ -147,6 +165,25 @@ export class TerminalManager {
             listener(session);
         }
     }
+    restore(restoredSessions) {
+        const restoredAtMs = Date.now();
+        for (const entry of restoredSessions) {
+            const summary = normalizeRestoredTerminal(entry.summary, restoredAtMs);
+            const outputs = normalizeTerminalOutputs(entry.outputs, summary.id);
+            if (summary.status === 'closed' && wasActiveTerminal(entry.summary.status)) {
+                outputs.push({
+                    id: randomUUID(),
+                    terminalId: summary.id,
+                    data: '\r\n[cli-run-ui] Restored after server restart. The original PTY is no longer attached.\r\n',
+                    timestampMs: restoredAtMs,
+                });
+            }
+            this.terminals.set(summary.id, {
+                summary,
+                outputs,
+            });
+        }
+    }
 }
 function buildTerminalSpec(request) {
     if (!path.isAbsolute(request.cwd)) {
@@ -213,5 +250,22 @@ function toWindowsCommand(parts) {
 }
 function toPosixCommand(parts) {
     return parts.map((part) => `'${part.replace(/'/g, `'\\''`)}'`).join(' ');
+}
+function normalizeRestoredTerminal(summary, restoredAtMs) {
+    const status = wasActiveTerminal(summary.status) ? 'closed' : summary.status;
+    return {
+        ...summary,
+        status,
+        startedAtMs: summary.startedAtMs ?? summary.createdAtMs,
+        endedAtMs: status === 'closed' ? summary.endedAtMs ?? restoredAtMs : summary.endedAtMs,
+    };
+}
+function normalizeTerminalOutputs(outputs, terminalId) {
+    return outputs
+        .filter((entry) => entry.terminalId === terminalId)
+        .slice(-2000);
+}
+function wasActiveTerminal(status) {
+    return status === 'starting' || status === 'open';
 }
 //# sourceMappingURL=TerminalManager.js.map

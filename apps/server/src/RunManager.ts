@@ -12,9 +12,12 @@ import type {
 type RunListener = (run: RunSessionDTO) => void;
 type RunLogListener = (entry: RunLogEntryDTO) => void;
 
-interface InternalRun {
+export interface PersistedRunRecord {
   summary: RunSessionDTO;
   logs: RunLogEntryDTO[];
+}
+
+interface InternalRun extends PersistedRunRecord {
   child?: ChildProcessWithoutNullStreams;
 }
 
@@ -22,6 +25,10 @@ export class RunManager {
   private readonly runs = new Map<string, InternalRun>();
   private readonly runListeners = new Set<RunListener>();
   private readonly logListeners = new Set<RunLogListener>();
+
+  constructor(restoredRuns: PersistedRunRecord[] = []) {
+    this.restore(restoredRuns);
+  }
 
   listRuns(): RunSessionDTO[] {
     return Array.from(this.runs.values())
@@ -35,6 +42,15 @@ export class RunManager {
 
   getLogs(runId: string): RunLogEntryDTO[] {
     return this.runs.get(runId)?.logs ?? [];
+  }
+
+  listPersistedRuns(): PersistedRunRecord[] {
+    return Array.from(this.runs.values())
+      .map((run) => ({
+        summary: run.summary,
+        logs: [...run.logs],
+      }))
+      .sort((a, b) => b.summary.createdAtMs - a.summary.createdAtMs);
   }
 
   onRun(listener: RunListener): () => void {
@@ -173,6 +189,29 @@ export class RunManager {
       listener(summary);
     }
   }
+
+  private restore(restoredRuns: PersistedRunRecord[]): void {
+    const restoredAtMs = Date.now();
+    for (const entry of restoredRuns) {
+      const summary = normalizeRestoredRun(entry.summary, restoredAtMs);
+      const logs = normalizeRunLogs(entry.logs, summary.id);
+
+      if (summary.status === 'stopped' && wasActiveRun(entry.summary.status)) {
+        logs.push({
+          id: randomUUID(),
+          runId: summary.id,
+          stream: 'system',
+          text: '[cli-run-ui] Restored after server restart. The original process is no longer attached.',
+          timestampMs: restoredAtMs,
+        });
+      }
+
+      this.runs.set(summary.id, {
+        summary,
+        logs,
+      });
+    }
+  }
 }
 
 function buildCommand(request: StartRunRequestDTO): { command: string; args: string[] } {
@@ -227,4 +266,24 @@ function extractSessionId(provider: ProviderId, sessionUid?: string): string {
     throw new Error('Selected session does not match the chosen provider.');
   }
   return sessionId;
+}
+
+function normalizeRestoredRun(summary: RunSessionDTO, restoredAtMs: number): RunSessionDTO {
+  const status = wasActiveRun(summary.status) ? 'stopped' : summary.status;
+  return {
+    ...summary,
+    status,
+    startedAtMs: summary.startedAtMs ?? summary.createdAtMs,
+    endedAtMs: status === 'stopped' ? summary.endedAtMs ?? restoredAtMs : summary.endedAtMs,
+  };
+}
+
+function normalizeRunLogs(logs: RunLogEntryDTO[], runId: string): RunLogEntryDTO[] {
+  return logs
+    .filter((entry) => entry.runId === runId)
+    .slice(-800);
+}
+
+function wasActiveRun(status: RunSessionDTO['status']): boolean {
+  return status === 'starting' || status === 'running';
 }

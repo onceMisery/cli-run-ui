@@ -5,6 +5,9 @@ export class RunManager {
     runs = new Map();
     runListeners = new Set();
     logListeners = new Set();
+    constructor(restoredRuns = []) {
+        this.restore(restoredRuns);
+    }
     listRuns() {
         return Array.from(this.runs.values())
             .map((run) => run.summary)
@@ -15,6 +18,14 @@ export class RunManager {
     }
     getLogs(runId) {
         return this.runs.get(runId)?.logs ?? [];
+    }
+    listPersistedRuns() {
+        return Array.from(this.runs.values())
+            .map((run) => ({
+            summary: run.summary,
+            logs: [...run.logs],
+        }))
+            .sort((a, b) => b.summary.createdAtMs - a.summary.createdAtMs);
     }
     onRun(listener) {
         this.runListeners.add(listener);
@@ -141,6 +152,26 @@ export class RunManager {
             listener(summary);
         }
     }
+    restore(restoredRuns) {
+        const restoredAtMs = Date.now();
+        for (const entry of restoredRuns) {
+            const summary = normalizeRestoredRun(entry.summary, restoredAtMs);
+            const logs = normalizeRunLogs(entry.logs, summary.id);
+            if (summary.status === 'stopped' && wasActiveRun(entry.summary.status)) {
+                logs.push({
+                    id: randomUUID(),
+                    runId: summary.id,
+                    stream: 'system',
+                    text: '[cli-run-ui] Restored after server restart. The original process is no longer attached.',
+                    timestampMs: restoredAtMs,
+                });
+            }
+            this.runs.set(summary.id, {
+                summary,
+                logs,
+            });
+        }
+    }
 }
 function buildCommand(request) {
     if (!request.prompt.trim()) {
@@ -189,5 +220,22 @@ function extractSessionId(provider, sessionUid) {
         throw new Error('Selected session does not match the chosen provider.');
     }
     return sessionId;
+}
+function normalizeRestoredRun(summary, restoredAtMs) {
+    const status = wasActiveRun(summary.status) ? 'stopped' : summary.status;
+    return {
+        ...summary,
+        status,
+        startedAtMs: summary.startedAtMs ?? summary.createdAtMs,
+        endedAtMs: status === 'stopped' ? summary.endedAtMs ?? restoredAtMs : summary.endedAtMs,
+    };
+}
+function normalizeRunLogs(logs, runId) {
+    return logs
+        .filter((entry) => entry.runId === runId)
+        .slice(-800);
+}
+function wasActiveRun(status) {
+    return status === 'starting' || status === 'running';
 }
 //# sourceMappingURL=RunManager.js.map

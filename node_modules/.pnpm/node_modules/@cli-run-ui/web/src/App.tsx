@@ -1,4 +1,4 @@
-import { useDeferredValue, useMemo, useState } from 'react';
+import { Suspense, lazy, useDeferredValue, useMemo, useState } from 'react';
 import type { MessageDTO, SessionDTO } from '@cli-run-ui/core';
 import {
   Activity,
@@ -14,16 +14,21 @@ import { useSessionStream } from './hooks/useSessionStream.ts';
 import { useConversationStream } from './hooks/useConversationStream.ts';
 import { useRunSessions } from './hooks/useRunSessions.ts';
 import { useTerminalSessions } from './hooks/useTerminalSessions.ts';
-import { ConversationView } from './views/ConversationView.tsx';
 import { SessionList } from './views/SessionList.tsx';
 import { HeaderBar } from './views/HeaderBar.tsx';
-import { RunControlPanel } from './views/RunControlPanel.tsx';
-import { TerminalPanel } from './views/TerminalPanel.tsx';
 import { Badge } from './components/ui/badge.tsx';
 import { Button } from './components/ui/button.tsx';
 import { cn } from './lib/utils.ts';
 
 type ProviderFilter = 'all' | SessionDTO['provider'];
+const ConversationView = lazy(async () => {
+  const module = await import('./views/ConversationView.tsx');
+  return { default: module.ConversationView };
+});
+const AgentWorkbenchPanel = lazy(async () => {
+  const module = await import('./views/AgentWorkbenchPanel.tsx');
+  return { default: module.AgentWorkbenchPanel };
+});
 
 export default function App() {
   const { sessions, status: sessionStatus } = useSessionStream();
@@ -155,7 +160,8 @@ export default function App() {
                       cli-run-ui
                     </h1>
                     <p className="mt-1 text-sm text-slate-300">
-                      聚合 Claude 与 Codex 的本地会话，像运行面板一样查看与恢复。
+                      Aggregate local Claude and Codex sessions into one polished runboard for
+                      fast browsing, resuming, and orchestration.
                     </p>
                   </div>
                 </div>
@@ -229,7 +235,8 @@ export default function App() {
                   <div>
                     <div className="text-sm font-medium text-white">Sessions</div>
                     <div className="text-xs text-slate-400">
-                      最近更新优先，适合像 `claude-run` 一样快速切换上下文
+                      Sorted by recent activity so it feels closer to a `claude-run` style
+                      workspace switcher.
                     </div>
                   </div>
                   <Badge variant="muted" className="bg-white/5 text-slate-300">
@@ -252,7 +259,9 @@ export default function App() {
               conversationStatus={conversationStatus}
               messageCount={messages.length}
             />
-            <ConversationView session={activeSession} messages={messages} />
+            <Suspense fallback={<PanelFallback text="Loading conversation workspace..." />}>
+              <ConversationView session={activeSession} messages={messages} />
+            </Suspense>
           </main>
 
           <aside className="overflow-hidden rounded-[30px] border border-white/10 bg-[linear-gradient(180deg,rgba(8,15,28,0.96),rgba(8,14,24,0.88))] shadow-[0_24px_80px_rgba(0,0,0,0.35)] backdrop-blur">
@@ -263,17 +272,15 @@ export default function App() {
                 totalUsage={totalUsage}
               />
 
-              <RunControlPanel
-                activeSession={activeSession}
-                runs={runs}
-                runStatus={runStatus}
-              />
-
-              <TerminalPanel
-                activeSession={activeSession}
-                terminals={terminals}
-                terminalStatus={terminalStatus}
-              />
+              <Suspense fallback={<PanelFallback text="Loading agent workspace..." />}>
+                <AgentWorkbenchPanel
+                  activeSession={activeSession}
+                  runs={runs}
+                  runStatus={runStatus}
+                  terminals={terminals}
+                  terminalStatus={terminalStatus}
+                />
+              </Suspense>
 
               <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
                 <div className="flex items-center gap-2 text-sm font-medium text-white">
@@ -474,6 +481,14 @@ function InsightStat({ label, value }: { label: string; value: string }) {
 function EmptyMiniState({ text }: { text: string }) {
   return (
     <div className="rounded-2xl border border-dashed border-white/10 bg-black/20 px-4 py-6 text-center text-sm text-slate-400">
+      {text}
+    </div>
+  );
+}
+
+function PanelFallback({ text }: { text: string }) {
+  return (
+    <div className="rounded-2xl border border-dashed border-white/10 bg-black/20 px-4 py-10 text-center text-sm text-slate-400">
       {text}
     </div>
   );

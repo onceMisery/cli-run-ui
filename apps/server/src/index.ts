@@ -10,6 +10,7 @@ import {
   type SessionProvider,
   WatcherHub,
 } from '@cli-run-ui/core';
+import { HistoryStore } from './HistoryStore.js';
 import { RunManager } from './RunManager.js';
 import { TerminalManager } from './TerminalManager.js';
 
@@ -18,10 +19,19 @@ const app = new Hono();
 const providers: SessionProvider[] = [new ClaudeProvider(), new CodexProvider()];
 const providerMap = new Map(providers.map((provider) => [provider.id, provider]));
 const watcherHub = new WatcherHub(providers);
-const runManager = new RunManager();
-const terminalManager = new TerminalManager();
+const historyStore = new HistoryStore();
+const historySnapshot = await historyStore.load();
+const runManager = new RunManager(historySnapshot.runs);
+const terminalManager = new TerminalManager(historySnapshot.terminals);
+const runtimePersistence = createRuntimePersistenceTask(historyStore, runManager, terminalManager);
 watcherHub.start();
 void listAllSessions();
+runtimePersistence.schedule();
+
+runManager.onRun(() => runtimePersistence.schedule());
+runManager.onLog(() => runtimePersistence.schedule());
+terminalManager.onSession(() => runtimePersistence.schedule());
+terminalManager.onOutput(() => runtimePersistence.schedule());
 
 const devOrigins = new Set([
   'http://localhost:5173',
@@ -375,4 +385,47 @@ interface SseStream {
   send: (event: string, data: unknown) => void;
   comment: (text: string) => void;
   close: () => void;
+}
+
+function createRuntimePersistenceTask(
+  store: HistoryStore,
+  runs: RunManager,
+  terminals: TerminalManager
+) {
+  let timer: ReturnType<typeof setTimeout> | null = null;
+  let writing = false;
+  let queued = false;
+
+  const persist = async () => {
+    if (writing) {
+      queued = true;
+      return;
+    }
+
+    writing = true;
+    try {
+      await store.save({
+        runs: runs.listPersistedRuns(),
+        terminals: terminals.listPersistedSessions(),
+      });
+    } catch (error) {
+      console.warn('[cli-run-ui] Failed to persist runtime history:', error);
+    } finally {
+      writing = false;
+      if (queued) {
+        queued = false;
+        void persist();
+      }
+    }
+  };
+
+  return {
+    schedule() {
+      if (timer) clearTimeout(timer);
+      timer = setTimeout(() => {
+        timer = null;
+        void persist();
+      }, 150);
+    },
+  };
 }
