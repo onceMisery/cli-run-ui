@@ -1,0 +1,5 @@
+import { createHash } from 'node:crypto';
+export function hashString(value) {
+    return createHash('sha1').update(value).digest('hex');
+}
+//# sourceMappingURL=hash.js.map

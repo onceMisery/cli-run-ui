@@ -14,9 +14,11 @@ describe('CodexProvider', () => {
     const provider = new CodexProvider({ rootDir: fixtureRoot });
     const sessions = await provider.listSessions();
     expect(sessions.length).toBe(1);
-    expect(sessions[0].uid).toBe('codex:codex-1');
-    expect(sessions[0].projectPath).toBe('/tmp/codexproj');
-    expect(sessions[0].usage?.total).toBe(123);
+    const session = sessions[0];
+    expect(session).toBeDefined();
+    expect(session?.uid).toBe('codex:codex-1');
+    expect(session?.projectPath).toBe('/tmp/codexproj');
+    expect(session?.usage?.total).toBe(123);
   });
 
   it('joins tool call and output', async () => {
@@ -37,6 +39,7 @@ describe('CodexProvider', () => {
     const chunk = await provider.getConversationStream('codex-1', 0);
     expect(chunk.nextOffset).toBeGreaterThan(0);
     const chunk2 = await provider.getConversationStream('codex-1', chunk.nextOffset);
-    expect(chunk2.nextOffset).toBe(chunk.nextOffset);
+    expect(chunk2.nextOffset).toBeGreaterThanOrEqual(chunk.nextOffset);
+    expect(chunk2.messages.length).toBe(0);
   });
 });

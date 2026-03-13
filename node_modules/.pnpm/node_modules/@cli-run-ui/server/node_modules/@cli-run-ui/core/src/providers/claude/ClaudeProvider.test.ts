@@ -14,8 +14,10 @@ describe('ClaudeProvider', () => {
     const provider = new ClaudeProvider({ rootDir: fixtureRoot });
     const sessions = await provider.listSessions();
     expect(sessions.length).toBe(1);
-    expect(sessions[0].uid).toBe('claude:sess-123');
-    expect(sessions[0].projectPath).toBe('/tmp/projectA');
+    const session = sessions[0];
+    expect(session).toBeDefined();
+    expect(session?.uid).toBe('claude:sess-123');
+    expect(session?.projectPath).toBe('/tmp/projectA');
   });
 
   it('parses conversation with tool parts', async () => {
@@ -23,6 +25,8 @@ describe('ClaudeProvider', () => {
     const messages = await provider.getConversation('sess-123');
     expect(messages.length).toBe(2);
     const assistant = messages[1];
+    expect(assistant).toBeDefined();
+    if (!assistant) return;
     const toolCall = assistant.parts.find((part) => part.kind === 'tool_call');
     const toolResult = assistant.parts.find((part) => part.kind === 'tool_result');
     expect(toolCall).toBeTruthy();

@@ -316,7 +316,9 @@ async function readTokenUsage(filePath: string): Promise<SessionDTO['usage'] | n
     .filter((line) => line.length > 0);
 
   for (let i = lines.length - 1; i >= 0; i -= 1) {
-    const parsed = safeJsonParse(lines[i]) as Record<string, unknown> | null;
+    const line = lines[i];
+    if (!line) continue;
+    const parsed = safeJsonParse(line) as Record<string, unknown> | null;
     if (!parsed) continue;
     if (parsed.type !== 'event_msg') continue;
     const payload = parsed.payload as Record<string, unknown> | undefined;

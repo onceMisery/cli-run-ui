@@ -1,0 +1,4 @@
+
+> @cli-run-ui/core@0.0.1 build D:\code\cli-run-ui\packages\core
+> tsc -p tsconfig.json
+
