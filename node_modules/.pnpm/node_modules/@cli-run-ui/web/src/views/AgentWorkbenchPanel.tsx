@@ -455,7 +455,7 @@ export function AgentWorkbenchPanel({
               active={surface === 'run'}
               onClick={() => setSurface('run')}
               icon={Play}
-              label={isChinese ? 'Headless run' : 'Headless run'}
+              label={isChinese ? '无头运行' : 'Headless run'}
             />
             <SurfaceChip
               active={surface === 'terminal'}
