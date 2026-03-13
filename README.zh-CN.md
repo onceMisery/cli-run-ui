@@ -15,11 +15,12 @@ Claude Code 与 Codex 的本地运行工作台。
 
 ## 快速开始
 ```bash
-corepack pnpm install
-corepack pnpm dev
+corepack pnpm local
 ```
 
 Web 端默认运行在 `http://127.0.0.1:5173`，Server 默认运行在 `http://127.0.0.1:4000`。
+
+如果依赖已经安装好了，直接运行 `corepack pnpm dev` 也可以。
 
 ## CLI 覆盖配置
 如果 `codex` 或 `claude` 不在默认 `PATH` 中，可以设置下面的环境变量：

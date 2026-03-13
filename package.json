@@ -3,6 +3,7 @@
   "private": true,
   "packageManager": "pnpm@9.12.0",
   "scripts": {
+    "local": "pnpm install && pnpm dev",
     "dev": "turbo dev",
     "build": "turbo build",
     "lint": "turbo lint",

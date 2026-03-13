@@ -15,11 +15,12 @@ Local runboard for Claude Code and Codex sessions.
 
 ## Quick Start
 ```bash
-corepack pnpm install
-corepack pnpm dev
+corepack pnpm local
 ```
 
 The web app runs on `http://127.0.0.1:5173` and the server on `http://127.0.0.1:4000`.
+
+If dependencies are already installed, `corepack pnpm dev` is enough.
 
 ## CLI Overrides
 If the executables are not available on your default `PATH`, set one or both of these:
