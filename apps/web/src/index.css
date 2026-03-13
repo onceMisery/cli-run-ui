@@ -1,0 +1,38 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Space Grotesk", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --radius: 0.75rem;
+
+  --color-background: 224 36% 8%;
+  --color-foreground: 210 40% 98%;
+  --color-card: 223 28% 12%;
+  --color-card-foreground: 210 40% 98%;
+  --color-muted: 215 20% 65%;
+  --color-muted-foreground: 215 16% 47%;
+  --color-border: 220 18% 24%;
+  --color-primary: 173 84% 45%;
+  --color-primary-foreground: 222 47% 11%;
+  --color-secondary: 24 95% 53%;
+  --color-secondary-foreground: 0 0% 100%;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans;
+    background-image:
+      radial-gradient(circle at top, rgba(32, 48, 80, 0.6), transparent 55%),
+      radial-gradient(circle at 20% 20%, rgba(94, 234, 212, 0.15), transparent 40%),
+      linear-gradient(160deg, rgba(11, 13, 18, 0.98), rgba(7, 9, 14, 0.98));
+  }
+
+  code {
+    @apply font-mono;
+  }
+}
