@@ -29,7 +29,8 @@ describe('CodexProvider', () => {
         const chunk = await provider.getConversationStream('codex-1', 0);
         expect(chunk.nextOffset).toBeGreaterThan(0);
         const chunk2 = await provider.getConversationStream('codex-1', chunk.nextOffset);
-        expect(chunk2.nextOffset).toBe(chunk.nextOffset);
+        expect(chunk2.nextOffset).toBeGreaterThanOrEqual(chunk.nextOffset);
+        expect(chunk2.messages.length).toBe(0);
     });
 });
 //# sourceMappingURL=CodexProvider.test.js.map

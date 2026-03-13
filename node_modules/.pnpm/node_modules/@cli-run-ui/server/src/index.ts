@@ -6,10 +6,12 @@ import {
   ClaudeProvider,
   CodexProvider,
   type StartRunRequestDTO,
+  type StartTerminalRequestDTO,
   type SessionProvider,
   WatcherHub,
 } from '@cli-run-ui/core';
 import { RunManager } from './RunManager.js';
+import { TerminalManager } from './TerminalManager.js';
 
 const app = new Hono();
 
@@ -17,6 +19,7 @@ const providers: SessionProvider[] = [new ClaudeProvider(), new CodexProvider()]
 const providerMap = new Map(providers.map((provider) => [provider.id, provider]));
 const watcherHub = new WatcherHub(providers);
 const runManager = new RunManager();
+const terminalManager = new TerminalManager();
 watcherHub.start();
 void listAllSessions();
 
@@ -187,6 +190,114 @@ app.get('/api/runs/:id/stream', (c) => {
     return () => {
       offRun();
       offLog();
+      clearInterval(heartbeat);
+    };
+  });
+});
+
+app.get('/api/terminals', (c) => {
+  return c.json({ terminals: terminalManager.listSessions() });
+});
+
+app.post('/api/terminals', async (c) => {
+  const body = await c.req.json().catch(() => null);
+  const request = body as StartTerminalRequestDTO | null;
+  if (!request) {
+    return c.json({ error: 'invalid request body' }, 400);
+  }
+
+  try {
+    const terminal = await terminalManager.startSession(request);
+    return c.json({ terminal }, 201);
+  } catch (error) {
+    return c.json(
+      {
+        error: error instanceof Error ? error.message : 'failed to start terminal',
+      },
+      400
+    );
+  }
+});
+
+app.post('/api/terminals/:id/input', async (c) => {
+  const body = (await c.req.json().catch(() => null)) as { input?: string } | null;
+  if (!body || typeof body.input !== 'string') {
+    return c.json({ error: 'input is required' }, 400);
+  }
+  const terminal = terminalManager.write(c.req.param('id'), body.input);
+  if (!terminal) {
+    return c.json({ error: 'terminal not found' }, 404);
+  }
+  return c.json({ terminal });
+});
+
+app.post('/api/terminals/:id/resize', async (c) => {
+  const body = (await c.req.json().catch(() => null)) as
+    | { cols?: number; rows?: number }
+    | null;
+  if (!body || typeof body.cols !== 'number' || typeof body.rows !== 'number') {
+    return c.json({ error: 'cols and rows are required' }, 400);
+  }
+  const terminal = terminalManager.resize(c.req.param('id'), body.cols, body.rows);
+  if (!terminal) {
+    return c.json({ error: 'terminal not found' }, 404);
+  }
+  return c.json({ terminal });
+});
+
+app.post('/api/terminals/:id/stop', (c) => {
+  const terminal = terminalManager.stop(c.req.param('id'));
+  if (!terminal) {
+    return c.json({ error: 'terminal not found' }, 404);
+  }
+  return c.json({ terminal });
+});
+
+app.get('/api/terminals/stream', (c) => {
+  return createSseResponse(c, async (stream) => {
+    stream.send('snapshot', { terminals: terminalManager.listSessions() });
+
+    const offSession = terminalManager.onSession((terminal) => {
+      stream.send('terminal', { terminal });
+    });
+
+    const heartbeat = setInterval(() => stream.comment('heartbeat'), 15000);
+
+    return () => {
+      offSession();
+      clearInterval(heartbeat);
+    };
+  });
+});
+
+app.get('/api/terminals/:id/stream', (c) => {
+  const terminalId = c.req.param('id');
+  const terminal = terminalManager.getSession(terminalId);
+  if (!terminal) {
+    return c.json({ error: 'terminal not found' }, 404);
+  }
+
+  return createSseResponse(c, async (stream) => {
+    stream.send('snapshot', {
+      terminal,
+      outputs: terminalManager.getOutputs(terminalId),
+    });
+
+    const offSession = terminalManager.onSession((update) => {
+      if (update.id !== terminalId) return;
+      stream.send('terminal', { terminal: update });
+    });
+
+    const offOutput = terminalManager.onOutput((output) => {
+      if (output.terminalId !== terminalId) return;
+      stream.send('output', { output });
+    });
+
+    const heartbeat = setInterval(() => stream.comment('heartbeat'), 15000);
+
+    return () => {
+      offSession();
+      offOutput();
       clearInterval(heartbeat);
     };
   });

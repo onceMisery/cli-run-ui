@@ -70,3 +70,39 @@ export interface StartRunRequestDTO {
   prompt: string;
   sessionUid?: string;
 }
+
+export type TerminalMode = 'new' | 'resume';
+export type TerminalSessionStatus = 'starting' | 'open' | 'closed' | 'failed';
+
+export interface TerminalSessionDTO {
+  id: string;
+  provider: ProviderId;
+  mode: TerminalMode;
+  cwd: string;
+  command: string[];
+  createdAtMs: number;
+  startedAtMs?: number;
+  endedAtMs?: number;
+  cols: number;
+  rows: number;
+  status: TerminalSessionStatus;
+  sessionUid?: string;
+  exitCode?: number | null;
+  error?: string;
+}
+
+export interface TerminalOutputDTO {
+  id: string;
+  terminalId: string;
+  data: string;
+  timestampMs: number;
+}
+
+export interface StartTerminalRequestDTO {
+  provider: ProviderId;
+  mode: TerminalMode;
+  cwd: string;
+  sessionUid?: string;
+  cols?: number;
+  rows?: number;
+}

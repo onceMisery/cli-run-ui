@@ -13,10 +13,12 @@ import {
 import { useSessionStream } from './hooks/useSessionStream.ts';
 import { useConversationStream } from './hooks/useConversationStream.ts';
 import { useRunSessions } from './hooks/useRunSessions.ts';
+import { useTerminalSessions } from './hooks/useTerminalSessions.ts';
 import { ConversationView } from './views/ConversationView.tsx';
 import { SessionList } from './views/SessionList.tsx';
 import { HeaderBar } from './views/HeaderBar.tsx';
 import { RunControlPanel } from './views/RunControlPanel.tsx';
+import { TerminalPanel } from './views/TerminalPanel.tsx';
 import { Badge } from './components/ui/badge.tsx';
 import { Button } from './components/ui/button.tsx';
 import { cn } from './lib/utils.ts';
@@ -26,6 +28,7 @@ type ProviderFilter = 'all' | SessionDTO['provider'];
 export default function App() {
   const { sessions, status: sessionStatus } = useSessionStream();
   const { runs, status: runStatus } = useRunSessions();
+  const { terminals, status: terminalStatus } = useTerminalSessions();
   const [activeSessionUid, setActiveSessionUid] = useState<string | null>(null);
   const [providerFilter, setProviderFilter] = useState<ProviderFilter>('all');
   const [query, setQuery] = useState('');
@@ -97,6 +100,13 @@ export default function App() {
     () =>
       runs.filter((run) => run.status === 'running' || run.status === 'starting').length,
     [runs]
+  );
+  const activeTerminalCount = useMemo(
+    () =>
+      terminals.filter(
+        (terminal) => terminal.status === 'open' || terminal.status === 'starting'
+      ).length,
+    [terminals]
   );
 
   const highlightedProjects = useMemo(() => {
@@ -175,7 +185,7 @@ export default function App() {
                   icon={TerminalSquare}
                   label="Codex"
                   value={providerCounts.codex}
-                  helper={`${runningCount} active runs`}
+                  helper={`${runningCount} runs · ${activeTerminalCount} terminals`}
                 />
               </div>
             </div>
@@ -257,6 +267,12 @@ export default function App() {
                 activeSession={activeSession}
                 runs={runs}
                 runStatus={runStatus}
+              />
+
+              <TerminalPanel
+                activeSession={activeSession}
+                terminals={terminals}
+                terminalStatus={terminalStatus}
               />
 
               <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
