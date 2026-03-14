@@ -10,16 +10,15 @@ import {
   TerminalSquare,
 } from 'lucide-react';
 
-import { useSessionStream } from './hooks/useSessionStream.ts';
-import { useConversationStream } from './hooks/useConversationStream.ts';
-import { useRunSessions } from './hooks/useRunSessions.ts';
-import { useTaskSessions } from './hooks/useTaskSessions.ts';
-import { useTerminalSessions } from './hooks/useTerminalSessions.ts';
-import { useAgentRelaySessions } from './hooks/useAgentRelaySessions.ts';
-import { SessionList } from './views/SessionList.tsx';
-import { HeaderBar } from './views/HeaderBar.tsx';
 import { Badge } from './components/ui/badge.tsx';
 import { Button } from './components/ui/button.tsx';
+import { useAgentRelaySessions } from './hooks/useAgentRelaySessions.ts';
+import { useConversationStream } from './hooks/useConversationStream.ts';
+import { useRunSessions } from './hooks/useRunSessions.ts';
+import { useSessionStream } from './hooks/useSessionStream.ts';
+import { useTaskSessions } from './hooks/useTaskSessions.ts';
+import { useTerminalSessions } from './hooks/useTerminalSessions.ts';
+import { useTheme } from './lib/theme.tsx';
 import { cn } from './lib/utils.ts';
 import {
   formatCompactNumber,
@@ -27,9 +26,11 @@ import {
   useI18n,
   type Language,
 } from './lib/i18n.tsx';
-import { useTheme } from './lib/theme.tsx';
+import { HeaderBar } from './views/HeaderBar.tsx';
+import { SessionList } from './views/SessionList.tsx';
 
 type ProviderFilter = 'all' | SessionDTO['provider'];
+type WorkspaceView = 'transcript' | 'agent';
 
 const ConversationView = lazy(async () => {
   const module = await import('./views/ConversationView.tsx');
@@ -51,6 +52,7 @@ export default function App() {
   const { relays, status: relayStatus } = useAgentRelaySessions();
   const [activeSessionUid, setActiveSessionUid] = useState<string | null>(null);
   const [providerFilter, setProviderFilter] = useState<ProviderFilter>('all');
+  const [workspaceView, setWorkspaceView] = useState<WorkspaceView>('transcript');
   const [query, setQuery] = useState('');
   const deferredQuery = useDeferredValue(query);
 
@@ -116,11 +118,13 @@ export default function App() {
     () => new Set(sessions.map((session) => session.projectPath ?? session.projectName)).size,
     [sessions]
   );
+
   const runningCount = useMemo(
     () =>
       runs.filter((run) => run.status === 'running' || run.status === 'starting').length,
     [runs]
   );
+
   const activeTerminalCount = useMemo(
     () =>
       terminals.filter(
@@ -128,11 +132,13 @@ export default function App() {
       ).length,
     [terminals]
   );
+
   const activeTaskCount = useMemo(
     () =>
       tasks.filter((task) => task.status === 'preparing' || task.status === 'running').length,
     [tasks]
   );
+
   const activeRelayCount = useMemo(
     () =>
       relays.filter((relay) => relay.status === 'running' || relay.status === 'starting')
@@ -166,14 +172,14 @@ export default function App() {
         updatedAtMs: meta.updatedAtMs,
         providers: Array.from(meta.providerSet.values()),
       }))
-      .sort((a, b) => b.updatedAtMs - a.updatedAtMs)
+      .sort((left, right) => right.updatedAtMs - left.updatedAtMs)
       .slice(0, 4);
   }, [filteredSessions, isChinese]);
 
   return (
     <div className="app-shell min-h-screen text-foreground">
       <div className="mx-auto flex min-h-screen max-w-[1800px] flex-col gap-6 px-4 py-4 lg:px-6">
-        <section className="grid min-h-[calc(100vh-2rem)] gap-4 xl:grid-cols-[340px_minmax(0,1fr)_320px]">
+        <section className="grid min-h-[calc(100vh-2rem)] gap-4 xl:grid-cols-[340px_minmax(0,1fr)]">
           <aside className="overflow-hidden rounded-[30px] border border-white/10 bg-[linear-gradient(180deg,rgba(8,15,28,0.96),rgba(8,14,24,0.88))] shadow-[0_24px_80px_rgba(0,0,0,0.35)] backdrop-blur">
             <div className="border-b border-white/10 px-5 py-5">
               <div className="flex items-start justify-between gap-4">
@@ -187,7 +193,7 @@ export default function App() {
                     </h1>
                     <p className="mt-1 text-sm text-slate-300">
                       {isChinese
-                        ? '把本地 Claude 与 Codex 会话聚合到同一个精致工作台里，便于浏览、恢复和继续协作。'
+                        ? '把本地 Claude 和 Codex 会话聚合到同一个工作台里，便于浏览、恢复和继续协作。'
                         : 'Aggregate local Claude and Codex sessions into one polished runboard for fast browsing, resuming, and orchestration.'}
                     </p>
                   </div>
@@ -245,7 +251,9 @@ export default function App() {
                   label={isChinese ? '活跃会话' : 'Live sessions'}
                   value={sessions.length}
                   helper={
-                    isChinese ? `当前可见 ${filteredSessions.length}` : `${filteredSessions.length} visible`
+                    isChinese
+                      ? `当前可见 ${filteredSessions.length}`
+                      : `${filteredSessions.length} visible`
                   }
                 />
                 <MetricCard
@@ -266,7 +274,7 @@ export default function App() {
                   value={providerCounts.codex}
                   helper={
                     isChinese
-                      ? `${runningCount} 个 run / ${activeTerminalCount} 个 terminal / ${activeRelayCount} 个 relay`
+                      ? `${runningCount} 个 run / ${activeTaskCount} 个 task / ${activeTerminalCount} 个 terminal / ${activeRelayCount} 个 relay`
                       : `${runningCount} runs / ${activeTaskCount} tasks / ${activeTerminalCount} terminals / ${activeRelayCount} relays`
                   }
                 />
@@ -281,7 +289,9 @@ export default function App() {
                     value={query}
                     onChange={(event) => setQuery(event.target.value)}
                     placeholder={
-                      isChinese ? '搜索项目、会话、路径...' : 'Search project, session, path...'
+                      isChinese
+                        ? '搜索项目、会话、路径...'
+                        : 'Search project, session, path...'
                     }
                     className="w-full bg-transparent text-sm text-slate-100 outline-none placeholder:text-slate-500"
                   />
@@ -317,8 +327,8 @@ export default function App() {
                     </div>
                     <div className="text-xs text-slate-400">
                       {isChinese
-                        ? '按最近活动排序，更接近 `claude-run` 那种快速切换上下文的使用方式。'
-                        : 'Sorted by recent activity so it feels closer to a `claude-run` style workspace switcher.'}
+                        ? '按最近活动排序，方便快速切换上下文。'
+                        : 'Sorted by recent activity for fast workspace switching.'}
                     </div>
                   </div>
                   <Badge variant="muted" className="bg-white/5 text-slate-300">
@@ -335,98 +345,151 @@ export default function App() {
           </aside>
 
           <main className="flex min-h-0 flex-col overflow-hidden rounded-[30px] border border-white/10 bg-[linear-gradient(180deg,rgba(7,16,26,0.95),rgba(7,13,22,0.84))] shadow-[0_24px_80px_rgba(0,0,0,0.35)] backdrop-blur">
-            <HeaderBar
-              session={activeSession}
-              sessionStatus={sessionStatus}
-              conversationStatus={conversationStatus}
-              messageCount={messages.length}
-            />
-            <Suspense
-              fallback={
-                <PanelFallback
-                  text={
-                    isChinese ? '正在加载对话工作区...' : 'Loading conversation workspace...'
-                  }
-                />
-              }
-            >
-              <ConversationView session={activeSession} messages={messages} />
-            </Suspense>
-          </main>
-
-          <aside className="overflow-hidden rounded-[30px] border border-white/10 bg-[linear-gradient(180deg,rgba(8,15,28,0.96),rgba(8,14,24,0.88))] shadow-[0_24px_80px_rgba(0,0,0,0.35)] backdrop-blur">
-            <div className="space-y-4 px-5 py-5">
-              <InsightPanel
-                activeSession={activeSession}
-                messages={messages}
-                totalUsage={totalUsage}
-              />
-
-              <Suspense
-                fallback={
-                  <PanelFallback
-                    text={isChinese ? '正在加载 Agent 工作台...' : 'Loading agent workspace...'}
+            <div className="border-b border-white/10 px-5 py-4">
+              <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+                <div>
+                  <div className="text-xs uppercase tracking-[0.18em] text-slate-500">
+                    {isChinese ? '主工作区' : 'Workspace'}
+                  </div>
+                  <div className="mt-1 text-sm text-slate-300">
+                    {workspaceView === 'transcript'
+                      ? isChinese
+                        ? '专注查看当前会话 transcript，并在旁边保留关键信息。'
+                        : 'Focus on the live transcript while keeping session context nearby.'
+                      : isChinese
+                        ? '把 Agent 工作台独立成单独页签，不再和 transcript 挤在一起。'
+                        : 'Give the agent controls a dedicated tab instead of squeezing them beside the transcript.'}
+                  </div>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <WorkspaceTabButton
+                    active={workspaceView === 'transcript'}
+                    icon={Activity}
+                    title={isChinese ? '会话页' : 'Transcript'}
+                    description={isChinese ? '查看消息流' : 'Live transcript'}
+                    onClick={() => setWorkspaceView('transcript')}
                   />
-                }
-              >
-                <AgentWorkbenchPanel
-                  activeSession={activeSession}
-                  runs={runs}
-                  runStatus={runStatus}
-                  tasks={tasks}
-                  taskStatus={taskStatus}
-                  terminals={terminals}
-                  terminalStatus={terminalStatus}
-                  relays={relays}
-                  relayStatus={relayStatus}
-                />
-              </Suspense>
-
-              <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-                <div className="flex items-center gap-2 text-sm font-medium text-white">
-                  <Sparkles className="h-4 w-4 text-amber-300" />
-                  {isChinese ? '重点项目' : 'Spotlight Projects'}
+                  <WorkspaceTabButton
+                    active={workspaceView === 'agent'}
+                    icon={TerminalSquare}
+                    title={isChinese ? 'Agent 工作台' : 'Agent Workspace'}
+                    description={isChinese ? '任务 / 终端 / Relay' : 'Tasks, terminals, relays'}
+                    onClick={() => setWorkspaceView('agent')}
+                  />
                 </div>
-                <div className="mt-3 space-y-3">
-                  {highlightedProjects.length === 0 ? (
-                    <EmptyMiniState text={isChinese ? '还没有可展示的会话。' : 'No indexed sessions yet.'} />
-                  ) : (
-                    highlightedProjects.map((project) => (
-                      <div
-                        key={project.name}
-                        className="rounded-2xl border border-white/10 bg-black/20 p-3"
-                      >
-                        <div className="flex items-center justify-between gap-3">
-                          <div className="min-w-0">
-                            <div className="truncate text-sm font-medium text-white">
-                              {project.name}
-                            </div>
-                            <div className="mt-1 text-xs text-slate-400">
-                              {isChinese ? '更新于 ' : 'Updated '}
-                              {formatRelativeTime(project.updatedAtMs, language)}
-                            </div>
-                          </div>
-                          <Badge variant="muted" className="bg-white/5 text-slate-300">
-                            {project.count}
-                          </Badge>
-                        </div>
-                        <div className="mt-2 flex flex-wrap gap-2">
-                          {project.providers.map((provider) => (
-                            <Badge
-                              key={`${project.name}-${provider}`}
-                              className={providerBadgeClass(provider)}
-                            >
-                              {provider}
-                            </Badge>
-                          ))}
-                        </div>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </section>
+              </div>
             </div>
-          </aside>
+
+            {workspaceView === 'transcript' ? (
+              <div className="grid min-h-0 flex-1 gap-4 p-4 xl:grid-cols-[minmax(0,1fr)_320px]">
+                <section className="flex min-h-0 flex-col overflow-hidden rounded-[26px] border border-white/10 bg-black/10">
+                  <HeaderBar
+                    session={activeSession}
+                    sessionStatus={sessionStatus}
+                    conversationStatus={conversationStatus}
+                    messageCount={messages.length}
+                  />
+                  <Suspense
+                    fallback={
+                      <PanelFallback
+                        text={
+                          isChinese
+                            ? '正在加载对话工作区...'
+                            : 'Loading conversation workspace...'
+                        }
+                      />
+                    }
+                  >
+                    <ConversationView session={activeSession} messages={messages} />
+                  </Suspense>
+                </section>
+
+                <aside className="min-h-0 space-y-4 overflow-y-auto rounded-[26px] border border-white/10 bg-white/[0.03] p-4">
+                  <InsightPanel
+                    activeSession={activeSession}
+                    messages={messages}
+                    totalUsage={totalUsage}
+                  />
+                  <SpotlightProjectsPanel
+                    highlightedProjects={highlightedProjects}
+                    isChinese={isChinese}
+                    language={language}
+                  />
+                </aside>
+              </div>
+            ) : (
+              <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto p-4">
+                <section className="rounded-[26px] border border-white/10 bg-white/[0.03] px-5 py-4">
+                  <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+                    <div>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Badge className="border-[var(--theme-accent-border)] bg-[var(--theme-accent-soft)] text-[var(--theme-accent-text)]">
+                          {isChinese ? '独立 Agent 视图' : 'Dedicated agent view'}
+                        </Badge>
+                        {activeSession ? (
+                          <Badge className={providerBadgeClass(activeSession.provider)}>
+                            {activeSession.provider}
+                          </Badge>
+                        ) : null}
+                      </div>
+                      <div className="mt-3 text-lg font-semibold text-white">
+                        {isChinese ? 'Agent 工作台' : 'Agent Workspace'}
+                      </div>
+                      <div className="mt-1 text-sm text-slate-300">
+                        {activeSession
+                          ? isChinese
+                            ? `当前已绑定到 ${activeSession.projectName}，可以直接继续任务、打开终端，或发起 relay。`
+                            : `Currently linked to ${activeSession.projectName}, so you can resume work, open terminals, or start relay sessions without leaving this tab.`
+                          : isChinese
+                            ? '先从左侧选择一个会话，或者直接在这里发起新的任务和终端。'
+                            : 'Select a session on the left, or launch fresh tasks and terminals directly from here.'}
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3 xl:w-[360px]">
+                      <SummaryStat
+                        label={isChinese ? '运行中任务' : 'Active tasks'}
+                        value={String(activeTaskCount)}
+                      />
+                      <SummaryStat
+                        label={isChinese ? '活动终端' : 'Open terminals'}
+                        value={String(activeTerminalCount)}
+                      />
+                      <SummaryStat
+                        label={isChinese ? 'Headless runs' : 'Headless runs'}
+                        value={String(runningCount)}
+                      />
+                      <SummaryStat
+                        label={isChinese ? 'Relay 房间' : 'Relay rooms'}
+                        value={String(activeRelayCount)}
+                      />
+                    </div>
+                  </div>
+                </section>
+
+                <Suspense
+                  fallback={
+                    <PanelFallback
+                      text={
+                        isChinese ? '正在加载 Agent 工作台...' : 'Loading agent workspace...'
+                      }
+                    />
+                  }
+                >
+                  <AgentWorkbenchPanel
+                    activeSession={activeSession}
+                    runs={runs}
+                    runStatus={runStatus}
+                    tasks={tasks}
+                    taskStatus={taskStatus}
+                    terminals={terminals}
+                    terminalStatus={terminalStatus}
+                    relays={relays}
+                    relayStatus={relayStatus}
+                  />
+                </Suspense>
+              </div>
+            )}
+          </main>
         </section>
       </div>
     </div>
@@ -513,6 +576,49 @@ function FilterChip({
   );
 }
 
+function WorkspaceTabButton({
+  active,
+  icon: Icon,
+  title,
+  description,
+  onClick,
+}: {
+  active: boolean;
+  icon: typeof Activity;
+  title: string;
+  description: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={cn(
+        'flex min-w-[180px] items-start gap-3 rounded-2xl border px-4 py-3 text-left transition',
+        active
+          ? 'border-[var(--theme-accent-border)] bg-[var(--theme-accent-soft)] text-[var(--theme-accent-text)]'
+          : 'border-white/10 bg-white/[0.03] text-slate-300 hover:bg-white/[0.06] hover:text-white'
+      )}
+    >
+      <div
+        className={cn(
+          'mt-0.5 flex h-9 w-9 items-center justify-center rounded-xl border',
+          active
+            ? 'border-[var(--theme-accent-border)] bg-black/20'
+            : 'border-white/10 bg-black/20'
+        )}
+      >
+        <Icon className="h-4 w-4" />
+      </div>
+      <div>
+        <div className="text-sm font-medium">{title}</div>
+        <div className={cn('mt-1 text-xs', active ? 'text-current/80' : 'text-slate-400')}>
+          {description}
+        </div>
+      </div>
+    </button>
+  );
+}
+
 function InsightPanel({
   activeSession,
   messages,
@@ -535,12 +641,19 @@ function InsightPanel({
         <Clock3 className="h-4 w-4 text-emerald-300" />
         {isChinese ? '会话洞察' : 'Session Insights'}
       </div>
+
       {activeSession ? (
         <div className="mt-4 space-y-3">
-          <InsightStat label={isChinese ? '提供方' : 'Provider'} value={activeSession.provider} />
-          <InsightStat label={isChinese ? '消息数' : 'Messages'} value={String(messages.length)} />
           <InsightStat
-            label={isChinese ? '助手回复' : 'Assistant turns'}
+            label={isChinese ? '提供方' : 'Provider'}
+            value={activeSession.provider}
+          />
+          <InsightStat
+            label={isChinese ? '消息数' : 'Messages'}
+            value={String(messages.length)}
+          />
+          <InsightStat
+            label={isChinese ? '智能体回复' : 'Assistant turns'}
             value={String(assistantMessages)}
           />
           <InsightStat
@@ -569,7 +682,9 @@ function InsightPanel({
         </div>
       ) : (
         <div className="mt-4">
-          <EmptyMiniState text={isChinese ? '选择一个会话查看详情。' : 'Select a session to inspect details.'} />
+          <EmptyMiniState
+            text={isChinese ? '选择一个会话查看详情。' : 'Select a session to inspect details.'}
+          />
         </div>
       )}
 
@@ -595,6 +710,73 @@ function InsightStat({ label, value }: { label: string; value: string }) {
     <div className="flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-black/20 px-3 py-2">
       <span className="text-xs uppercase tracking-[0.18em] text-slate-500">{label}</span>
       <span className="max-w-[170px] truncate text-sm text-slate-100">{value}</span>
+    </div>
+  );
+}
+
+function SpotlightProjectsPanel({
+  highlightedProjects,
+  isChinese,
+  language,
+}: {
+  highlightedProjects: Array<{
+    name: string;
+    count: number;
+    updatedAtMs: number;
+    providers: SessionDTO['provider'][];
+  }>;
+  isChinese: boolean;
+  language: Language;
+}) {
+  return (
+    <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+      <div className="flex items-center gap-2 text-sm font-medium text-white">
+        <Sparkles className="h-4 w-4 text-amber-300" />
+        {isChinese ? '重点项目' : 'Spotlight Projects'}
+      </div>
+      <div className="mt-3 space-y-3">
+        {highlightedProjects.length === 0 ? (
+          <EmptyMiniState
+            text={isChinese ? '还没有可展示的会话。' : 'No indexed sessions yet.'}
+          />
+        ) : (
+          highlightedProjects.map((project) => (
+            <div
+              key={project.name}
+              className="rounded-2xl border border-white/10 bg-black/20 p-3"
+            >
+              <div className="flex items-center justify-between gap-3">
+                <div className="min-w-0">
+                  <div className="truncate text-sm font-medium text-white">{project.name}</div>
+                  <div className="mt-1 text-xs text-slate-400">
+                    {isChinese ? '更新于 ' : 'Updated '}
+                    {formatRelativeTime(project.updatedAtMs, language)}
+                  </div>
+                </div>
+                <Badge variant="muted" className="bg-white/5 text-slate-300">
+                  {project.count}
+                </Badge>
+              </div>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {project.providers.map((provider) => (
+                  <Badge key={`${project.name}-${provider}`} className={providerBadgeClass(provider)}>
+                    {provider}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+    </section>
+  );
+}
+
+function SummaryStat({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-2xl border border-white/10 bg-black/20 px-4 py-3">
+      <div className="text-[10px] uppercase tracking-[0.2em] text-slate-500">{label}</div>
+      <div className="mt-1 text-sm font-medium text-white">{value}</div>
     </div>
   );
 }

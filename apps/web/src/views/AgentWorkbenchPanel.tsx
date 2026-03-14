@@ -211,6 +211,10 @@ export function AgentWorkbenchPanel({
   const [selectedRelayId, setSelectedRelayId] = useState<string | null>(
     savedPreferences?.selectedRelayId ?? relays[0]?.id ?? null
   );
+  const pendingTaskSelectionRef = useRef<string | null>(null);
+  const pendingRunSelectionRef = useRef<string | null>(null);
+  const pendingTerminalSelectionRef = useRef<string | null>(null);
+  const pendingRelaySelectionRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (!activeSession) return;
@@ -259,39 +263,67 @@ export function AgentWorkbenchPanel({
 
   useEffect(() => {
     if (tasks.length === 0) {
+      if (selectedTaskId && pendingTaskSelectionRef.current === selectedTaskId) return;
       setSelectedTaskId(null);
       return;
     }
-    if (selectedTaskId && tasks.some((task) => task.id === selectedTaskId)) return;
+    if (selectedTaskId && tasks.some((task) => task.id === selectedTaskId)) {
+      if (pendingTaskSelectionRef.current === selectedTaskId) {
+        pendingTaskSelectionRef.current = null;
+      }
+      return;
+    }
+    if (selectedTaskId && pendingTaskSelectionRef.current === selectedTaskId) return;
     setSelectedTaskId(tasks[0]?.id ?? null);
   }, [selectedTaskId, tasks]);
 
   useEffect(() => {
     if (runs.length === 0) {
+      if (selectedRunId && pendingRunSelectionRef.current === selectedRunId) return;
       setSelectedRunId(null);
       return;
     }
-    if (selectedRunId && runs.some((run) => run.id === selectedRunId)) return;
+    if (selectedRunId && runs.some((run) => run.id === selectedRunId)) {
+      if (pendingRunSelectionRef.current === selectedRunId) {
+        pendingRunSelectionRef.current = null;
+      }
+      return;
+    }
+    if (selectedRunId && pendingRunSelectionRef.current === selectedRunId) return;
     setSelectedRunId(runs[0]?.id ?? null);
   }, [runs, selectedRunId]);
 
   useEffect(() => {
     if (terminals.length === 0) {
+      if (selectedTerminalId && pendingTerminalSelectionRef.current === selectedTerminalId) {
+        return;
+      }
       setSelectedTerminalId(null);
       return;
     }
     if (selectedTerminalId && terminals.some((terminal) => terminal.id === selectedTerminalId)) {
+      if (pendingTerminalSelectionRef.current === selectedTerminalId) {
+        pendingTerminalSelectionRef.current = null;
+      }
       return;
     }
+    if (selectedTerminalId && pendingTerminalSelectionRef.current === selectedTerminalId) return;
     setSelectedTerminalId(terminals[0]?.id ?? null);
   }, [selectedTerminalId, terminals]);
 
   useEffect(() => {
     if (relays.length === 0) {
+      if (selectedRelayId && pendingRelaySelectionRef.current === selectedRelayId) return;
       setSelectedRelayId(null);
       return;
     }
-    if (selectedRelayId && relays.some((relay) => relay.id === selectedRelayId)) return;
+    if (selectedRelayId && relays.some((relay) => relay.id === selectedRelayId)) {
+      if (pendingRelaySelectionRef.current === selectedRelayId) {
+        pendingRelaySelectionRef.current = null;
+      }
+      return;
+    }
+    if (selectedRelayId && pendingRelaySelectionRef.current === selectedRelayId) return;
     setSelectedRelayId(relays[0]?.id ?? null);
   }, [relays, selectedRelayId]);
 
@@ -510,6 +542,7 @@ export function AgentWorkbenchPanel({
       if (!response.ok || !data.task) {
         throw new Error(data.error ?? 'Failed to start task.');
       }
+      pendingTaskSelectionRef.current = data.task.id;
       startTransition(() => {
         setSurface('task');
         setSelectedTaskId(data.task!.id);
@@ -656,6 +689,7 @@ export function AgentWorkbenchPanel({
       if (!response.ok || !data.run) {
         throw new Error(data.error ?? 'Failed to start run.');
       }
+      pendingRunSelectionRef.current = data.run.id;
       startTransition(() => {
         setSurface('run');
         setSelectedRunId(data.run.id);
@@ -689,6 +723,7 @@ export function AgentWorkbenchPanel({
     if (!response.ok || !data.terminal) {
       throw new Error(data.error ?? 'Failed to open terminal.');
     }
+    pendingTerminalSelectionRef.current = data.terminal.id;
     startTransition(() => {
       setSurface('terminal');
       setSelectedTerminalId(data.terminal.id);
@@ -761,6 +796,7 @@ export function AgentWorkbenchPanel({
       if (!response.ok || !data.relay) {
         throw new Error(data.error ?? 'Failed to start relay.');
       }
+      pendingRelaySelectionRef.current = data.relay.id;
       startTransition(() => {
         setSurface('relay');
         setSelectedRelayId(data.relay.id);
@@ -1497,6 +1533,7 @@ export function AgentWorkbenchPanel({
                   badge={entry.status}
                   badgeClass={taskBadgeClass(entry.status)}
                   onClick={() => {
+                    pendingTaskSelectionRef.current = null;
                     setSurface('task');
                     setSelectedTaskId(entry.id);
                   }}
@@ -1511,6 +1548,7 @@ export function AgentWorkbenchPanel({
                   badge={entry.status}
                   badgeClass={runBadgeClass(entry.status)}
                   onClick={() => {
+                    pendingRunSelectionRef.current = null;
                     setSurface('run');
                     setSelectedRunId(entry.id);
                   }}
@@ -1525,6 +1563,7 @@ export function AgentWorkbenchPanel({
                   badge={entry.status}
                   badgeClass={terminalBadgeClass(entry.status)}
                   onClick={() => {
+                    pendingTerminalSelectionRef.current = null;
                     setSurface('terminal');
                     setSelectedTerminalId(entry.id);
                   }}
@@ -1539,6 +1578,7 @@ export function AgentWorkbenchPanel({
                   badge={entry.status}
                   badgeClass={relayBadgeClass(entry.status)}
                   onClick={() => {
+                    pendingRelaySelectionRef.current = null;
                     setSurface('relay');
                     setSelectedRelayId(entry.id);
                   }}
