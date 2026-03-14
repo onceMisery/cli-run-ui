@@ -1,8 +1,971 @@
 {
   "version": 3,
-  "savedAtMs": 1773498127030,
-  "runs": [],
+  "savedAtMs": 1773499244993,
+  "runs": [
+    {
+      "summary": {
+        "id": "a5a659ad-e003-4bc2-a377-1be9a924309b",
+        "provider": "codex",
+        "mode": "task",
+        "cwd": "D:/code/cli-run-ui",
+        "prompt": "say hello",
+        "command": [
+          "codex",
+          "exec",
+          "--skip-git-repo-check",
+          "say hello"
+        ],
+        "createdAtMs": 1773499240928,
+        "startedAtMs": 1773499240928,
+        "status": "failed",
+        "error": "spawn codex ENOENT",
+        "endedAtMs": 1773499240935,
+        "exitCode": -4058
+      },
+      "logs": [
+        {
+          "id": "8d4f6d91-a96c-4070-bc0b-1f5ad74101e7",
+          "runId": "a5a659ad-e003-4bc2-a377-1be9a924309b",
+          "stream": "system",
+          "text": "Started codex exec --skip-git-repo-check say hello",
+          "timestampMs": 1773499240932
+        },
+        {
+          "id": "cd2e48a7-ba2f-4645-8b64-83838b6b1cdb",
+          "runId": "a5a659ad-e003-4bc2-a377-1be9a924309b",
+          "stream": "system",
+          "text": "Failed to start: spawn codex ENOENT",
+          "timestampMs": 1773499240933
+        },
+        {
+          "id": "9ca4f650-35ab-4353-b6ca-502c61855820",
+          "runId": "a5a659ad-e003-4bc2-a377-1be9a924309b",
+          "stream": "system",
+          "text": "Process exited with code -4058",
+          "timestampMs": 1773499240935
+        }
+      ]
+    }
+  ],
   "terminals": [
+    {
+      "summary": {
+        "id": "93b22236-f934-4178-a437-8d9c6c9586af",
+        "provider": "codex",
+        "mode": "new",
+        "cwd": "D:/code/cli-run-ui",
+        "command": [
+          "codex"
+        ],
+        "createdAtMs": 1773499240632,
+        "startedAtMs": 1773499240632,
+        "cols": 120,
+        "rows": 32,
+        "status": "open"
+      },
+      "outputs": [
+        {
+          "id": "676dfe86-d5ad-460a-b99b-37ec923c1eb5",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\r\n[cli-run-ui] Starting codex\r\n",
+          "timestampMs": 1773499240922
+        },
+        {
+          "id": "bbb80028-b7cb-47ee-a8d2-933ea0473ae9",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b[?9001h\u001b[?1004h",
+          "timestampMs": 1773499240944
+        },
+        {
+          "id": "de788db4-c05d-4401-a4da-fea7d60b5011",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b[?25l\u001b[2J\u001b[m\u001b[HMicrosoft Windows [版本 10.0.26200.8037]\u001b]0;C:\\WINDOWS\\system32\\cmd.exe\u0007\u001b[?25h",
+          "timestampMs": 1773499240951
+        },
+        {
+          "id": "5eee1108-56c5-43ff-b704-9f4726e5400c",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b]9001;CmdNotFound;hello\u001b\\",
+          "timestampMs": 1773499240954
+        },
+        {
+          "id": "9516a43f-1dbf-45ba-8c58-83173816c4da",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b[?25l\r\n(c) Microsoft Corporation。保留所有权利。\u001b[4;1HD:\\code\\cli-run-ui>hello from browser\r\n'hello' 不是内部或外部命令，也不是可运行的程序\r\n或批处理文件。\u001b[8;1HD:\\code\\cli-run-ui>\u001b[?25h",
+          "timestampMs": 1773499240960
+        },
+        {
+          "id": "9237f7d5-69f1-48a2-a797-6eac39bfdae1",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "codex\r\n",
+          "timestampMs": 1773499241007
+        },
+        {
+          "id": "aa460486-470e-47e1-bcf2-c0eea6f60fd4",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b]0;C:\\WINDOWS\\system32\\cmd.exe  - \"node\"   \"D:\\dev-env\\node\\node_global\\\\node_modules\\@openai\\codex\\bin\\codex.js\" \u0007",
+          "timestampMs": 1773499241022
+        },
+        {
+          "id": "31908e38-e7a8-4aae-b6c8-abf2bbb0e0e0",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b[?2004h",
+          "timestampMs": 1773499241172
+        },
+        {
+          "id": "b9e396cc-8ab0-4a4f-be38-35ba1aa0b58d",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b[?2026h",
+          "timestampMs": 1773499241210
+        },
+        {
+          "id": "355dccbd-8dcf-4927-8f65-2195885f5a02",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b[?25l\u001b[1C\u001b[K\u001b[2m\r\n╭───────────────────────────────────────╮\u001b[22m\u001b[K\u001b[2m\r\n│ >_ \u001b[22m\u001b[1mOpenAI Codex\u001b[22m\u001b[2m (v0.114.0)            │\u001b[22m\u001b[K\u001b[2m\r\n│                                       │\u001b[22m\u001b[K\u001b[2m\r\n│ model:     \u001b[3mloading\u001b[23m   \u001b[38;5;6m\u001b[22m/model\u001b[m\u001b[2m to change │\u001b[22m\u001b[K\u001b[2m\r\n│ directory: \u001b[22mD:\\code\\cli-run-ui\u001b[2m         │\u001b[22m\u001b[K\u001b[2m\r\n╰───────────────────────────────────────╯\u001b[22m\u001b[K\u001b[16;2H\u001b[K\n\u001b[K\u001b[1m\r\n›\u001b[22m\u001b[2m\u001b[1CExplain this codebase\u001b[22m\u001b[K\u001b[19;2H\u001b[K\u001b[2m\u001b[20;3H? for shortcuts\u001b[84C100% context left\u001b[22m  \u001b[20;119H\u001b[?25h\u001b[?2026l",
+          "timestampMs": 1773499241210
+        },
+        {
+          "id": "4ab9b8d1-becd-41bb-be2b-d591aef994c0",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b[?25l\u001b[18;3H\u001b[?25h",
+          "timestampMs": 1773499241226
+        },
+        {
+          "id": "d89d01f1-2158-484d-9199-427e0eca714f",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b[?2026h\u001b[?25l\u001b[9;1H\u001b[?25h",
+          "timestampMs": 1773499243030
+        },
+        {
+          "id": "15809456-3a48-4633-8805-d0bc3ba4e69c",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b[?2026l",
+          "timestampMs": 1773499243031
+        },
+        {
+          "id": "a6354851-3fce-4d93-85f2-034583a0a496",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b[?2026h",
+          "timestampMs": 1773499243039
+        },
+        {
+          "id": "34ba2d50-01ce-4e0d-a5aa-76e3c1c18e0c",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b[?2026l",
+          "timestampMs": 1773499243040
+        },
+        {
+          "id": "4cee652e-af90-4309-8f2a-acdba483084e",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b[?25l\u001b[2m╭─────────────────────────────────────────────╮\u001b[22m\u001b[K\u001b[2m\r\n│ >_ \u001b[22m\u001b[1mOpenAI Codex\u001b[22m\u001b[2m (v0.114.0)                  │\u001b[22m\u001b[K\u001b[2m\r\n│                                             │\u001b[22m\u001b[K\u001b[2m\r\n│ model:     \u001b[22mgpt-5.4 xhigh\u001b[2m   \u001b[38;5;6m\u001b[22m/model\u001b[m\u001b[2m to change │\u001b[22m\u001b[K\u001b[2m\r\n│ directory: \u001b[22mD:\\code\\cli-run-ui\u001b[2m               │\u001b[22m\u001b[K\u001b[2m\r\n╰─────────────────────────────────────────────╯\u001b[22m\u001b[K\r\n\u001b[K\r\n  \u001b[1mTip:\u001b[22m \u001b[3mNew\u001b[23m Use \u001b[1m/fast\u001b[22m to enable our fastest inference at 2X plan usage.\u001b[K\r\n\u001b[K\u001b[38;5;3m\r\n⚠ MCP client for `fetch` failed to start: MCP startup failed: program not found\u001b[K\u001b[m\r\n\u001b[K\r\n• \u001b[2mStarting MCP servers (1/2): sequential-thinking\u001b[22m \u001b[2m(0s • esc to interrupt)\u001b[22m\u001b[K\r\n\u001b[K\r\n\u001b[K\u001b[1m\r\n›\u001b[22m \u001b[2mExplain this codebase\u001b[22m\u001b[K\r\n\u001b[K\u001b[2m\r\n  gpt-5.4 xhigh · 100% left · D:\\code\\cli-run-ui\u001b[22m\u001b[K\r\n\u001b[K\r\n\u001b[K\r\n\u001b[K\r\n\u001b[K\r\n\u001b[K\r\n\u001b[K\r\n\u001b[K\u001b[23;3H\u001b[?25h",
+          "timestampMs": 1773499243050
+        },
+        {
+          "id": "1eea799a-73be-4a7a-a4bf-cdf2c330ab37",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b[?2026h",
+          "timestampMs": 1773499243082
+        },
+        {
+          "id": "2da99148-9b8f-477a-ba9b-413eb8398f87",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b[?25l\u001b[19;2H\u001b[K\u001b[20;74H\u001b[K\u001b[21;2H\u001b[K\n\u001b[K\u001b[23;24H\u001b[K\u001b[24;2H\u001b[K\u001b[25;49H\u001b[K\u001b[?25h\u001b[?2026l",
+          "timestampMs": 1773499243082
+        },
+        {
+          "id": "c0ff1d2e-8b1f-4dd6-ad1c-d53f68f9fa02",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b[?25l\u001b[23;3H\u001b[?25h",
+          "timestampMs": 1773499243097
+        },
+        {
+          "id": "5e3381b8-ad3a-4ef0-8ab2-0034450d9398",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b[?2026h",
+          "timestampMs": 1773499243128
+        },
+        {
+          "id": "58c356c7-0bc8-4860-b5ce-b403a5c052fb",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b[?25l\u001b[19;2H\u001b[K\u001b[20;74H\u001b[K\u001b[21;2H\u001b[K\n\u001b[K\u001b[23;24H\u001b[K\u001b[24;2H\u001b[K\u001b[25;49H\u001b[K\u001b[?25h",
+          "timestampMs": 1773499243128
+        },
+        {
+          "id": "cb06f388-01ff-4cbe-ad53-b35f96c99c23",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b[?2026l",
+          "timestampMs": 1773499243129
+        },
+        {
+          "id": "96828650-7696-4e0c-9a54-f5920f6b9318",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b[?25l\u001b[23;3H\u001b[?25h",
+          "timestampMs": 1773499243142
+        },
+        {
+          "id": "7897400c-7793-464c-9b0d-dc710b79161c",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b[?2026h",
+          "timestampMs": 1773499243179
+        },
+        {
+          "id": "a4f701c7-4145-4b2b-817e-0b238a617fa2",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b[?25l\u001b[19;2H\u001b[K\u001b[20;74H\u001b[K\u001b[21;2H\u001b[K\n\u001b[K\u001b[23;24H\u001b[K\u001b[24;2H\u001b[K\u001b[25;49H\u001b[K\u001b[?25h",
+          "timestampMs": 1773499243179
+        },
+        {
+          "id": "83172482-c9b2-40eb-81ea-8ea466e8fb07",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b[?2026l",
+          "timestampMs": 1773499243179
+        },
+        {
+          "id": "96dd1f75-b63b-4e2b-8479-4042328c752b",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b[?25l\u001b[23;3H\u001b[?25h",
+          "timestampMs": 1773499243190
+        },
+        {
+          "id": "1748f506-21de-45d1-8243-05662a6c27b4",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b[?2026h",
+          "timestampMs": 1773499243221
+        },
+        {
+          "id": "3fead9f0-ecf4-4749-8c38-f482dfb075f4",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b[?25l\u001b[19;2H\u001b[K\u001b[20;74H\u001b[K\u001b[21;2H\u001b[K\n\u001b[K\u001b[23;24H\u001b[K\u001b[24;2H\u001b[K\u001b[25;49H\u001b[K\u001b[?25h\u001b[?2026l",
+          "timestampMs": 1773499243221
+        },
+        {
+          "id": "c2db4baf-b0aa-40bb-a1b6-a3094fc8ded3",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b[?25l\u001b[23;3H\u001b[?25h",
+          "timestampMs": 1773499243235
+        },
+        {
+          "id": "c149a528-a0ed-4ed0-8517-5702f329c079",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b]0;npm\u0007",
+          "timestampMs": 1773499243250
+        },
+        {
+          "id": "d3833978-68a9-4d3c-9ace-08e462c58201",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b[?2026h",
+          "timestampMs": 1773499243266
+        },
+        {
+          "id": "56593962-7254-4fb1-88d5-1e404f4e364d",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b[?25l\u001b[19;2H\u001b[K\u001b[20;3HS\u001b[70C\u001b[K\u001b[21;2H\u001b[K\n\u001b[K\u001b[23;24H\u001b[K\u001b[24;2H\u001b[K\u001b[25;49H\u001b[K\u001b[20;4H\u001b[?25h\u001b[?2026l",
+          "timestampMs": 1773499243266
+        },
+        {
+          "id": "6dff3f42-4af1-4f45-90c5-c46d68b99280",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b[?25l\u001b[23;3H\u001b[?25h",
+          "timestampMs": 1773499243281
+        },
+        {
+          "id": "dba65598-2737-4ee9-bcdf-906bb1e2a918",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b]0;npm exec @modelcontextprotocol/server-sequential-thinking\u0007",
+          "timestampMs": 1773499243305
+        },
+        {
+          "id": "7e1cafc2-69be-408f-8bd5-463bdae20464",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b[?2026h",
+          "timestampMs": 1773499243313
+        },
+        {
+          "id": "7e14ee7b-dcbe-44b6-9f69-6e6f1735cad1",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b[?2026l",
+          "timestampMs": 1773499243313
+        },
+        {
+          "id": "a03c76e5-5d6b-4272-8903-aa464bd4f021",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b[?25l\u001b[19;2H\u001b[K\u001b[1m\u001b[20;3HSt\u001b[22ma\u001b[68C\u001b[K\u001b[21;2H\u001b[K\n\u001b[K\u001b[23;24H\u001b[K\u001b[24;2H\u001b[K\u001b[25;49H\u001b[K\u001b[23;3H\u001b[?25h",
+          "timestampMs": 1773499243327
+        },
+        {
+          "id": "5b5dcbbc-0fef-42db-8284-b261b1ceaf4b",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b[?2026h",
+          "timestampMs": 1773499243360
+        },
+        {
+          "id": "fce7dccd-755d-40c5-bc19-f9ad709b010c",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b[?25l\u001b[19;2H\u001b[K\u001b[1m\u001b[20;5Har\u001b[22mt\u001b[66C\u001b[K\u001b[21;2H\u001b[K\n\u001b[K\u001b[23;24H\u001b[K\u001b[24;2H\u001b[K\u001b[25;49H\u001b[K\u001b[20;8H\u001b[?25h\u001b[?2026l",
+          "timestampMs": 1773499243360
+        },
+        {
+          "id": "ae55510d-f930-4bdd-9c49-fe3f4be39c94",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b[?25l\u001b[23;3H\u001b[?25h",
+          "timestampMs": 1773499243374
+        },
+        {
+          "id": "397b75b6-0c62-4396-a24f-a9ce23a33d76",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b[?2026h",
+          "timestampMs": 1773499243406
+        },
+        {
+          "id": "162f02f2-0505-43a0-91ef-40a2b166dbbe",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b[?25l\u001b[19;2H\u001b[K\u001b[1m\u001b[20;7Ht\u001b[22mi\u001b[65C\u001b[K\u001b[21;2H\u001b[K\n\u001b[K\u001b[23;24H\u001b[K\u001b[24;2H\u001b[K\u001b[25;49H\u001b[K\u001b[20;9H\u001b[?25h\u001b[?2026l",
+          "timestampMs": 1773499243406
+        },
+        {
+          "id": "72e0ecac-1859-4831-9486-caedc3c43ae4",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b[?25l\u001b[23;3H\u001b[?25h",
+          "timestampMs": 1773499243420
+        },
+        {
+          "id": "ab94b564-6381-43ed-b3e1-2204648c025e",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b[?2026h",
+          "timestampMs": 1773499243444
+        },
+        {
+          "id": "9cfacabd-6430-497f-8270-1795d4824640",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b[?25l\u001b[19;2H\u001b[K\u001b[20;3HS\u001b[1m\u001b[4Ci\u001b[22mn\u001b[64C\u001b[K\u001b[21;2H\u001b[K\n\u001b[K\u001b[23;24H\u001b[K\u001b[24;2H\u001b[K\u001b[25;49H\u001b[K\u001b[20;10H\u001b[?25h",
+          "timestampMs": 1773499243444
+        },
+        {
+          "id": "cded3f33-19d6-40db-9d09-b3edc6a3b1d9",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b[?2026l",
+          "timestampMs": 1773499243444
+        },
+        {
+          "id": "e90c0375-0f20-44a0-9302-c9467e81d076",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b[?25l\u001b[23;3H\u001b[?25h",
+          "timestampMs": 1773499243452
+        },
+        {
+          "id": "81aed353-c876-4a65-b166-f002dcc6a5e8",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b[?2026h",
+          "timestampMs": 1773499243484
+        },
+        {
+          "id": "5a7478e5-f84f-42c4-892d-a0560a0cc8c9",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b[?25l\u001b[19;2H\u001b[K\u001b[2m\u001b[20;3HSt\u001b[22ma\u001b[1m\u001b[3Cng\u001b[22m \u001b[62C\u001b[K\u001b[21;2H\u001b[K\n\u001b[K\u001b[23;24H\u001b[K\u001b[24;2H\u001b[K\u001b[25;49H\u001b[K\u001b[20;12H\u001b[?25h\u001b[?2026l",
+          "timestampMs": 1773499243484
+        },
+        {
+          "id": "80381c6f-544b-4172-85ae-9c4e5f34f753",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b[?25l\u001b[23;3H\u001b[?25h",
+          "timestampMs": 1773499243499
+        },
+        {
+          "id": "f403e1a6-7d37-4674-8f51-10470fac6f53",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b[?2026h",
+          "timestampMs": 1773499243530
+        },
+        {
+          "id": "a86284fb-c75e-4786-a0f2-1ee382a57060",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b[?25l\u001b[19;2H\u001b[K\u001b[2m\u001b[20;5Ha\u001b[22mr\u001b[1m\u001b[4C \u001b[22mM\u001b[61C\u001b[K\u001b[21;2H\u001b[K\n\u001b[K\u001b[23;24H\u001b[K\u001b[24;2H\u001b[K\u001b[25;49H\u001b[K\u001b[20;13H\u001b[?25h",
+          "timestampMs": 1773499243530
+        },
+        {
+          "id": "06081f65-184a-4a2a-bc9b-6f85c078659c",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b[?2026l",
+          "timestampMs": 1773499243530
+        },
+        {
+          "id": "6b8aaffd-4bef-4a6b-960e-12cc082f642d",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b[?25l\u001b[23;3H\u001b[?25h",
+          "timestampMs": 1773499243544
+        },
+        {
+          "id": "2178ad99-621b-4864-b8ab-57620484ab42",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b[?2026h\u001b[?25l\u001b[19;2H\u001b[K\u001b[2m\u001b[20;6Hrt\u001b[22mi\u001b[1m\u001b[3CMC\u001b[22mP\u001b[59C\u001b[K\u001b[21;2H\u001b[K\n\u001b[K\u001b[23;24H\u001b[K\u001b[24;2H\u001b[K\u001b[25;49H\u001b[K\u001b[20;15H\u001b[?25h",
+          "timestampMs": 1773499243576
+        },
+        {
+          "id": "0ca77452-4aa1-4976-833c-4c4c4d2d4ee8",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b[?2026l",
+          "timestampMs": 1773499243576
+        },
+        {
+          "id": "fe128539-413e-41d2-9c54-badb90829fe7",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b[?25l\u001b[23;3H\u001b[?25h",
+          "timestampMs": 1773499243591
+        },
+        {
+          "id": "62a76828-2a58-4fe0-a502-c61843ebf0d6",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b[?2026h\u001b[?25l\u001b[19;2H\u001b[K\u001b[2m\u001b[20;8Hi\u001b[22mn\u001b[1m\u001b[4CP\u001b[22m \u001b[58C\u001b[K\u001b[21;2H\u001b[K\n\u001b[K\u001b[23;24H\u001b[K\u001b[24;2H\u001b[K\u001b[25;49H\u001b[K\u001b[20;16H\u001b[?25h",
+          "timestampMs": 1773499243618
+        },
+        {
+          "id": "986ee0cf-8733-4097-a97d-8aa8c298860f",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b[?2026l",
+          "timestampMs": 1773499243618
+        },
+        {
+          "id": "51d36b02-047e-4e21-a745-1e162e62a0f3",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b[?25l\u001b[23;3H\u001b[?25h",
+          "timestampMs": 1773499243639
+        },
+        {
+          "id": "cf064fe5-8825-476a-89c8-0efeadae3524",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b[?2026h",
+          "timestampMs": 1773499243655
+        },
+        {
+          "id": "1871de02-2ddc-4ebf-b0b7-004f006b276e",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b[?25l\u001b[19;2H\u001b[K\u001b[2m\r\n◦\u001b[7Cn\u001b[22mg\u001b[1m\u001b[4C \u001b[22ms\u001b[57C\u001b[K\u001b[21;2H\u001b[K\n\u001b[K\u001b[23;24H\u001b[K\u001b[24;2H\u001b[K\u001b[25;49H\u001b[K\u001b[20;17H\u001b[?25h\u001b[?2026l",
+          "timestampMs": 1773499243655
+        },
+        {
+          "id": "5518e126-aa27-438d-ba8b-bb8275cbe2b4",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b[?25l\u001b[23;3H\u001b[?25h",
+          "timestampMs": 1773499243669
+        },
+        {
+          "id": "5c95ec65-ffa4-40fb-ae96-a9ffc6bb891b",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b[?2026h",
+          "timestampMs": 1773499243700
+        },
+        {
+          "id": "e1617ad8-d62f-41b3-a6bf-c59344d498b5",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b[?25l\u001b[19;2H\u001b[K\u001b[2m\u001b[20;10Hg \u001b[22mM\u001b[1m\u001b[3Cse\u001b[22mr\u001b[55C\u001b[K\u001b[21;2H\u001b[K\n\u001b[K\u001b[23;24H\u001b[K\u001b[24;2H\u001b[K\u001b[25;49H\u001b[K\u001b[20;19H\u001b[?25h\u001b[?2026l",
+          "timestampMs": 1773499243700
+        },
+        {
+          "id": "e0410184-c2d3-45f3-a332-edb1db721382",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b[?25l\u001b[23;3H\u001b[?25h",
+          "timestampMs": 1773499243715
+        },
+        {
+          "id": "b66aa9d7-6b66-4e78-ba1a-af49ac0c1109",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b[?2026h",
+          "timestampMs": 1773499243747
+        },
+        {
+          "id": "404e430f-a399-4bd3-82ab-8b7ef79d167b",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b[?25l\u001b[19;2H\u001b[K\u001b[2m\u001b[20;12HM\u001b[22mC\u001b[1m\u001b[4Cr\u001b[22mv\u001b[54C\u001b[K\u001b[21;2H\u001b[K\n\u001b[K\u001b[23;24H\u001b[K\u001b[24;2H\u001b[K\u001b[25;49H\u001b[K\u001b[20;20H\u001b[?25h\u001b[?2026l",
+          "timestampMs": 1773499243747
+        },
+        {
+          "id": "9df88b9e-6ff5-42d4-b3b3-60ed862a2fe1",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b[?25l\u001b[23;3H\u001b[?25h",
+          "timestampMs": 1773499243762
+        },
+        {
+          "id": "3a39a273-51b6-463f-b5b6-a0c89597a709",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b[?2026h\u001b[?25l\u001b[19;2H\u001b[K\u001b[2m\u001b[20;13HCP\u001b[22m \u001b[1m\u001b[3Cve\u001b[22mr\u001b[52C\u001b[K\u001b[21;2H\u001b[K\n\u001b[K\u001b[23;24H\u001b[K\u001b[24;2H\u001b[K\u001b[25;49H\u001b[K\u001b[20;22H\u001b[?25h",
+          "timestampMs": 1773499243794
+        },
+        {
+          "id": "5a19e9ec-f594-42ce-adb6-94d5daadb3c8",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b[?2026l",
+          "timestampMs": 1773499243794
+        },
+        {
+          "id": "0aa421f4-ff17-4910-bb23-ce53a6e760fd",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b[?25l\u001b[23;3H\u001b[?25h",
+          "timestampMs": 1773499243809
+        },
+        {
+          "id": "8319694b-8135-4838-9d50-7cde787482c1",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b[?2026h\u001b[?25l\u001b[19;2H\u001b[K\u001b[2m\u001b[20;15H s\u001b[22me\u001b[1m\u001b[3Crs\u001b[22m \u001b[50C\u001b[K\u001b[21;2H\u001b[K\n\u001b[K\u001b[23;24H\u001b[K\u001b[24;2H\u001b[K\u001b[25;49H\u001b[K\u001b[20;24H\u001b[?25h",
+          "timestampMs": 1773499243841
+        },
+        {
+          "id": "39a9c7ea-aefe-480f-b929-6cfd947ac530",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b[?2026l",
+          "timestampMs": 1773499243841
+        },
+        {
+          "id": "9134c8a8-b82b-455e-b3a9-68963a8d2b9b",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b[?25l\u001b[23;3H\u001b[?25h",
+          "timestampMs": 1773499243857
+        },
+        {
+          "id": "c6f89436-3250-403c-bf87-0680e903cc96",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b[?2026h\u001b[?25l\u001b[19;2H\u001b[K\u001b[2m\u001b[20;17He\u001b[22mr\u001b[1m\u001b[4C \u001b[22m(\u001b[49C\u001b[K\u001b[21;2H\u001b[K\n\u001b[K\u001b[23;24H\u001b[K\u001b[24;2H\u001b[K\u001b[25;49H\u001b[K\u001b[20;25H\u001b[?25h",
+          "timestampMs": 1773499243889
+        },
+        {
+          "id": "cdc844e2-1588-4594-aa52-574d537f35d3",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b[?2026l",
+          "timestampMs": 1773499243889
+        },
+        {
+          "id": "1fef2a66-8f2b-4525-a18e-fb24d2a084bc",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b[?25l\u001b[23;3H\u001b[?25h",
+          "timestampMs": 1773499243903
+        },
+        {
+          "id": "56f2add4-05f3-4004-894c-63260e496f26",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b[?2026h",
+          "timestampMs": 1773499243935
+        },
+        {
+          "id": "efc4d292-cf46-4f69-a938-24afcfe3af84",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b[?25l\u001b[19;2H\u001b[K\u001b[2m\u001b[20;18Hrv\u001b[22me\u001b[1m\u001b[3C(1\u001b[22m/\u001b[47C\u001b[K\u001b[21;2H\u001b[K\n\u001b[K\u001b[23;24H\u001b[K\u001b[24;2H\u001b[K\u001b[25;49H\u001b[K\u001b[20;27H\u001b[?25h\u001b[?2026l",
+          "timestampMs": 1773499243935
+        },
+        {
+          "id": "f58d6271-ea8c-4e94-bcae-10c8b8d05de5",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b[?25l\u001b[23;3H\u001b[?25h",
+          "timestampMs": 1773499243950
+        },
+        {
+          "id": "1bbd9993-6154-4d32-ba7a-8a278c9ed065",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b[?2026h",
+          "timestampMs": 1773499243982
+        },
+        {
+          "id": "2f575387-4704-4394-9f9e-68d979c18daf",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b[?25l\u001b[19;2H\u001b[K\u001b[2m\u001b[20;20He\u001b[22mr\u001b[1m\u001b[4C/\u001b[22m2\u001b[46C\u001b[K\u001b[21;2H\u001b[K\n\u001b[K\u001b[23;24H\u001b[K\u001b[24;2H\u001b[K\u001b[25;49H\u001b[K\u001b[20;28H\u001b[?25h\u001b[?2026l",
+          "timestampMs": 1773499243982
+        },
+        {
+          "id": "1ee8f7d5-7a01-41e3-9957-1b9898e9c34c",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b[?25l\u001b[23;3H\u001b[?25h",
+          "timestampMs": 1773499243996
+        },
+        {
+          "id": "4dbe5f27-296d-479a-93ac-330582fbb48c",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b[?2026h",
+          "timestampMs": 1773499244027
+        },
+        {
+          "id": "9022ef13-145d-4145-9906-14b9f57e0aa3",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b[?25l\u001b[19;2H\u001b[K\u001b[2m\u001b[20;21Hrs\u001b[22m \u001b[1m\u001b[3C2)\u001b[22m:\u001b[44C\u001b[K\u001b[21;2H\u001b[K\n\u001b[K\u001b[23;24H\u001b[K\u001b[24;2H\u001b[K\u001b[25;49H\u001b[K\u001b[20;30H\u001b[?25h\u001b[?2026l",
+          "timestampMs": 1773499244027
+        },
+        {
+          "id": "b936af86-122a-45d2-8bae-8320dfbf23d9",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b[?25l\u001b[23;3H\u001b[?25h",
+          "timestampMs": 1773499244042
+        },
+        {
+          "id": "f789fd04-50e2-4e7a-beac-c615738e5183",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b[?2026h\u001b[?25l\u001b[19;2H\u001b[K\u001b[2m\u001b[20;23H \u001b[22m(\u001b[1m\u001b[4C:\u001b[22m \u001b[2m\u001b[21C1\u001b[22m\u001b[21C\u001b[K\u001b[21;2H\u001b[K\n\u001b[K\u001b[23;24H\u001b[K\u001b[24;2H\u001b[K\u001b[25;49H\u001b[K\u001b[20;53H\u001b[?25h",
+          "timestampMs": 1773499244075
+        },
+        {
+          "id": "df965c91-886d-4a02-9108-c255ee6fd4eb",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b[?2026l",
+          "timestampMs": 1773499244075
+        },
+        {
+          "id": "0a182e28-2b52-48b6-9cc5-72b9b41f6ed9",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b[?25l\u001b[23;3H\u001b[?25h",
+          "timestampMs": 1773499244089
+        },
+        {
+          "id": "912ac4d5-7a2f-405c-8b22-7eeb26e9e61c",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b[?2026h",
+          "timestampMs": 1773499244122
+        },
+        {
+          "id": "193e9219-d3db-4b09-bf37-3dbd2ad4f1c9",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b[?25l\u001b[19;2H\u001b[K\u001b[2m\u001b[20;24H(1\u001b[22m/\u001b[1m\u001b[3C s\u001b[22me\u001b[41C\u001b[K\u001b[21;2H\u001b[K\n\u001b[K\u001b[23;24H\u001b[K\u001b[24;2H\u001b[K\u001b[25;49H\u001b[K\u001b[20;33H\u001b[?25h",
+          "timestampMs": 1773499244122
+        },
+        {
+          "id": "4d17c28b-a01d-4d4f-819f-f0f13ad71f11",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b[?2026l",
+          "timestampMs": 1773499244123
+        },
+        {
+          "id": "7c47bad9-9668-459b-b913-f770934df2ed",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b[?25l\u001b[23;3H\u001b[?25h",
+          "timestampMs": 1773499244137
+        },
+        {
+          "id": "a8563a27-9069-457b-ae18-c99ef4c38e79",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b[?2026h",
+          "timestampMs": 1773499244169
+        },
+        {
+          "id": "cf6f0316-f5f0-488e-be97-1261bf4f3f67",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b[?25l\u001b[19;2H\u001b[K\u001b[2m\u001b[20;26H/2\u001b[22m)\u001b[1m\u001b[3Ceq\u001b[22mu\u001b[39C\u001b[K\u001b[21;2H\u001b[K\n\u001b[K\u001b[23;24H\u001b[K\u001b[24;2H\u001b[K\u001b[25;49H\u001b[K\u001b[20;35H\u001b[?25h",
+          "timestampMs": 1773499244169
+        },
+        {
+          "id": "c194ce24-d7b4-403e-a179-334749394309",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b[?2026l",
+          "timestampMs": 1773499244169
+        },
+        {
+          "id": "5f1c1516-ec8a-4d8a-b632-ce18c07b126b",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b[?25l\u001b[23;3H\u001b[?25h",
+          "timestampMs": 1773499244184
+        },
+        {
+          "id": "7a40c8d8-ee2a-4ab8-bf8c-c222a46e3135",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b[?2026h",
+          "timestampMs": 1773499244216
+        },
+        {
+          "id": "1c4d7bd5-cbbb-443f-96e4-1df74fe72c2c",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b[?25l\u001b[19;2H\u001b[K\u001b[2m\u001b[20;28H)\u001b[22m:\u001b[1m\u001b[4Cu\u001b[22me\u001b[38C\u001b[K\u001b[21;2H\u001b[K\n\u001b[K\u001b[23;24H\u001b[K\u001b[24;2H\u001b[K\u001b[25;49H\u001b[K\u001b[20;36H\u001b[?25h\u001b[?2026l",
+          "timestampMs": 1773499244216
+        },
+        {
+          "id": "7bcee025-8d6e-46b6-9063-1198a0595d9c",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b[?25l\u001b[23;3H\u001b[?25h",
+          "timestampMs": 1773499244231
+        },
+        {
+          "id": "0d13295d-9b41-4843-9975-5aaf9f5bd169",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b[?2026h",
+          "timestampMs": 1773499244262
+        },
+        {
+          "id": "f4a67059-9558-48cd-9dc4-00507ce50849",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b[?25l\u001b[19;2H\u001b[K\r\n•\u001b[2m\u001b[27C: \u001b[22ms\u001b[1m\u001b[3Cen\u001b[22mt\u001b[36C\u001b[K\u001b[21;2H\u001b[K\n\u001b[K\u001b[23;24H\u001b[K\u001b[24;2H\u001b[K\u001b[25;49H\u001b[K\u001b[20;38H\u001b[?25h",
+          "timestampMs": 1773499244262
+        },
+        {
+          "id": "b02848da-58f0-4e53-b652-4d654fa9658c",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b[?2026l",
+          "timestampMs": 1773499244262
+        },
+        {
+          "id": "6c50b67e-6732-4075-a567-344e42f73635",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b[?25l\u001b[23;3H\u001b[?25h",
+          "timestampMs": 1773499244277
+        },
+        {
+          "id": "35c93a4a-7ff3-4b6f-8997-3cc2fd069782",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b[?2026h",
+          "timestampMs": 1773499244309
+        },
+        {
+          "id": "8fded30a-1b33-4ca0-934b-ebcb1bf886be",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b[?25l\u001b[19;2H\u001b[K\u001b[2m\u001b[20;31Hs\u001b[22me\u001b[1m\u001b[4Ct\u001b[22mi\u001b[35C\u001b[K\u001b[21;2H\u001b[K\n\u001b[K\u001b[23;24H\u001b[K\u001b[24;2H\u001b[K\u001b[25;49H\u001b[K\u001b[20;39H\u001b[?25h",
+          "timestampMs": 1773499244309
+        },
+        {
+          "id": "e4286a7b-416a-46ac-9372-a57268d7c257",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b[?2026l",
+          "timestampMs": 1773499244309
+        },
+        {
+          "id": "b1ea67dc-02e7-45c8-bb0a-fe16c8995577",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b[?25l\u001b[23;3H\u001b[?25h",
+          "timestampMs": 1773499244324
+        },
+        {
+          "id": "9c53eb7f-7e51-4d6e-9a90-0e54ddb47c7b",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b[?2026h",
+          "timestampMs": 1773499244355
+        },
+        {
+          "id": "e747b7d9-0b2e-4aa8-8f38-4cb24fbe156f",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b[?25l\u001b[19;2H\u001b[K\u001b[2m\u001b[20;32Heq\u001b[22mu\u001b[1m\u001b[3Cia\u001b[22ml\u001b[33C\u001b[K\u001b[21;2H\u001b[K\n\u001b[K\u001b[23;24H\u001b[K\u001b[24;2H\u001b[K\u001b[25;49H\u001b[K\u001b[20;41H\u001b[?25h\u001b[?2026l",
+          "timestampMs": 1773499244355
+        },
+        {
+          "id": "56e162aa-1d8b-4309-b260-0346d82b92f6",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b[?25l\u001b[23;3H\u001b[?25h",
+          "timestampMs": 1773499244370
+        },
+        {
+          "id": "abbe8bca-ff70-46fc-afe8-a66b381f9130",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b[?2026h",
+          "timestampMs": 1773499244402
+        },
+        {
+          "id": "c1798431-8d0e-42e6-876e-17f2c7ab72fa",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b[?25l\u001b[19;2H\u001b[K\u001b[2m\u001b[20;34Hu\u001b[22me\u001b[1m\u001b[4Cl\u001b[22m-\u001b[32C\u001b[K\u001b[21;2H\u001b[K\n\u001b[K\u001b[23;24H\u001b[K\u001b[24;2H\u001b[K\u001b[25;49H\u001b[K\u001b[20;42H\u001b[?25h\u001b[?2026l",
+          "timestampMs": 1773499244402
+        },
+        {
+          "id": "e28eac0c-8c30-46f1-9c79-319eb777fbd6",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b[?25l\u001b[23;3H\u001b[?25h",
+          "timestampMs": 1773499244417
+        },
+        {
+          "id": "5b6eb09b-9978-4a13-a2a5-eb458dac3033",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b[?2026h",
+          "timestampMs": 1773499244449
+        },
+        {
+          "id": "8b67762a-9486-4999-adf6-f033a78ea0db",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b[?25l\u001b[19;2H\u001b[K\u001b[2m\u001b[20;35Hen\u001b[22mt\u001b[1m\u001b[3C-t\u001b[22mh\u001b[30C\u001b[K\u001b[21;2H\u001b[K\n\u001b[K\u001b[23;24H\u001b[K\u001b[24;2H\u001b[K\u001b[25;49H\u001b[K\u001b[20;44H\u001b[?25h\u001b[?2026l",
+          "timestampMs": 1773499244449
+        },
+        {
+          "id": "bf5b365e-fb71-46a9-859f-576972d1c7d7",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b[?25l\u001b[23;3H\u001b[?25h",
+          "timestampMs": 1773499244464
+        },
+        {
+          "id": "90127a5c-1853-446c-bacc-31f2b19a4eee",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b[?2026h",
+          "timestampMs": 1773499244496
+        },
+        {
+          "id": "d0c91a4e-4b1b-4616-b905-2bea9fd23376",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b[?25l\u001b[19;2H\u001b[K\u001b[2m\u001b[20;37Hti\u001b[22ma\u001b[1m\u001b[3Chi\u001b[22mn\u001b[28C\u001b[K\u001b[21;2H\u001b[K\n\u001b[K\u001b[23;24H\u001b[K\u001b[24;2H\u001b[K\u001b[25;49H\u001b[K\u001b[20;46H\u001b[?25h",
+          "timestampMs": 1773499244496
+        },
+        {
+          "id": "d55dd453-4eb7-44e6-9b3b-5ed03e2c27f8",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b[?2026l",
+          "timestampMs": 1773499244496
+        },
+        {
+          "id": "b4930c1a-5957-4620-956d-969dc06a3482",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b[?25l\u001b[23;3H\u001b[?25h",
+          "timestampMs": 1773499244511
+        },
+        {
+          "id": "1c367a4f-6322-4214-a5fc-3437e8439d7d",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b[?2026h",
+          "timestampMs": 1773499244542
+        },
+        {
+          "id": "5db370be-6035-4fed-83ad-55c86720d637",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b[?25l\u001b[19;2H\u001b[K\u001b[2m\u001b[20;39Ha\u001b[22ml\u001b[1m\u001b[4Cn\u001b[22mk\u001b[27C\u001b[K\u001b[21;2H\u001b[K\n\u001b[K\u001b[23;24H\u001b[K\u001b[24;2H\u001b[K\u001b[25;49H\u001b[K\u001b[20;47H\u001b[?25h",
+          "timestampMs": 1773499244542
+        },
+        {
+          "id": "25b1eb0b-16af-4c02-a3c3-e052fe32b49f",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b[?2026l",
+          "timestampMs": 1773499244543
+        },
+        {
+          "id": "3f43c786-f25e-4544-a823-be742de6ee80",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b[?25l\u001b[23;3H\u001b[?25h",
+          "timestampMs": 1773499244557
+        },
+        {
+          "id": "571208ae-0f00-4024-867b-441661de3ecb",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b[?2026h\u001b[?25l\u001b[19;2H\u001b[K\u001b[2m\u001b[20;40Hl-\u001b[22mt\u001b[1m\u001b[3Cki\u001b[22mn\u001b[25C\u001b[K\u001b[21;2H\u001b[K\n\u001b[K\u001b[23;24H\u001b[K\u001b[24;2H\u001b[K\u001b[25;49H\u001b[K\u001b[20;49H\u001b[?25h",
+          "timestampMs": 1773499244589
+        },
+        {
+          "id": "a7fa959b-955f-4e63-bcdb-5440d643e8a7",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b[?2026l",
+          "timestampMs": 1773499244589
+        },
+        {
+          "id": "49bde39f-48bb-4272-b280-79995291bb94",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b[?25l\u001b[23;3H\u001b[?25h",
+          "timestampMs": 1773499244604
+        },
+        {
+          "id": "42fc6807-8d69-4913-8898-6520b2d46702",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b]0;C:\\WINDOWS\\system32\\cmd.exe \u0007",
+          "timestampMs": 1773499244624
+        },
+        {
+          "id": "01fe8c5d-8cc5-4cfb-b42e-f019f3009724",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b[?2026h\u001b[?25l\u001b[19;2H\u001b[K\u001b[2m\u001b[20;42Ht\u001b[22mh\u001b[1m\u001b[4Cn\u001b[22mg\u001b[24C\u001b[K\u001b[21;2H\u001b[K\n\u001b[K\u001b[23;24H\u001b[K\u001b[24;2H\u001b[K\u001b[25;49H\u001b[K\u001b[20;50H\u001b[?25h",
+          "timestampMs": 1773499244635
+        },
+        {
+          "id": "6451a4f4-ce13-4576-9da6-416e3577e07f",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b[?2026l",
+          "timestampMs": 1773499244636
+        },
+        {
+          "id": "ca9febc1-6e07-4934-8919-35b67e5cd906",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b[?25l\u001b[23;3H\u001b[?25h",
+          "timestampMs": 1773499244651
+        },
+        {
+          "id": "aa2c6ece-6057-4aac-8f29-879ea37b2bfd",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b[?2026h",
+          "timestampMs": 1773499244683
+        },
+        {
+          "id": "95b077c4-be4c-4ac9-b62b-c7af7666cbc2",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b[?25l\u001b[19;2H\u001b[K\u001b[2m\u001b[20;43Hhi\u001b[22mn\u001b[1m\u001b[3Cg\u001b[22m\u001b[24C\u001b[K\u001b[21;2H\u001b[K\n\u001b[K\u001b[23;24H\u001b[K\u001b[24;2H\u001b[K\u001b[25;49H\u001b[K\u001b[20;50H\u001b[?25h",
+          "timestampMs": 1773499244683
+        },
+        {
+          "id": "7c427f02-db80-45c5-8ca6-c51dc857486a",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b[?2026l",
+          "timestampMs": 1773499244683
+        },
+        {
+          "id": "67ea59d6-b3ee-498f-986c-2ffefe8b857a",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b[?25l\u001b[23;3H\u001b[?25h",
+          "timestampMs": 1773499244698
+        },
+        {
+          "id": "e19d25d5-e543-4b7f-a912-90f43ba914f9",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b[?2026h",
+          "timestampMs": 1773499244729
+        },
+        {
+          "id": "04b2eab6-8ed3-4096-aa41-d3f396427ed6",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b[?25l\u001b[19;2H\u001b[K\u001b[2m\u001b[20;45Hn\u001b[22mk\u001b[27C\u001b[K\u001b[21;2H\u001b[K\n\u001b[K\u001b[23;24H\u001b[K\u001b[24;2H\u001b[K\u001b[25;49H\u001b[K\u001b[20;47H\u001b[?25h\u001b[?2026l",
+          "timestampMs": 1773499244729
+        },
+        {
+          "id": "64f070df-b133-4077-ab5e-3a002787c3e4",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b[?25l\u001b[23;3H\u001b[?25h",
+          "timestampMs": 1773499244744
+        },
+        {
+          "id": "30772da4-3303-42a6-9eee-3a65a6dbfe88",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b[?2026h",
+          "timestampMs": 1773499244776
+        },
+        {
+          "id": "0479ffa3-253c-4f2d-a936-5546ce23e88c",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b[?25l\u001b[19;2H\u001b[K\u001b[2m\u001b[20;46Hki\u001b[22mn\u001b[25C\u001b[K\u001b[21;2H\u001b[K\n\u001b[K\u001b[23;24H\u001b[K\u001b[24;2H\u001b[K\u001b[25;49H\u001b[K\u001b[20;49H\u001b[?25h\u001b[?2026l",
+          "timestampMs": 1773499244776
+        },
+        {
+          "id": "21745721-d720-4b3f-a3e7-cfe69a50c5f1",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b[?25l\u001b[23;3H\u001b[?25h",
+          "timestampMs": 1773499244791
+        },
+        {
+          "id": "602cdfb8-9908-4c89-9cc1-4877a975b2a0",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b[?2026h",
+          "timestampMs": 1773499244810
+        },
+        {
+          "id": "70235c41-b687-4914-abaf-0c90caa37fdd",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b[?25l\u001b[19;2H\u001b[K\u001b[2m\u001b[20;48Hn\u001b[22mg\u001b[24C\u001b[K\u001b[21;2H\u001b[K\n\u001b[K\u001b[23;24H\u001b[K\u001b[24;2H\u001b[K\u001b[25;49H\u001b[K\u001b[20;50H\u001b[?25h\u001b[?2026l",
+          "timestampMs": 1773499244811
+        },
+        {
+          "id": "1492d2d3-8ba8-4976-ab06-2b7bacc857df",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b[?25l\u001b[23;3H\u001b[?25h",
+          "timestampMs": 1773499244821
+        },
+        {
+          "id": "129cfeff-4a60-42a0-8483-135d1db5fe6e",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b[?2026h",
+          "timestampMs": 1773499244822
+        },
+        {
+          "id": "7af87265-68ff-4449-8d2f-cb48891304f1",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b[?2026l",
+          "timestampMs": 1773499244823
+        },
+        {
+          "id": "3faa738c-1eec-4069-b74e-62151382058d",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\u001b[?25l\u001b[19;1H\u001b[K\u001b[38;5;3m\r\n⚠ MCP startup incomplete (failed: fetch)\u001b[K\u001b[m\r\n\u001b[K\r\n\u001b[K\u001b[1m\r\n›\u001b[22m \u001b[2mExplain this codebase\u001b[22m\u001b[K\r\n\u001b[K\u001b[2m\r\n  gpt-5.4 xhigh · 100% left · D:\\code\\cli-run-ui\u001b[22m\u001b[K\r\n\u001b[K\r\n\u001b[K\r\n\u001b[K\r\n\u001b[K\r\n\u001b[K\r\n\u001b[K\r\n\u001b[K\u001b[23;3H\u001b[?25h",
+          "timestampMs": 1773499244836
+        }
+      ]
+    },
     {
       "summary": {
         "id": "ace1551b-c6fa-41a3-ab2b-961fc811fb4e",
@@ -18,8 +981,9 @@
         "startedAtMs": 1773498125626,
         "cols": 120,
         "rows": 32,
-        "status": "open",
-        "sessionUid": "codex:019ce79c-17a3-7343-8416-736d1e49c56f"
+        "status": "closed",
+        "sessionUid": "codex:019ce79c-17a3-7343-8416-736d1e49c56f",
+        "endedAtMs": 1773498437378
       },
       "outputs": [
         {
@@ -75,6 +1039,12 @@
           "terminalId": "ace1551b-c6fa-41a3-ab2b-961fc811fb4e",
           "data": "\r\nD:\\code\\cli-run-ui>\u001b]0;C:\\WINDOWS\\system32\\cmd.exe \u0007",
           "timestampMs": 1773498126874
+        },
+        {
+          "id": "e7c265e2-0c33-4c3d-98cc-f2cc60088df7",
+          "terminalId": "ace1551b-c6fa-41a3-ab2b-961fc811fb4e",
+          "data": "\r\n[cli-run-ui] Restored after server restart. The original PTY is no longer attached.\r\n",
+          "timestampMs": 1773498437378
         }
       ]
     },
@@ -91,7 +1061,8 @@
         "startedAtMs": 1773498027854,
         "cols": 120,
         "rows": 32,
-        "status": "open"
+        "status": "closed",
+        "endedAtMs": 1773498437378
       },
       "outputs": [
         {
@@ -2391,6 +3362,12 @@
           "terminalId": "d33517f4-9890-4428-8ada-b6f8324a7db5",
           "data": "\u001b[?25l\u001b[K\u001b[38;5;3m\r\n⚠ MCP startup incomplete (failed: fetch)\u001b[K\u001b[m\r\n\u001b[K\r\n\u001b[K\u001b[1m\r\n›\u001b[22m \u001b[2mWrite tests for @filename\u001b[22m\u001b[K\r\n\u001b[K\u001b[2m\r\n  gpt-5.4 xhigh · 100% left · D:\\code\\cli-run-ui\u001b[22m\u001b[K\r\n\u001b[K\r\n\u001b[K\r\n\u001b[K\r\n\u001b[K\r\n\u001b[K\r\n\u001b[K\r\n\u001b[K\r\n\u001b[K\r\n\u001b[K\r\n\u001b[K\u001b[20;3H\u001b[?25h",
           "timestampMs": 1773498033494
+        },
+        {
+          "id": "ba23dc69-ebea-4339-b60b-68124360e171",
+          "terminalId": "d33517f4-9890-4428-8ada-b6f8324a7db5",
+          "data": "\r\n[cli-run-ui] Restored after server restart. The original PTY is no longer attached.\r\n",
+          "timestampMs": 1773498437378
         }
       ]
     },
@@ -2407,7 +3384,8 @@
         "startedAtMs": 1773498007724,
         "cols": 120,
         "rows": 32,
-        "status": "open"
+        "status": "closed",
+        "endedAtMs": 1773498437378
       },
       "outputs": [
         {
@@ -3219,6 +4197,12 @@
           "terminalId": "7a89c3f9-5f35-4757-b656-2b4f89849620",
           "data": "\u001b[?25l\u001b[15;1H\u001b[K\u001b[38;5;3m\r\n⚠ MCP startup incomplete (failed: fetch)\u001b[K\u001b[m\r\n\u001b[K\r\n\u001b[K\u001b[1m\r\n›\u001b[22m \u001b[2mFind and fix a bug in @filename\u001b[22m\u001b[K\r\n\u001b[K\u001b[2m\r\n  gpt-5.4 xhigh · 100% left · D:\\code\\cli-run-ui\u001b[22m\u001b[K\r\n\u001b[K\r\n\u001b[K\r\n\u001b[K\r\n\u001b[K\r\n\u001b[K\r\n\u001b[K\r\n\u001b[K\r\n\u001b[K\r\n\u001b[K\r\n\u001b[K\r\n\u001b[K\u001b[19;3H\u001b[?25h",
           "timestampMs": 1773498013429
+        },
+        {
+          "id": "ae6f2f22-f24e-4f20-8501-18773915a589",
+          "terminalId": "7a89c3f9-5f35-4757-b656-2b4f89849620",
+          "data": "\r\n[cli-run-ui] Restored after server restart. The original PTY is no longer attached.\r\n",
+          "timestampMs": 1773498437378
         }
       ]
     },
@@ -3237,8 +4221,9 @@
         "startedAtMs": 1773497283411,
         "cols": 120,
         "rows": 32,
-        "status": "open",
-        "sessionUid": "codex:019ce79c-17a3-7343-8416-736d1e49c56f"
+        "status": "closed",
+        "sessionUid": "codex:019ce79c-17a3-7343-8416-736d1e49c56f",
+        "endedAtMs": 1773498437378
       },
       "outputs": [
         {
@@ -3306,6 +4291,12 @@
           "terminalId": "5758df0b-f3b9-456f-ab6a-3d3c2008fbee",
           "data": "\u001b[?25l'我认为每个功能都应该对用户更加清晰明白是干什么的' 不是内部或外部命令，也不是可运行的程序\r\n或批处理文件。\u001b[18;1HD:\\code\\cli-run-ui>\u001b[?25h",
           "timestampMs": 1773498126250
+        },
+        {
+          "id": "6efa7405-28a3-42e4-b6c2-ddf6af64702b",
+          "terminalId": "5758df0b-f3b9-456f-ab6a-3d3c2008fbee",
+          "data": "\r\n[cli-run-ui] Restored after server restart. The original PTY is no longer attached.\r\n",
+          "timestampMs": 1773498437378
         }
       ]
     }

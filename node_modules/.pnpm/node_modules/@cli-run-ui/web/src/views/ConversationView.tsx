@@ -20,6 +20,7 @@ import {
 } from '@/components/ui/accordion';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { copyTextWithFeedback } from '@/lib/copy-feedback';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { cn } from '@/lib/utils';
 import { formatRelativeTime, useI18n } from '@/lib/i18n';
@@ -469,11 +470,14 @@ function CopyButton({ value }: { value: string }) {
   const [copied, setCopied] = useState(false);
 
   const onCopy = async () => {
-    try {
-      await navigator.clipboard.writeText(value);
+    const success = await copyTextWithFeedback(value, {
+      successMessage: isChinese ? '代码已复制' : 'Code copied',
+      errorMessage: isChinese ? '复制代码失败' : 'Failed to copy code',
+    });
+    if (success) {
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
-    } catch {
+    } else {
       setCopied(false);
     }
   };
@@ -499,15 +503,19 @@ function InlineCopyButton({
   value: string;
   label: string;
 }) {
+  const { isChinese } = useI18n();
   const [copied, setCopied] = useState(false);
 
   const onCopy = async () => {
     if (!value) return;
-    try {
-      await navigator.clipboard.writeText(value);
+    const success = await copyTextWithFeedback(value, {
+      successMessage: isChinese ? '已复制到剪贴板' : 'Copied to clipboard',
+      errorMessage: isChinese ? '复制失败' : 'Failed to copy',
+    });
+    if (success) {
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
-    } catch {
+    } else {
       setCopied(false);
     }
   };

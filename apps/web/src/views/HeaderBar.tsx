@@ -4,6 +4,7 @@ import { Copy, FolderTree, RadioTower, Terminal, Workflow } from 'lucide-react';
 import type { StreamStatus } from '../hooks/useSessionStream.ts';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { copyTextWithFeedback } from '@/lib/copy-feedback';
 import { cn } from '@/lib/utils';
 import {
   formatCompactNumber,
@@ -98,7 +99,7 @@ export function HeaderBar({
             variant="outline"
             size="sm"
             className="border-white/10 bg-white/[0.03] text-slate-100 hover:bg-white/[0.08]"
-            onClick={() => copyResume(session)}
+            onClick={() => copyResume(session, isChinese)}
           >
             <Terminal className="h-4 w-4" />
             {isChinese ? '复制恢复命令' : 'Copy resume command'}
@@ -107,7 +108,12 @@ export function HeaderBar({
             variant="ghost"
             size="sm"
             className="text-slate-300 hover:bg-white/[0.06] hover:text-white"
-            onClick={() => void navigator.clipboard.writeText(session.source.filePath)}
+            onClick={() =>
+              void copyTextWithFeedback(session.source.filePath, {
+                successMessage: isChinese ? 'Transcript 路径已复制' : 'Transcript path copied',
+                errorMessage: isChinese ? '复制 transcript 路径失败' : 'Failed to copy transcript path',
+              })
+            }
           >
             <Copy className="h-4 w-4" />
             {isChinese ? '复制 transcript 路径' : 'Copy transcript path'}
@@ -193,11 +199,14 @@ function conversationText(status: StreamStatus, isChinese: boolean): string {
       : 'Opening stream';
 }
 
-function copyResume(session: SessionDTO) {
+function copyResume(session: SessionDTO, isChinese: boolean) {
   const command = session.projectPath
     ? `cd ${session.projectPath} && ${session.resumeCommand}`
     : session.resumeCommand;
-  void navigator.clipboard.writeText(command);
+  void copyTextWithFeedback(command, {
+    successMessage: isChinese ? '恢复命令已复制' : 'Resume command copied',
+    errorMessage: isChinese ? '复制恢复命令失败' : 'Failed to copy resume command',
+  });
 }
 
 function formatUsage(usage: SessionDTO['usage'] | undefined, language: Language): string | null {

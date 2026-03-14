@@ -1,4 +1,4 @@
-import { Suspense, lazy, useDeferredValue, useMemo, useState } from 'react';
+import { Suspense, useDeferredValue, useMemo, useState } from 'react';
 import type { MessageDTO, SessionDTO } from '@cli-run-ui/core';
 import {
   Activity,
@@ -26,21 +26,13 @@ import {
   useI18n,
   type Language,
 } from './lib/i18n.tsx';
+import { AgentWorkbenchPanel } from './views/AgentWorkbenchPanel.tsx';
+import { ConversationView } from './views/ConversationView.tsx';
 import { HeaderBar } from './views/HeaderBar.tsx';
 import { SessionList } from './views/SessionList.tsx';
 
 type ProviderFilter = 'all' | SessionDTO['provider'];
 type WorkspaceView = 'transcript' | 'agent';
-
-const ConversationView = lazy(async () => {
-  const module = await import('./views/ConversationView.tsx');
-  return { default: module.ConversationView };
-});
-
-const AgentWorkbenchPanel = lazy(async () => {
-  const module = await import('./views/AgentWorkbenchPanel.tsx');
-  return { default: module.AgentWorkbenchPanel };
-});
 
 export default function App() {
   const { theme, setTheme, themes } = useTheme();
@@ -466,27 +458,17 @@ export default function App() {
                   </div>
                 </section>
 
-                <Suspense
-                  fallback={
-                    <PanelFallback
-                      text={
-                        isChinese ? '正在加载 Agent 工作台...' : 'Loading agent workspace...'
-                      }
-                    />
-                  }
-                >
-                  <AgentWorkbenchPanel
-                    activeSession={activeSession}
-                    runs={runs}
-                    runStatus={runStatus}
-                    tasks={tasks}
-                    taskStatus={taskStatus}
-                    terminals={terminals}
-                    terminalStatus={terminalStatus}
-                    relays={relays}
-                    relayStatus={relayStatus}
-                  />
-                </Suspense>
+                <AgentWorkbenchPanel
+                  activeSession={activeSession}
+                  runs={runs}
+                  runStatus={runStatus}
+                  tasks={tasks}
+                  taskStatus={taskStatus}
+                  terminals={terminals}
+                  terminalStatus={terminalStatus}
+                  relays={relays}
+                  relayStatus={relayStatus}
+                />
               </div>
             )}
           </main>

@@ -58,6 +58,7 @@ import { useTaskStream } from '@/hooks/useTaskStream';
 import { useTerminalStream } from '@/hooks/useTerminalStream';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { copyTextWithFeedback } from '@/lib/copy-feedback';
 import { useI18n } from '@/lib/i18n';
 import { cn } from '@/lib/utils';
 
@@ -124,6 +125,7 @@ const CUSTOM_RELAY_TEMPLATES_STORAGE_KEY = 'cli-run-ui.custom-relay-templates';
 const MAX_RECENT_CHAT_PROMPTS = 6;
 const BUILTIN_RELAY_TEMPLATE_IDS = ['duel', 'review-trio', 'delivery-room'] as const;
 const RELAY_TEMPLATE_IDS: RelayTemplateId[] = [...BUILTIN_RELAY_TEMPLATE_IDS];
+const REQUEST_TIMEOUT_MS = 12000;
 
 export function AgentWorkbenchPanel({
   activeSession,
@@ -533,12 +535,15 @@ export function AgentWorkbenchPanel({
         sessionUid: mode === 'resume' ? activeSession?.uid : undefined,
         testCommand: taskTestCommand.trim() || undefined,
       };
-      const response = await fetch('/api/tasks', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-      const data = (await response.json()) as { task?: AgentTaskDTO; error?: string };
+      const { response, data } = await requestJson<{ task?: AgentTaskDTO; error?: string }>(
+        '/api/tasks',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        },
+        isChinese ? '启动 Task Loop 超时，请检查服务端是否正常。' : 'Starting the task loop timed out. Check whether the server is still responding.'
+      );
       if (!response.ok || !data.task) {
         throw new Error(data.error ?? 'Failed to start task.');
       }
@@ -680,12 +685,15 @@ export function AgentWorkbenchPanel({
         prompt: prompt.trim(),
         sessionUid: mode === 'resume' ? activeSession?.uid : undefined,
       };
-      const response = await fetch('/api/runs', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-      const data = (await response.json()) as { run?: RunSessionDTO; error?: string };
+      const { response, data } = await requestJson<{ run?: RunSessionDTO; error?: string }>(
+        '/api/runs',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        },
+        isChinese ? '启动 headless run 超时，请检查服务端是否正常。' : 'Starting the headless run timed out. Check whether the server is still responding.'
+      );
       if (!response.ok || !data.run) {
         throw new Error(data.error ?? 'Failed to start run.');
       }
@@ -711,15 +719,18 @@ export function AgentWorkbenchPanel({
       cols: 120,
       rows: 32,
     };
-    const response = await fetch('/api/terminals', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    });
-    const data = (await response.json()) as {
+    const { response, data } = await requestJson<{
       terminal?: TerminalSessionDTO;
       error?: string;
-    };
+    }>(
+      '/api/terminals',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      },
+      isChinese ? '打开交互式终端超时，请检查服务端是否正常。' : 'Opening the interactive terminal timed out. Check whether the server is still responding.'
+    );
     if (!response.ok || !data.terminal) {
       throw new Error(data.error ?? 'Failed to open terminal.');
     }
@@ -752,7 +763,10 @@ export function AgentWorkbenchPanel({
 
     try {
       if (liveTerminal?.status === 'open') {
-        await sendTerminalInput(liveTerminal.id, normalizeChatInput(message));
+        await sendTerminalInput(liveTerminal.id, normalizeChatInput(message), {
+          timeoutMessage: isChinese ? '消息发送超时，请检查终端连接是否正常。' : 'Sending the message timed out. Check whether the terminal connection is still healthy.',
+          errorMessage: isChinese ? '发送消息到终端失败。' : 'Failed to send the message to the terminal.',
+        });
         startTransition(() => setSurface('terminal'));
       } else {
         await startTerminalSession(message);
@@ -784,15 +798,18 @@ export function AgentWorkbenchPanel({
         maxTurns: relayMaxTurns,
         title: relayPrompt.trim(),
       };
-      const response = await fetch('/api/relays', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-      const data = (await response.json()) as {
+      const { response, data } = await requestJson<{
         relay?: AgentRelaySessionDTO;
         error?: string;
-      };
+      }>(
+        '/api/relays',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        },
+        isChinese ? '启动 Agent Relay 超时，请检查服务端是否正常。' : 'Starting the agent relay timed out. Check whether the server is still responding.'
+      );
       if (!response.ok || !data.relay) {
         throw new Error(data.error ?? 'Failed to start relay.');
       }
@@ -2937,7 +2954,11 @@ function AgentRelayRoomPane({
                     size="sm"
                     className="border-white/10 bg-white/[0.03] text-slate-100 hover:bg-white/[0.08]"
                     onClick={async () => {
-                      await navigator.clipboard.writeText(relay.summary ?? '');
+                      const success = await copyTextWithFeedback(relay.summary ?? '', {
+                        successMessage: isChinese ? '房间摘要已复制' : 'Room summary copied',
+                        errorMessage: isChinese ? '复制房间摘要失败' : 'Failed to copy room summary',
+                      });
+                      if (!success) return;
                       setCopiedSummary(true);
                       setTimeout(() => setCopiedSummary(false), 1500);
                     }}
@@ -3365,6 +3386,7 @@ function BrowserChatCard({
   const { isChinese } = useI18n();
   const terminalReady = terminal?.status === 'open';
   const hasRecentPrompts = recentPrompts.length > 0;
+  const [isRecentPromptsOpen, setIsRecentPromptsOpen] = useState(false);
   const disabledReason =
     cwd.trim().length === 0
       ? isChinese
@@ -3442,60 +3464,90 @@ function BrowserChatCard({
       </div>
 
       <div className="mt-3 flex-1 rounded-2xl border border-white/10 bg-white/[0.03] p-3">
-        <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-2 text-xs uppercase tracking-[0.18em] text-slate-500">
-            <Command className="h-3.5 w-3.5" />
-            {isChinese ? '历史快捷提问' : 'Recent prompts'}
-          </div>
-          <Badge variant="muted" className="bg-white/5 text-slate-300">
-            {recentPrompts.length}
-          </Badge>
-        </div>
-
-        {hasRecentPrompts ? (
-          <div className="mt-3 flex flex-wrap gap-2">
-            {recentPrompts.map((entry) => (
-              <button
-                key={entry}
-                type="button"
-                onClick={() => onPickRecentPrompt(entry)}
-                className="max-w-full rounded-full border border-white/10 bg-black/20 px-3 py-1.5 text-left text-xs text-slate-300 transition hover:border-[var(--theme-accent-border)] hover:bg-[var(--theme-accent-soft)] hover:text-white"
-                title={entry}
-              >
-                <span className="block max-w-[260px] truncate">{entry}</span>
-              </button>
-            ))}
-          </div>
-        ) : (
-          <div className="mt-3 rounded-2xl border border-dashed border-white/10 bg-black/20 px-3 py-4 text-sm text-slate-400">
-            {isChinese
-              ? '这里会记住你最近发给 agent 的问题，点击就能重新带回输入框。'
-              : 'Your latest prompts will show up here so you can reuse them with one click.'}
-          </div>
-        )}
-
-        <div className="mt-3 grid gap-2 md:grid-cols-2">
-          <div className="rounded-2xl border border-white/10 bg-black/20 px-3 py-2.5">
+        <button
+          type="button"
+          onClick={() => setIsRecentPromptsOpen((current) => !current)}
+          className="flex w-full items-center justify-between gap-3 rounded-2xl border border-white/10 bg-black/20 px-3 py-3 text-left transition hover:bg-white/[0.04]"
+        >
+          <div className="min-w-0">
             <div className="flex items-center gap-2 text-xs uppercase tracking-[0.18em] text-slate-500">
-              <Keyboard className="h-3.5 w-3.5" />
-              {isChinese ? '发送快捷键' : 'Shortcut'}
+              <Command className="h-3.5 w-3.5" />
+              {isChinese ? '历史快捷提问' : 'Recent prompts'}
             </div>
             <div className="mt-2 text-sm text-slate-300">
-              {isChinese ? '`Ctrl/Cmd + Enter` 发送，`Enter` 换行。' : '`Ctrl/Cmd + Enter` sends, `Enter` adds a new line.'}
+              {isRecentPromptsOpen
+                ? isChinese
+                  ? '点击收起历史提问和发送说明。'
+                  : 'Click to collapse recent prompts and delivery guidance.'
+                : hasRecentPrompts
+                  ? isChinese
+                    ? '点击展开最近提问，快速重新带回输入框。'
+                    : 'Click to expand recent prompts and refill the composer quickly.'
+                  : isChinese
+                    ? '当前没有历史提问，点击展开查看说明。'
+                    : 'No recent prompts yet. Click to expand the helper panel.'}
             </div>
           </div>
-          <div className="rounded-2xl border border-white/10 bg-black/20 px-3 py-2.5">
-            <div className="flex items-center gap-2 text-xs uppercase tracking-[0.18em] text-slate-500">
-              <CornerDownLeft className="h-3.5 w-3.5" />
-              {isChinese ? '发送方式' : 'Delivery'}
-            </div>
-            <div className="mt-2 text-sm text-slate-300">
-              {isChinese
-                ? '优先复用当前 terminal；没有打开会话时自动新建并发出首条消息。'
-                : 'Reuses the current terminal when available, otherwise opens one and delivers the first message automatically.'}
-            </div>
+          <div className="flex shrink-0 items-center gap-2">
+            <Badge variant="muted" className="bg-white/5 text-slate-300">
+              {recentPrompts.length}
+            </Badge>
+            {isRecentPromptsOpen ? (
+              <ArrowUp className="h-4 w-4 text-slate-400" />
+            ) : (
+              <ArrowDown className="h-4 w-4 text-slate-400" />
+            )}
           </div>
-        </div>
+        </button>
+
+        {isRecentPromptsOpen ? (
+          <>
+            {hasRecentPrompts ? (
+              <div className="mt-3 flex flex-wrap gap-2">
+                {recentPrompts.map((entry) => (
+                  <button
+                    key={entry}
+                    type="button"
+                    onClick={() => onPickRecentPrompt(entry)}
+                    className="max-w-full rounded-full border border-white/10 bg-black/20 px-3 py-1.5 text-left text-xs text-slate-300 transition hover:border-[var(--theme-accent-border)] hover:bg-[var(--theme-accent-soft)] hover:text-white"
+                    title={entry}
+                  >
+                    <span className="block max-w-[260px] truncate">{entry}</span>
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <div className="mt-3 rounded-2xl border border-dashed border-white/10 bg-black/20 px-3 py-4 text-sm text-slate-400">
+                {isChinese
+                  ? '这里会记住你最近发给 agent 的问题，点击就能重新带回输入框。'
+                  : 'Your latest prompts will show up here so you can reuse them with one click.'}
+              </div>
+            )}
+
+            <div className="mt-3 grid gap-2 md:grid-cols-2">
+              <div className="rounded-2xl border border-white/10 bg-black/20 px-3 py-2.5">
+                <div className="flex items-center gap-2 text-xs uppercase tracking-[0.18em] text-slate-500">
+                  <Keyboard className="h-3.5 w-3.5" />
+                  {isChinese ? '发送快捷键' : 'Shortcut'}
+                </div>
+                <div className="mt-2 text-sm text-slate-300">
+                  {isChinese ? '`Ctrl/Cmd + Enter` 发送，`Enter` 换行。' : '`Ctrl/Cmd + Enter` sends, `Enter` adds a new line.'}
+                </div>
+              </div>
+              <div className="rounded-2xl border border-white/10 bg-black/20 px-3 py-2.5">
+                <div className="flex items-center gap-2 text-xs uppercase tracking-[0.18em] text-slate-500">
+                  <CornerDownLeft className="h-3.5 w-3.5" />
+                  {isChinese ? '发送方式' : 'Delivery'}
+                </div>
+                <div className="mt-2 text-sm text-slate-300">
+                  {isChinese
+                    ? '优先复用当前 terminal；没有打开会话时自动新建并发出首条消息。'
+                    : 'Reuses the current terminal when available, otherwise opens one and delivers the first message automatically.'}
+                </div>
+              </div>
+            </div>
+          </>
+        ) : null}
       </div>
 
       <div className="mt-3 shrink-0 rounded-[24px] border border-[var(--theme-accent-border)] bg-[linear-gradient(180deg,rgba(255,255,255,0.06),rgba(255,255,255,0.03))] p-3 shadow-[0_18px_40px_rgba(0,0,0,0.24)]">
@@ -3718,17 +3770,57 @@ async function resumeRelay(relayId: string) {
   }
 }
 
-async function sendTerminalInput(terminalId: string, input: string) {
+async function sendTerminalInput(
+  terminalId: string,
+  input: string,
+  messages = {
+    timeoutMessage: 'Sending the message to the terminal timed out.',
+    errorMessage: 'Failed to send message to terminal.',
+  }
+) {
   if (!input) return;
-  await fetch(`/api/terminals/${encodeURIComponent(terminalId)}/input`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ input }),
-  });
+  const { response, data } = await requestJson<{ error?: string }>(
+    `/api/terminals/${encodeURIComponent(terminalId)}/input`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ input }),
+    },
+    messages.timeoutMessage
+  );
+  if (!response.ok) {
+    throw new Error(data?.error ?? messages.errorMessage);
+  }
 }
 
 function normalizeChatInput(value: string) {
   return `${value.replace(/\r?\n/g, '\r')}\r`;
+}
+
+async function requestJson<T>(
+  input: string,
+  init: RequestInit,
+  timeoutMessage: string,
+  timeoutMs = REQUEST_TIMEOUT_MS
+): Promise<{ response: Response; data: T | null }> {
+  const controller = new AbortController();
+  const timer = window.setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    const response = await fetch(input, {
+      ...init,
+      signal: controller.signal,
+    });
+    const data = (await response.json().catch(() => null)) as T | null;
+    return { response, data };
+  } catch (error) {
+    if (error instanceof DOMException && error.name === 'AbortError') {
+      throw new Error(timeoutMessage);
+    }
+    throw error;
+  } finally {
+    window.clearTimeout(timer);
+  }
 }
 
 function orderRelayParticipants(

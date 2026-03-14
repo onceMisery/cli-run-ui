@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client';
 
 import App from './App.tsx';
 import './index.css';
+import { CopyFeedbackHost } from './lib/copy-feedback.tsx';
 import { I18nProvider } from './lib/i18n.tsx';
 import { ThemeProvider } from './lib/theme.tsx';
 
@@ -12,7 +13,10 @@ if (root) {
     <React.StrictMode>
       <ThemeProvider>
         <I18nProvider>
-          <App />
+          <>
+            <App />
+            <CopyFeedbackHost />
+          </>
         </I18nProvider>
       </ThemeProvider>
     </React.StrictMode>
