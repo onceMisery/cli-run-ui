@@ -1,5 +1,10 @@
 import { useEffect, useState } from 'react';
-import type { AgentRelaySessionDTO, AgentRelayTurnDTO } from '@cli-run-ui/core';
+import type {
+  AgentRelayInterventionDTO,
+  RemoveAgentRelayInterventionDTO,
+  AgentRelaySessionDTO,
+  AgentRelayTurnDTO,
+} from '@cli-run-ui/core';
 
 import type { StreamStatus } from './useSessionStream.ts';
 
@@ -9,6 +14,7 @@ export function useAgentRelayStream(
 ) {
   const [relay, setRelay] = useState<AgentRelaySessionDTO | null>(initialRelay);
   const [turns, setTurns] = useState<AgentRelayTurnDTO[]>([]);
+  const [interventions, setInterventions] = useState<AgentRelayInterventionDTO[]>([]);
   const [status, setStatus] = useState<StreamStatus>(relayId ? 'connecting' : 'closed');
 
   useEffect(() => {
@@ -19,6 +25,7 @@ export function useAgentRelayStream(
     if (!relayId) {
       setRelay(null);
       setTurns([]);
+      setInterventions([]);
       setStatus('closed');
       return;
     }
@@ -37,10 +44,14 @@ export function useAgentRelayStream(
         const data = safeParse(event.data) as {
           relay?: AgentRelaySessionDTO;
           turns?: AgentRelayTurnDTO[];
+          interventions?: AgentRelayInterventionDTO[];
         } | null;
         if (!data) return;
         if (data.relay) setRelay(data.relay);
         if (Array.isArray(data.turns)) setTurns(sortTurns(data.turns));
+        if (Array.isArray(data.interventions)) {
+          setInterventions(sortInterventions(data.interventions));
+        }
       });
 
       source.addEventListener('relay', (event) => {
@@ -52,6 +63,20 @@ export function useAgentRelayStream(
         const data = safeParse(event.data) as { turn?: AgentRelayTurnDTO } | null;
         if (!data?.turn) return;
         setTurns((prev) => sortTurns(mergeTurn(prev, data.turn)));
+      });
+
+      source.addEventListener('intervention', (event) => {
+        const data = safeParse(event.data) as { intervention?: AgentRelayInterventionDTO } | null;
+        if (!data?.intervention) return;
+        setInterventions((prev) => sortInterventions(mergeIntervention(prev, data.intervention)));
+      });
+
+      source.addEventListener('intervention_removed', (event) => {
+        const data = safeParse(event.data) as { removal?: RemoveAgentRelayInterventionDTO } | null;
+        if (!data?.removal) return;
+        setInterventions((prev) =>
+          prev.filter((entry) => entry.id !== data.removal?.interventionId)
+        );
       });
 
       source.onopen = () => setStatus('open');
@@ -71,6 +96,7 @@ export function useAgentRelayStream(
     };
 
     setTurns([]);
+    setInterventions([]);
     connect();
 
     return () => {
@@ -80,7 +106,7 @@ export function useAgentRelayStream(
     };
   }, [relayId]);
 
-  return { relay, turns, status };
+  return { relay, turns, interventions, status };
 }
 
 function mergeTurn(existing: AgentRelayTurnDTO[], incoming: AgentRelayTurnDTO) {
@@ -91,6 +117,19 @@ function mergeTurn(existing: AgentRelayTurnDTO[], incoming: AgentRelayTurnDTO) {
 
 function sortTurns(turns: AgentRelayTurnDTO[]) {
   return [...turns].sort((a, b) => a.turn - b.turn);
+}
+
+function mergeIntervention(
+  existing: AgentRelayInterventionDTO[],
+  incoming: AgentRelayInterventionDTO
+) {
+  const map = new Map(existing.map((entry) => [entry.id, entry]));
+  map.set(incoming.id, incoming);
+  return Array.from(map.values());
+}
+
+function sortInterventions(interventions: AgentRelayInterventionDTO[]) {
+  return [...interventions].sort((a, b) => a.createdAtMs - b.createdAtMs);
 }
 
 function safeParse(data: string): unknown {

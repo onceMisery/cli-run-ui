@@ -120,7 +120,7 @@ export interface StartTerminalRequestDTO {
     cols?: number;
     rows?: number;
 }
-export type AgentRelayStatus = 'starting' | 'running' | 'completed' | 'failed' | 'stopped';
+export type AgentRelayStatus = 'starting' | 'running' | 'paused' | 'completed' | 'failed' | 'stopped';
 export type AgentRelayTurnStatus = 'running' | 'completed' | 'failed' | 'stopped';
 export interface AgentRelayParticipantDTO {
     id: string;
@@ -163,6 +163,13 @@ export interface AgentRelayTurnDTO {
     exitCode?: number | null;
     error?: string;
 }
+export interface AgentRelayInterventionDTO {
+    id: string;
+    relayId: string;
+    content: string;
+    createdAtMs: number;
+    updatedAtMs?: number;
+}
 export interface StartAgentRelayRequestDTO {
     cwd: string;
     prompt: string;
@@ -171,5 +178,15 @@ export interface StartAgentRelayRequestDTO {
     title?: string;
     systemPrompt?: string;
     participants?: AgentRelayParticipantInputDTO[];
+}
+export interface PostAgentRelayInterventionRequestDTO {
+    content: string;
+}
+export interface PatchAgentRelayInterventionRequestDTO {
+    content: string;
+}
+export interface RemoveAgentRelayInterventionDTO {
+    relayId: string;
+    interventionId: string;
 }
 //# sourceMappingURL=index.d.ts.map

@@ -7,6 +7,7 @@ import {
 } from 'react';
 import type {
   AgentRelayParticipantInputDTO,
+  AgentRelayInterventionDTO,
   AgentRelaySessionDTO,
   AgentRelayTurnDTO,
   RunSessionDTO,
@@ -29,12 +30,15 @@ import {
   LoaderCircle,
   MessageSquare,
   Monitor,
+  Pause,
+  Pencil,
   Play,
   SplitSquareVertical,
   RotateCcw,
   Sparkles,
   Square,
   SquareTerminal,
+  Trash2,
   Users,
 } from 'lucide-react';
 
@@ -121,7 +125,13 @@ export function AgentWorkbenchPanel({
   const [isLaunchingTerminal, setIsLaunchingTerminal] = useState(false);
   const [isSendingChat, setIsSendingChat] = useState(false);
   const [isLaunchingRelay, setIsLaunchingRelay] = useState(false);
+  const [isSendingRelayIntervention, setIsSendingRelayIntervention] = useState(false);
+  const [isUpdatingRelayLifecycle, setIsUpdatingRelayLifecycle] = useState(false);
+  const [editingRelayInterventionId, setEditingRelayInterventionId] = useState<string | null>(null);
+  const [isRemovingRelayIntervention, setIsRemovingRelayIntervention] = useState<string | null>(null);
   const [chatDraft, setChatDraft] = useState('');
+  const [relayInterventionDraft, setRelayInterventionDraft] = useState('');
+  const [relayInterventionError, setRelayInterventionError] = useState<string | null>(null);
   const [recentChatPrompts, setRecentChatPrompts] = useState<string[]>(() =>
     readRecentChatPrompts()
   );
@@ -223,7 +233,7 @@ export function AgentWorkbenchPanel({
     selectedTerminalId,
     terminal
   );
-  const { relay: liveRelay, turns } = useAgentRelayStream(selectedRelayId, relay);
+  const { relay: liveRelay, turns, interventions } = useAgentRelayStream(selectedRelayId, relay);
 
   const canResume =
     !!activeSession &&
@@ -393,6 +403,116 @@ export function AgentWorkbenchPanel({
     }
   };
 
+  const sendRelayIntervention = async () => {
+    if (!liveRelay || !relayInterventionDraft.trim() || isSendingRelayIntervention) return;
+    setIsSendingRelayIntervention(true);
+    setRelayInterventionError(null);
+
+    try {
+      const response = editingRelayInterventionId
+        ? await fetch(
+            `/api/relays/${encodeURIComponent(liveRelay.id)}/interventions/${encodeURIComponent(editingRelayInterventionId)}`,
+            {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ content: relayInterventionDraft.trim() }),
+            }
+          )
+        : await fetch(`/api/relays/${encodeURIComponent(liveRelay.id)}/interventions`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ content: relayInterventionDraft.trim() }),
+          });
+      const data = (await response.json()) as { error?: string };
+      if (!response.ok) {
+        throw new Error(
+          data.error ??
+            (editingRelayInterventionId
+              ? 'Failed to update steer message.'
+              : 'Failed to steer relay.')
+        );
+      }
+      setRelayInterventionDraft('');
+      setEditingRelayInterventionId(null);
+    } catch (reason) {
+      setRelayInterventionError(
+        reason instanceof Error
+          ? reason.message
+          : editingRelayInterventionId
+            ? 'Failed to update steer message.'
+            : 'Failed to steer relay.'
+      );
+    } finally {
+      setIsSendingRelayIntervention(false);
+    }
+  };
+
+  const startEditingRelayIntervention = (intervention: AgentRelayInterventionDTO) => {
+    setEditingRelayInterventionId(intervention.id);
+    setRelayInterventionError(null);
+    setRelayInterventionDraft(intervention.content);
+  };
+
+  const cancelEditingRelayIntervention = () => {
+    setEditingRelayInterventionId(null);
+    setRelayInterventionError(null);
+    setRelayInterventionDraft('');
+  };
+
+  const removeRelayIntervention = async (interventionId: string) => {
+    if (!liveRelay || isRemovingRelayIntervention) return;
+    setIsRemovingRelayIntervention(interventionId);
+    setRelayInterventionError(null);
+
+    try {
+      const response = await fetch(
+        `/api/relays/${encodeURIComponent(liveRelay.id)}/interventions/${encodeURIComponent(interventionId)}`,
+        { method: 'DELETE' }
+      );
+      const data = (await response.json().catch(() => null)) as { error?: string } | null;
+      if (!response.ok) {
+        throw new Error(data?.error ?? 'Failed to withdraw steer message.');
+      }
+      if (editingRelayInterventionId === interventionId) {
+        cancelEditingRelayIntervention();
+      }
+    } catch (reason) {
+      setRelayInterventionError(
+        reason instanceof Error ? reason.message : 'Failed to withdraw steer message.'
+      );
+    } finally {
+      setIsRemovingRelayIntervention(null);
+    }
+  };
+
+  const pauseLiveRelay = async () => {
+    if (!liveRelay || isUpdatingRelayLifecycle) return;
+    setIsUpdatingRelayLifecycle(true);
+    setRelayError(null);
+
+    try {
+      await pauseRelay(liveRelay.id);
+    } catch (reason) {
+      setRelayError(reason instanceof Error ? reason.message : 'Failed to pause relay.');
+    } finally {
+      setIsUpdatingRelayLifecycle(false);
+    }
+  };
+
+  const resumeLiveRelay = async () => {
+    if (!liveRelay || isUpdatingRelayLifecycle) return;
+    setIsUpdatingRelayLifecycle(true);
+    setRelayError(null);
+
+    try {
+      await resumeRelay(liveRelay.id);
+    } catch (reason) {
+      setRelayError(reason instanceof Error ? reason.message : 'Failed to resume relay.');
+    } finally {
+      setIsUpdatingRelayLifecycle(false);
+    }
+  };
+
   const resetDraft = () => {
     setPrompt('');
     setRelayPrompt('');
@@ -401,7 +521,11 @@ export function AgentWorkbenchPanel({
     setTerminalError(null);
     setChatError(null);
     setRelayError(null);
+    setRelayInterventionError(null);
     setChatDraft('');
+    setRelayInterventionDraft('');
+    setEditingRelayInterventionId(null);
+    setIsRemovingRelayIntervention(null);
     setProvider(activeSession?.provider ?? 'codex');
     setMode(activeSession ? 'resume' : 'task');
     setRelayStarter('codex');
@@ -818,11 +942,25 @@ export function AgentWorkbenchPanel({
               onStop={stopTerminal}
             />
           ) : (
-            <AgentRelayPane
+            <AgentRelayRoomPane
               relay={liveRelay}
               relays={relays}
               turns={turns}
+              interventions={interventions}
+              editingInterventionId={editingRelayInterventionId}
+              interventionDraft={relayInterventionDraft}
+              interventionError={relayInterventionError}
+              isSendingIntervention={isSendingRelayIntervention}
+              isUpdatingLifecycle={isUpdatingRelayLifecycle}
+              removingInterventionId={isRemovingRelayIntervention}
+              onInterventionDraftChange={setRelayInterventionDraft}
+              onCancelInterventionEdit={cancelEditingRelayIntervention}
+              onEditIntervention={startEditingRelayIntervention}
+              onRemoveIntervention={(id) => void removeRelayIntervention(id)}
+              onSendIntervention={() => void sendRelayIntervention()}
               onPick={setSelectedRelayId}
+              onPause={() => void pauseLiveRelay()}
+              onResume={() => void resumeLiveRelay()}
               onStop={stopRelay}
             />
           )}
@@ -955,6 +1093,83 @@ function HeadlessRunPane({
         </div>
       ) : null}
 
+      {relay ? (
+        <div className="mb-3 grid gap-3 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
+          <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-3">
+            <div className="flex items-center justify-between gap-3">
+              <div className="text-xs uppercase tracking-[0.18em] text-slate-500">
+                {isChinese ? '房间摘要' : 'Room summary'}
+              </div>
+              <div className="flex items-center gap-2">
+                {relay.summary ? (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="border-white/10 bg-white/[0.03] text-slate-100 hover:bg-white/[0.08]"
+                    onClick={async () => {
+                      await navigator.clipboard.writeText(relay.summary ?? '');
+                      setCopiedSummary(true);
+                      setTimeout(() => setCopiedSummary(false), 1500);
+                    }}
+                  >
+                    <Copy className="h-4 w-4" />
+                    {copiedSummary
+                      ? isChinese
+                        ? '已复制'
+                        : 'Copied'
+                      : isChinese
+                        ? '复制'
+                        : 'Copy'}
+                  </Button>
+                ) : null}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="border-white/10 bg-white/[0.03] text-slate-100 hover:bg-white/[0.08]"
+                  onClick={() => downloadRelayMarkdown(relay, turns, interventions)}
+                >
+                  <Download className="h-4 w-4" />
+                  {isChinese ? '导出' : 'Export'}
+                </Button>
+              </div>
+            </div>
+            <div className="mt-2 whitespace-pre-wrap text-sm leading-6 text-slate-200">
+              {relay.summary ??
+                (isChinese
+                  ? '对话推进到足够轮次后会自动整理摘要。'
+                  : 'A summary will appear automatically once the room has enough turns.')}
+            </div>
+          </div>
+          <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-3">
+            <div className="text-xs uppercase tracking-[0.18em] text-slate-500">
+              {isChinese ? '参与者' : 'Participants'}
+            </div>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {relay.participants.map((participant) => (
+                <Badge
+                  key={participant.id}
+                  className={
+                    participant.provider === 'claude'
+                      ? 'border-sky-400/30 bg-sky-400/10 text-sky-100'
+                      : 'border-emerald-400/30 bg-emerald-400/10 text-emerald-100'
+                  }
+                >
+                  {participant.label}
+                </Badge>
+              ))}
+            </div>
+            {relay.systemPrompt ? (
+              <div className="mt-3 rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-sm text-slate-300">
+                <div className="text-xs uppercase tracking-[0.18em] text-slate-500">
+                  {isChinese ? 'System prompt' : 'System prompt'}
+                </div>
+                <div className="mt-2 whitespace-pre-wrap">{relay.systemPrompt}</div>
+              </div>
+            ) : null}
+          </div>
+        </div>
+      ) : null}
+
       <div
         ref={viewportRef}
         className="h-[320px] overflow-auto rounded-2xl border border-white/10 bg-black/40 p-3"
@@ -977,6 +1192,74 @@ function HeadlessRunPane({
             ))}
           </div>
         )}
+      </div>
+
+      <div className="mt-3 rounded-2xl border border-white/10 bg-white/[0.03] p-3">
+        <div className="flex items-center justify-between gap-3">
+          <div className="text-xs uppercase tracking-[0.18em] text-slate-500">
+            {isChinese ? '介入房间' : 'Steer the room'}
+          </div>
+          <Badge variant="muted" className="bg-white/5 text-slate-300">
+            {interventions.length}
+          </Badge>
+        </div>
+        <textarea
+          value={interventionDraft}
+          onChange={(event) => onInterventionDraftChange(event.target.value)}
+          rows={3}
+          disabled={!relay || relay.status !== 'running' || isSendingIntervention}
+          className="mt-3 w-full resize-none rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-sm text-slate-100 outline-none placeholder:text-slate-500 disabled:cursor-not-allowed disabled:opacity-60"
+          placeholder={
+            isChinese
+              ? '插一句人工指令，比如“先统一结论，再给出行动计划”。'
+              : 'Inject a human note, like “align on one conclusion, then give an action plan.”'
+          }
+        />
+        <div className="mt-3 flex items-center justify-between gap-3">
+          <div className="text-xs text-slate-400">
+            {relay?.status === 'running'
+              ? isChinese
+                ? '这条消息会从下一轮开始进入房间上下文。'
+                : 'This note will join the room context starting from the next turn.'
+              : isChinese
+                ? '只有运行中的 relay 才能继续人工介入。'
+                : 'Only a running relay can accept new human steering.'}
+          </div>
+          <Button
+            onClick={onSendIntervention}
+            disabled={!relay || relay.status !== 'running' || !interventionDraft.trim() || isSendingIntervention}
+            className="rounded-xl bg-[var(--theme-accent-solid)] text-[var(--theme-accent-foreground)] hover:bg-[var(--theme-accent-solid-hover)]"
+          >
+            {isSendingIntervention ? (
+              <LoaderCircle className="h-4 w-4 animate-spin" />
+            ) : (
+              <MessageSquare className="h-4 w-4" />
+            )}
+            {editingInterventionId
+              ? isChinese
+                ? '保存修改'
+                : 'Save edit'
+              : isChinese
+                ? '发送给房间'
+                : 'Send to room'}
+          </Button>
+        </div>
+        {interventionError ? <InlineNotice tone="error">{interventionError}</InlineNotice> : null}
+        {interventions.length > 0 ? (
+          <div className="mt-3 space-y-2">
+            {interventions.slice(-3).reverse().map((entry) => (
+              <div
+                key={entry.id}
+                className="rounded-xl border border-amber-400/20 bg-amber-400/[0.06] px-3 py-2 text-sm text-amber-50"
+              >
+                <div className="text-[11px] uppercase tracking-[0.18em] text-amber-200/80">
+                  {isChinese ? '最近人工消息' : 'Recent human steer'}
+                </div>
+                <div className="mt-1 whitespace-pre-wrap break-words">{entry.content}</div>
+              </div>
+            ))}
+          </div>
+        ) : null}
       </div>
 
       <div className="mt-3 space-y-2">
@@ -1159,12 +1442,34 @@ function AgentRelayPane({
   relay,
   relays,
   turns,
+  interventions,
+  editingInterventionId,
+  interventionDraft,
+  interventionError,
+  isSendingIntervention,
+  removingInterventionId,
+  onInterventionDraftChange,
+  onCancelInterventionEdit,
+  onEditIntervention,
+  onRemoveIntervention,
+  onSendIntervention,
   onPick,
   onStop,
 }: {
   relay: AgentRelaySessionDTO | null;
   relays: AgentRelaySessionDTO[];
   turns: AgentRelayTurnDTO[];
+  interventions: AgentRelayInterventionDTO[];
+  editingInterventionId: string | null;
+  interventionDraft: string;
+  interventionError: string | null;
+  isSendingIntervention: boolean;
+  removingInterventionId: string | null;
+  onInterventionDraftChange: (value: string) => void;
+  onCancelInterventionEdit: () => void;
+  onEditIntervention: (intervention: AgentRelayInterventionDTO) => void;
+  onRemoveIntervention: (interventionId: string) => void;
+  onSendIntervention: () => void;
   onPick: (id: string) => void;
   onStop: (id: string) => Promise<void>;
 }) {
@@ -1176,7 +1481,7 @@ function AgentRelayPane({
     const el = viewportRef.current;
     if (!el) return;
     el.scrollTop = el.scrollHeight;
-  }, [turns]);
+  }, [interventions, turns]);
 
   return (
     <section className="rounded-2xl border border-white/10 bg-black/20 p-3">
@@ -1264,6 +1569,437 @@ function AgentRelayPane({
             ))}
           </div>
         )}
+      </div>
+
+      <div className="mt-3 space-y-2">
+        {relays.slice(0, 5).map((entry) => (
+          <PickerRow
+            key={entry.id}
+            active={entry.id === relay?.id}
+            label={`${entry.participants.length}-agent room`}
+            sublabel={entry.title}
+            badge={entry.status}
+            badgeClass={relayBadgeClass(entry.status)}
+            onClick={() => onPick(entry.id)}
+          />
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function AgentRelayRoomPane({
+  relay,
+  relays,
+  turns,
+  interventions,
+  editingInterventionId,
+  interventionDraft,
+  interventionError,
+  isSendingIntervention,
+  isUpdatingLifecycle,
+  removingInterventionId,
+  onInterventionDraftChange,
+  onCancelInterventionEdit,
+  onEditIntervention,
+  onRemoveIntervention,
+  onSendIntervention,
+  onPick,
+  onPause,
+  onResume,
+  onStop,
+}: {
+  relay: AgentRelaySessionDTO | null;
+  relays: AgentRelaySessionDTO[];
+  turns: AgentRelayTurnDTO[];
+  interventions: AgentRelayInterventionDTO[];
+  editingInterventionId: string | null;
+  interventionDraft: string;
+  interventionError: string | null;
+  isSendingIntervention: boolean;
+  isUpdatingLifecycle: boolean;
+  removingInterventionId: string | null;
+  onInterventionDraftChange: (value: string) => void;
+  onCancelInterventionEdit: () => void;
+  onEditIntervention: (intervention: AgentRelayInterventionDTO) => void;
+  onRemoveIntervention: (interventionId: string) => void;
+  onSendIntervention: () => void;
+  onPick: (id: string) => void;
+  onPause: () => void;
+  onResume: () => void;
+  onStop: (id: string) => Promise<void>;
+}) {
+  const { isChinese, language } = useI18n();
+  const viewportRef = useRef<HTMLDivElement | null>(null);
+  const [copiedSummary, setCopiedSummary] = useState(false);
+  const timeline = useMemo(
+    () => buildRelayTimeline(turns, interventions),
+    [interventions, turns]
+  );
+
+  useEffect(() => {
+    const el = viewportRef.current;
+    if (!el) return;
+    el.scrollTop = el.scrollHeight;
+  }, [timeline]);
+
+  return (
+    <section className="rounded-2xl border border-white/10 bg-black/20 p-3">
+      <div className="mb-3 flex items-center justify-between gap-3">
+        <div>
+          <div className="text-xs uppercase tracking-[0.18em] text-slate-500">Agent Relay</div>
+          <div className="mt-1 text-sm text-slate-300">
+            {relay
+              ? `${relay.starter} starts · ${relay.currentTurn}/${relay.maxTurns} turns · ${relay.status}`
+              : isChinese
+                ? '选择一个 relay 会话'
+                : 'Select an agent relay'}
+          </div>
+        </div>
+        {relay ? (
+          <div className="flex items-center gap-2">
+            {(relay.status === 'starting' || relay.status === 'running') && (
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={isUpdatingLifecycle}
+                className="border-white/10 bg-white/[0.03] text-slate-100 hover:bg-white/[0.08]"
+                onClick={onPause}
+              >
+                {isUpdatingLifecycle ? (
+                  <LoaderCircle className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Pause className="h-4 w-4" />
+                )}
+                {isChinese ? '暂停' : 'Pause'}
+              </Button>
+            )}
+            {relay.status === 'paused' && (
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={isUpdatingLifecycle}
+                className="border-white/10 bg-white/[0.03] text-slate-100 hover:bg-white/[0.08]"
+                onClick={onResume}
+              >
+                {isUpdatingLifecycle ? (
+                  <LoaderCircle className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Play className="h-4 w-4" />
+                )}
+                {isChinese ? '继续' : 'Resume'}
+              </Button>
+            )}
+            {(relay.status === 'starting' ||
+              relay.status === 'running' ||
+              relay.status === 'paused') && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="border-white/10 bg-white/[0.03] text-slate-100 hover:bg-white/[0.08]"
+                onClick={() => void onStop(relay.id)}
+              >
+                <Square className="h-4 w-4" />
+                {isChinese ? '停止 relay' : 'Stop relay'}
+              </Button>
+            )}
+          </div>
+        ) : null}
+      </div>
+
+      {relay ? (
+        <div className="mb-3 grid gap-3 xl:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)]">
+          <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-3">
+            <div className="flex items-center justify-between gap-3">
+              <div className="text-xs uppercase tracking-[0.18em] text-slate-500">
+                {isChinese ? '房间摘要' : 'Room summary'}
+              </div>
+              <div className="flex items-center gap-2">
+                {relay.summary ? (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="border-white/10 bg-white/[0.03] text-slate-100 hover:bg-white/[0.08]"
+                    onClick={async () => {
+                      await navigator.clipboard.writeText(relay.summary ?? '');
+                      setCopiedSummary(true);
+                      setTimeout(() => setCopiedSummary(false), 1500);
+                    }}
+                  >
+                    <Copy className="h-4 w-4" />
+                    {copiedSummary
+                      ? isChinese
+                        ? '已复制'
+                        : 'Copied'
+                      : isChinese
+                        ? '复制'
+                        : 'Copy'}
+                  </Button>
+                ) : null}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="border-white/10 bg-white/[0.03] text-slate-100 hover:bg-white/[0.08]"
+                  onClick={() => downloadRelayMarkdown(relay, turns, interventions)}
+                >
+                  <Download className="h-4 w-4" />
+                  {isChinese ? '导出' : 'Export'}
+                </Button>
+              </div>
+            </div>
+            <div className="mt-2 whitespace-pre-wrap text-sm leading-6 text-slate-200">
+              {relay.summary ??
+                (isChinese
+                  ? '对话推进到足够轮次后会自动整理摘要。'
+                  : 'A summary will appear automatically once the room has enough turns.')}
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-3">
+            <div className="text-xs uppercase tracking-[0.18em] text-slate-500">
+              {isChinese ? '参与者' : 'Participants'}
+            </div>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {relay.participants.map((participant) => (
+                <Badge
+                  key={participant.id}
+                  className={
+                    participant.provider === 'claude'
+                      ? 'border-sky-400/30 bg-sky-400/10 text-sky-100'
+                      : 'border-emerald-400/30 bg-emerald-400/10 text-emerald-100'
+                  }
+                >
+                  {participant.label}
+                </Badge>
+              ))}
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      <div
+        ref={viewportRef}
+        className="h-[320px] overflow-auto rounded-2xl border border-white/10 bg-black/40 p-3"
+      >
+        {timeline.length === 0 ? (
+          <div className="text-sm text-slate-500">
+            {isChinese
+              ? '启动一个 Agent Relay 后，这里会显示智能体回合和人工插话的完整时间线。'
+              : 'Launch an agent relay to see the full room timeline, including agent turns and human steer messages.'}
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {timeline.map((entry) =>
+              entry.type === 'intervention' ? (
+                <article
+                  key={entry.id}
+                  className="rounded-2xl border border-amber-400/20 bg-amber-400/[0.06] p-3"
+                >
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-2 text-sm font-medium text-white">
+                      <Badge className="border-amber-400/30 bg-amber-400/10 text-amber-100">
+                        {isChinese ? '人工' : 'Human'}
+                      </Badge>
+                      <span>{isChinese ? '房间插话' : 'Room steer'}</span>
+                    </div>
+                    <div className="text-xs text-slate-400">
+                      {formatRelayTime(entry.createdAtMs, language)}
+                    </div>
+                  </div>
+                  <div className="mt-3 whitespace-pre-wrap break-words rounded-xl border border-amber-400/15 bg-black/20 p-3 text-sm leading-6 text-amber-50">
+                    {entry.content}
+                  </div>
+                  {entry.updatedAtMs ? (
+                    <div className="mt-2 text-[11px] text-amber-200/80">
+                      {isChinese ? '已编辑' : 'Edited'}
+                    </div>
+                  ) : null}
+                </article>
+              ) : (
+                <article
+                  key={entry.id}
+                  className={cn(
+                    'rounded-2xl border p-3',
+                    entry.agent === 'claude'
+                      ? 'border-sky-400/20 bg-sky-400/[0.06]'
+                      : 'border-emerald-400/20 bg-emerald-400/[0.06]'
+                  )}
+                >
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-2 text-sm font-medium text-white">
+                      <Badge
+                        className={
+                          entry.agent === 'claude'
+                            ? 'border-sky-400/30 bg-sky-400/10 text-sky-100'
+                            : 'border-emerald-400/30 bg-emerald-400/10 text-emerald-100'
+                        }
+                      >
+                        {entry.participantLabel}
+                      </Badge>
+                      <span>{isChinese ? `第 ${entry.turn} 轮` : `Turn ${entry.turn}`}</span>
+                    </div>
+                    <div className="text-xs text-slate-400">
+                      {formatRelayTime(entry.createdAtMs, language)}
+                    </div>
+                  </div>
+                  <div className="mt-3 rounded-xl border border-white/10 bg-black/20 p-3">
+                    <div className="mb-2 text-[11px] uppercase tracking-[0.18em] text-slate-500">
+                      {isChinese ? '输出' : 'Output'}
+                    </div>
+                    <pre className="whitespace-pre-wrap break-words text-sm leading-6 text-slate-100">
+                      {entry.output ||
+                        (entry.status === 'running'
+                          ? isChinese
+                            ? '等待当前 agent 回复中...'
+                            : 'Waiting for the current agent response...'
+                          : isChinese
+                            ? '这一轮没有输出。'
+                            : 'No output for this turn.')}
+                    </pre>
+                  </div>
+                  {entry.error ? (
+                    <div className="mt-2 text-sm text-rose-200">{entry.error}</div>
+                  ) : null}
+                </article>
+              )
+            )}
+          </div>
+        )}
+      </div>
+
+      <div className="mt-3 rounded-2xl border border-white/10 bg-white/[0.03] p-3">
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2 text-xs uppercase tracking-[0.18em] text-slate-500">
+            <MessageSquare className="h-3.5 w-3.5" />
+            {isChinese ? '介入房间' : 'Steer the room'}
+          </div>
+          <Badge variant="muted" className="bg-white/5 text-slate-300">
+            {interventions.length}
+          </Badge>
+        </div>
+        {editingInterventionId ? (
+          <div className="mt-3 flex items-center justify-between gap-3 rounded-xl border border-amber-400/20 bg-amber-400/[0.06] px-3 py-2 text-sm text-amber-50">
+            <span>
+              {isChinese
+                ? '正在编辑一条人工消息，保存后会继续影响后续回合。'
+                : 'Editing a steer message. Saving it will affect the next turns.'}
+            </span>
+            <button
+              type="button"
+              onClick={onCancelInterventionEdit}
+              className="rounded-full border border-amber-300/20 px-2.5 py-1 text-xs text-amber-100 transition hover:bg-amber-300/10"
+            >
+              {isChinese ? '取消编辑' : 'Cancel edit'}
+            </button>
+          </div>
+        ) : null}
+        <textarea
+          value={interventionDraft}
+          onChange={(event) => onInterventionDraftChange(event.target.value)}
+          rows={3}
+          disabled={
+            !relay ||
+            (relay.status !== 'running' && relay.status !== 'paused') ||
+            isSendingIntervention
+          }
+          className="mt-3 w-full resize-none rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-sm text-slate-100 outline-none placeholder:text-slate-500 disabled:cursor-not-allowed disabled:opacity-60"
+          placeholder={
+            isChinese
+              ? '插一句人工指令，比如“先统一结论，再给出行动计划”。'
+              : 'Inject a human note, like “align on one conclusion, then give an action plan.”'
+          }
+        />
+        <div className="mt-3 flex items-center justify-between gap-3">
+          <div className="text-xs text-slate-400">
+            {relay?.status === 'paused'
+              ? isChinese
+                ? '房间暂停时也可以先留下人工指令，恢复后会继续沿用。'
+                : 'You can add a steer message while paused, and it will be used after resume.'
+              : relay?.status === 'running'
+                ? isChinese
+                  ? '这条消息会从下一轮开始进入房间上下文。'
+                  : 'This message will enter the room context starting with the next turn.'
+                : isChinese
+                  ? '房间运行中或暂停时可以发送人工消息。'
+                  : 'Human messages can be sent while the room is running or paused.'}
+          </div>
+          <Button
+            onClick={onSendIntervention}
+            disabled={
+              !relay ||
+              (relay.status !== 'running' && relay.status !== 'paused') ||
+              !interventionDraft.trim() ||
+              isSendingIntervention
+            }
+            className="rounded-xl bg-[var(--theme-accent-solid)] text-[var(--theme-accent-foreground)] hover:bg-[var(--theme-accent-solid-hover)]"
+          >
+            {isSendingIntervention ? (
+              <LoaderCircle className="h-4 w-4 animate-spin" />
+            ) : (
+              <MessageSquare className="h-4 w-4" />
+            )}
+            {editingInterventionId
+              ? isChinese
+                ? '保存修改'
+                : 'Save edit'
+              : isChinese
+                ? '发送给房间'
+                : 'Send to room'}
+          </Button>
+        </div>
+        {interventionError ? <InlineNotice tone="error">{interventionError}</InlineNotice> : null}
+        {interventions.length > 0 ? (
+          <div className="mt-3 space-y-2">
+            {interventions
+              .slice()
+              .reverse()
+              .slice(0, 4)
+              .map((entry) => (
+                <div
+                  key={entry.id}
+                  className="rounded-xl border border-amber-400/20 bg-amber-400/[0.06] px-3 py-2"
+                >
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="text-[11px] uppercase tracking-[0.18em] text-amber-200/80">
+                      {isChinese ? '最近人工消息' : 'Recent human steer'}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => onEditIntervention(entry)}
+                        disabled={isSendingIntervention || removingInterventionId === entry.id}
+                        className="inline-flex items-center gap-1 rounded-full border border-amber-300/20 px-2 py-1 text-[11px] text-amber-100 transition hover:bg-amber-300/10 disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        <Pencil className="h-3 w-3" />
+                        {isChinese ? '编辑' : 'Edit'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => onRemoveIntervention(entry.id)}
+                        disabled={isSendingIntervention || removingInterventionId === entry.id}
+                        className="inline-flex items-center gap-1 rounded-full border border-rose-300/20 px-2 py-1 text-[11px] text-rose-100 transition hover:bg-rose-300/10 disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        {removingInterventionId === entry.id ? (
+                          <LoaderCircle className="h-3 w-3 animate-spin" />
+                        ) : (
+                          <Trash2 className="h-3 w-3" />
+                        )}
+                        {isChinese ? '撤回' : 'Withdraw'}
+                      </button>
+                    </div>
+                  </div>
+                  <div className="mt-1 whitespace-pre-wrap break-words text-sm text-amber-50">
+                    {entry.content}
+                  </div>
+                  {entry.updatedAtMs ? (
+                    <div className="mt-1 text-[11px] text-amber-200/80">
+                      {isChinese ? '已编辑' : 'Edited'}
+                    </div>
+                  ) : null}
+                </div>
+              ))}
+          </div>
+        ) : null}
       </div>
 
       <div className="mt-3 space-y-2">
@@ -1642,6 +2378,26 @@ async function stopRelay(relayId: string) {
   await fetch(`/api/relays/${encodeURIComponent(relayId)}/stop`, { method: 'POST' });
 }
 
+async function pauseRelay(relayId: string) {
+  const response = await fetch(`/api/relays/${encodeURIComponent(relayId)}/pause`, {
+    method: 'POST',
+  });
+  if (!response.ok) {
+    const data = (await response.json().catch(() => null)) as { error?: string } | null;
+    throw new Error(data?.error ?? 'Failed to pause relay.');
+  }
+}
+
+async function resumeRelay(relayId: string) {
+  const response = await fetch(`/api/relays/${encodeURIComponent(relayId)}/resume`, {
+    method: 'POST',
+  });
+  if (!response.ok) {
+    const data = (await response.json().catch(() => null)) as { error?: string } | null;
+    throw new Error(data?.error ?? 'Failed to resume relay.');
+  }
+}
+
 async function sendTerminalInput(terminalId: string, input: string) {
   if (!input) return;
   await fetch(`/api/terminals/${encodeURIComponent(terminalId)}/input`, {
@@ -1753,9 +2509,13 @@ function buildRelayTemplate(
   };
 }
 
-function downloadRelayMarkdown(relay: AgentRelaySessionDTO, turns: AgentRelayTurnDTO[]) {
+function downloadRelayMarkdown(
+  relay: AgentRelaySessionDTO,
+  turns: AgentRelayTurnDTO[],
+  interventions: AgentRelayInterventionDTO[]
+) {
   if (typeof window === 'undefined') return;
-  const markdown = buildRelayMarkdown(relay, turns);
+  const markdown = buildRelayMarkdown(relay, turns, interventions);
   const blob = new Blob([markdown], { type: 'text/markdown;charset=utf-8' });
   const url = window.URL.createObjectURL(blob);
   const anchor = document.createElement('a');
@@ -1765,8 +2525,13 @@ function downloadRelayMarkdown(relay: AgentRelaySessionDTO, turns: AgentRelayTur
   window.URL.revokeObjectURL(url);
 }
 
-function buildRelayMarkdown(relay: AgentRelaySessionDTO, turns: AgentRelayTurnDTO[]) {
-  const lines = [
+function buildRelayMarkdown(
+  relay: AgentRelaySessionDTO,
+  turns: AgentRelayTurnDTO[],
+  interventions: AgentRelayInterventionDTO[]
+) {
+  const timeline = buildRelayTimeline(turns, interventions);
+  const lines: Array<string | null> = [
     `# ${relay.title}`,
     '',
     `- Status: ${relay.status}`,
@@ -1789,11 +2554,71 @@ function buildRelayMarkdown(relay: AgentRelaySessionDTO, turns: AgentRelayTurnDT
   }
 
   lines.push('## Transcript', '');
-  for (const turn of turns) {
-    lines.push(`### Turn ${turn.turn} · ${turn.participantLabel}`, '', turn.output || '_No output_', '');
+  for (const entry of timeline) {
+    if (entry.type === 'intervention') {
+      lines.push(
+        `### Human steer · ${new Date(entry.createdAtMs).toLocaleString()}`,
+        '',
+        entry.content,
+        ''
+      );
+      continue;
+    }
+
+    lines.push(
+      `### Turn ${entry.turn} · ${entry.participantLabel}`,
+      '',
+      `- Provider: ${entry.agent}`,
+      `- Status: ${entry.status}`,
+      `- Started: ${new Date(entry.startedAtMs).toLocaleString()}`,
+      entry.endedAtMs ? `- Ended: ${new Date(entry.endedAtMs).toLocaleString()}` : null,
+      '',
+      '#### Prompt',
+      '',
+      entry.prompt || '_No prompt_',
+      '',
+      '#### Output',
+      '',
+      entry.output || '_No output_',
+      ''
+    );
+    if (entry.error) {
+      lines.push('#### Error', '', entry.error, '');
+    }
   }
 
-  return lines.join('\n');
+  return lines.filter((line): line is string => line !== null).join('\n');
+}
+
+type RelayTimelineEntry =
+  | (AgentRelayTurnDTO & { type: 'turn'; createdAtMs: number })
+  | (AgentRelayInterventionDTO & { type: 'intervention' });
+
+function buildRelayTimeline(
+  turns: AgentRelayTurnDTO[],
+  interventions: AgentRelayInterventionDTO[]
+): RelayTimelineEntry[] {
+  const entries: RelayTimelineEntry[] = [
+    ...turns.map((turn) => ({
+      ...turn,
+      type: 'turn' as const,
+      createdAtMs: turn.endedAtMs ?? turn.startedAtMs,
+    })),
+    ...interventions.map((intervention) => ({
+      ...intervention,
+      type: 'intervention' as const,
+    })),
+  ];
+
+  return entries.sort((left, right) => left.createdAtMs - right.createdAtMs);
+}
+
+function formatRelayTime(createdAtMs: number, language: string) {
+  return new Intl.DateTimeFormat(language, {
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+  }).format(createdAtMs);
 }
 
 function slugify(value: string) {
@@ -1919,6 +2744,9 @@ function terminalBadgeClass(status: TerminalSessionDTO['status']) {
 function relayBadgeClass(status: AgentRelaySessionDTO['status']) {
   if (status === 'running' || status === 'starting') {
     return 'border-violet-400/30 bg-violet-400/10 text-violet-100';
+  }
+  if (status === 'paused') {
+    return 'border-amber-400/30 bg-amber-400/10 text-amber-100';
   }
   if (status === 'completed') {
     return 'border-emerald-400/30 bg-emerald-400/10 text-emerald-100';

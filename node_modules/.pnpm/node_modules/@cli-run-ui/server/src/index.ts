@@ -3,6 +3,9 @@ import { Hono, type Context } from 'hono';
 import { cors } from 'hono/cors';
 
 import {
+  type PatchAgentRelayInterventionRequestDTO,
+  type PostAgentRelayInterventionRequestDTO,
+  type RemoveAgentRelayInterventionDTO,
   type StartAgentRelayRequestDTO,
   ClaudeProvider,
   CodexProvider,
@@ -42,6 +45,8 @@ terminalManager.onSession(() => runtimePersistence.schedule());
 terminalManager.onOutput(() => runtimePersistence.schedule());
 relayManager.onRelay(() => runtimePersistence.schedule());
 relayManager.onTurn(() => runtimePersistence.schedule());
+relayManager.onIntervention(() => runtimePersistence.schedule());
+relayManager.onInterventionRemoved(() => runtimePersistence.schedule());
 
 const devOrigins = new Set([
   'http://localhost:5173',
@@ -355,6 +360,75 @@ app.post('/api/relays/:id/stop', (c) => {
   return c.json({ relay });
 });
 
+app.post('/api/relays/:id/pause', (c) => {
+  const relay = relayManager.pauseRelay(c.req.param('id'));
+  if (!relay) {
+    return c.json({ error: 'relay not found' }, 404);
+  }
+  return c.json({ relay });
+});
+
+app.post('/api/relays/:id/resume', (c) => {
+  const relay = relayManager.resumeRelay(c.req.param('id'));
+  if (!relay) {
+    return c.json({ error: 'relay not found' }, 404);
+  }
+  return c.json({ relay });
+});
+
+app.post('/api/relays/:id/interventions', async (c) => {
+  const body = (await c.req.json().catch(() => null)) as PostAgentRelayInterventionRequestDTO | null;
+  if (!body) {
+    return c.json({ error: 'invalid request body' }, 400);
+  }
+
+  try {
+    const intervention = relayManager.addIntervention(c.req.param('id'), body.content);
+    return c.json({ intervention }, 201);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'failed to add intervention';
+    return c.json({ error: message }, message === 'Relay not found.' ? 404 : 400);
+  }
+});
+
+app.patch('/api/relays/:id/interventions/:interventionId', async (c) => {
+  const body = (await c.req.json().catch(() => null)) as PatchAgentRelayInterventionRequestDTO | null;
+  if (!body) {
+    return c.json({ error: 'invalid request body' }, 400);
+  }
+
+  try {
+    const intervention = relayManager.updateIntervention(
+      c.req.param('id'),
+      c.req.param('interventionId'),
+      body.content
+    );
+    return c.json({ intervention });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'failed to update intervention';
+    const status =
+      message === 'Relay not found.' || message === 'Intervention not found.' ? 404 : 400;
+    return c.json({ error: message }, status);
+  }
+});
+
+app.delete('/api/relays/:id/interventions/:interventionId', (c) => {
+  try {
+    relayManager.removeIntervention(c.req.param('id'), c.req.param('interventionId'));
+    return c.json({
+      removal: {
+        relayId: c.req.param('id'),
+        interventionId: c.req.param('interventionId'),
+      } satisfies RemoveAgentRelayInterventionDTO,
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'failed to remove intervention';
+    const status =
+      message === 'Relay not found.' || message === 'Intervention not found.' ? 404 : 400;
+    return c.json({ error: message }, status);
+  }
+});
+
 app.get('/api/relays/stream', (c) => {
   return createSseResponse(c, async (stream) => {
     stream.send('snapshot', { relays: relayManager.listRelays() });
@@ -383,6 +457,7 @@ app.get('/api/relays/:id/stream', (c) => {
     stream.send('snapshot', {
       relay,
       turns: relayManager.getTurns(relayId),
+      interventions: relayManager.getInterventions(relayId),
     });
 
     const offRelay = relayManager.onRelay((update) => {
@@ -395,11 +470,23 @@ app.get('/api/relays/:id/stream', (c) => {
       stream.send('turn', { turn });
     });
 
+    const offIntervention = relayManager.onIntervention((intervention) => {
+      if (intervention.relayId !== relayId) return;
+      stream.send('intervention', { intervention });
+    });
+
+    const offInterventionRemoved = relayManager.onInterventionRemoved((removal) => {
+      if (removal.relayId !== relayId) return;
+      stream.send('intervention_removed', { removal });
+    });
+
     const heartbeat = setInterval(() => stream.comment('heartbeat'), 15000);
 
     return () => {
       offRelay();
       offTurn();
+      offIntervention();
+      offInterventionRemoved();
       clearInterval(heartbeat);
     };
   });

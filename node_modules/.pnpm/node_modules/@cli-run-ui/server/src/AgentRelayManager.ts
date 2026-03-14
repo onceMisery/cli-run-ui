@@ -4,6 +4,7 @@ import { randomUUID } from 'node:crypto';
 import type {
   AgentRelayParticipantDTO,
   AgentRelayParticipantInputDTO,
+  AgentRelayInterventionDTO,
   AgentRelaySessionDTO,
   AgentRelayTurnDTO,
   ProviderId,
@@ -13,21 +14,31 @@ import { buildProviderCommand } from './providerCommands.js';
 
 type RelayListener = (relay: AgentRelaySessionDTO) => void;
 type RelayTurnListener = (turn: AgentRelayTurnDTO) => void;
+type RelayInterventionListener = (intervention: AgentRelayInterventionDTO) => void;
+type RelayInterventionRemovedListener = (payload: {
+  relayId: string;
+  interventionId: string;
+}) => void;
 
 export interface PersistedAgentRelayRecord {
   summary: AgentRelaySessionDTO;
   turns: AgentRelayTurnDTO[];
+  interventions: AgentRelayInterventionDTO[];
 }
 
 interface InternalRelay extends PersistedAgentRelayRecord {
   activeChild?: ChildProcessWithoutNullStreams;
   stopRequested: boolean;
+  pauseRequested: boolean;
+  loopActive: boolean;
 }
 
 export class AgentRelayManager {
   private readonly relays = new Map<string, InternalRelay>();
   private readonly relayListeners = new Set<RelayListener>();
   private readonly turnListeners = new Set<RelayTurnListener>();
+  private readonly interventionListeners = new Set<RelayInterventionListener>();
+  private readonly interventionRemovedListeners = new Set<RelayInterventionRemovedListener>();
 
   constructor(restoredRelays: PersistedAgentRelayRecord[] = []) {
     this.restore(restoredRelays);
@@ -47,11 +58,16 @@ export class AgentRelayManager {
     return this.relays.get(relayId)?.turns ?? [];
   }
 
+  getInterventions(relayId: string): AgentRelayInterventionDTO[] {
+    return this.relays.get(relayId)?.interventions ?? [];
+  }
+
   listPersistedRelays(): PersistedAgentRelayRecord[] {
     return Array.from(this.relays.values())
       .map((relay) => ({
         summary: relay.summary,
         turns: [...relay.turns],
+        interventions: [...relay.interventions],
       }))
       .sort((a, b) => b.summary.createdAtMs - a.summary.createdAtMs);
   }
@@ -64,6 +80,16 @@ export class AgentRelayManager {
   onTurn(listener: RelayTurnListener): () => void {
     this.turnListeners.add(listener);
     return () => this.turnListeners.delete(listener);
+  }
+
+  onIntervention(listener: RelayInterventionListener): () => void {
+    this.interventionListeners.add(listener);
+    return () => this.interventionListeners.delete(listener);
+  }
+
+  onInterventionRemoved(listener: RelayInterventionRemovedListener): () => void {
+    this.interventionRemovedListeners.add(listener);
+    return () => this.interventionRemovedListeners.delete(listener);
   }
 
   async startRelay(request: StartAgentRelayRequestDTO): Promise<AgentRelaySessionDTO> {
@@ -87,7 +113,10 @@ export class AgentRelayManager {
     const internal: InternalRelay = {
       summary,
       turns: [],
+      interventions: [],
       stopRequested: false,
+      pauseRequested: false,
+      loopActive: false,
     };
 
     this.relays.set(relayId, internal);
@@ -100,6 +129,7 @@ export class AgentRelayManager {
     const relay = this.relays.get(relayId);
     if (!relay) return null;
     relay.stopRequested = true;
+    relay.pauseRequested = false;
     relay.activeChild?.kill();
     if (relay.summary.status === 'completed' || relay.summary.status === 'failed' || relay.summary.status === 'stopped') {
       return relay.summary;
@@ -112,125 +142,289 @@ export class AgentRelayManager {
     return relay.summary;
   }
 
-  private async runRelay(relayId: string) {
+  pauseRelay(relayId: string): AgentRelaySessionDTO | null {
+    const relay = this.relays.get(relayId);
+    if (!relay) return null;
+    if (relay.summary.status === 'completed' || relay.summary.status === 'failed' || relay.summary.status === 'stopped') {
+      return relay.summary;
+    }
+
+    relay.pauseRequested = true;
+
+    if (!relay.activeChild && !relay.loopActive) {
+      this.updateRelay(relayId, {
+        status: 'paused',
+        summary: buildRelaySummary(relay.summary, relay.turns),
+      });
+    }
+
+    return relay.summary;
+  }
+
+  resumeRelay(relayId: string): AgentRelaySessionDTO | null {
+    const relay = this.relays.get(relayId);
+    if (!relay) return null;
+    if (relay.summary.status !== 'paused') {
+      return relay.summary;
+    }
+
+    relay.stopRequested = false;
+    relay.pauseRequested = false;
+
+    const nextTurnNumber = relay.summary.currentTurn + 1;
+    if (nextTurnNumber > relay.summary.maxTurns) {
+      this.updateRelay(relayId, {
+        status: 'completed',
+        summary: buildRelaySummary(relay.summary, relay.turns),
+        endedAtMs: Date.now(),
+      });
+      return relay.summary;
+    }
+
+    void this.runRelay(relayId, nextTurnNumber);
+    return relay.summary;
+  }
+
+  addIntervention(relayId: string, content: string): AgentRelayInterventionDTO {
+    const relay = this.relays.get(relayId);
+    if (!relay) {
+      throw new Error('Relay not found.');
+    }
+    if (
+      relay.summary.status !== 'running' &&
+      relay.summary.status !== 'starting' &&
+      relay.summary.status !== 'paused'
+    ) {
+      throw new Error('Relay is not currently accepting new messages.');
+    }
+    const normalized = content.trim();
+    if (!normalized) {
+      throw new Error('Message content is required.');
+    }
+
+    const intervention: AgentRelayInterventionDTO = {
+      id: randomUUID(),
+      relayId,
+      content: normalized,
+      createdAtMs: Date.now(),
+    };
+
+    relay.interventions.push(intervention);
+    this.emitIntervention(intervention);
+    return intervention;
+  }
+
+  updateIntervention(
+    relayId: string,
+    interventionId: string,
+    content: string
+  ): AgentRelayInterventionDTO {
+    const relay = this.relays.get(relayId);
+    if (!relay) {
+      throw new Error('Relay not found.');
+    }
+    if (
+      relay.summary.status !== 'running' &&
+      relay.summary.status !== 'starting' &&
+      relay.summary.status !== 'paused'
+    ) {
+      throw new Error('Relay is not currently accepting message edits.');
+    }
+
+    const normalized = content.trim();
+    if (!normalized) {
+      throw new Error('Message content is required.');
+    }
+
+    const index = relay.interventions.findIndex((entry) => entry.id === interventionId);
+    if (index === -1) {
+      throw new Error('Intervention not found.');
+    }
+
+    const current = relay.interventions[index];
+    if (!current) {
+      throw new Error('Intervention not found.');
+    }
+    const next: AgentRelayInterventionDTO = {
+      ...current,
+      content: normalized,
+      updatedAtMs: Date.now(),
+    };
+    relay.interventions[index] = next;
+    this.emitIntervention(next);
+    return next;
+  }
+
+  removeIntervention(relayId: string, interventionId: string) {
+    const relay = this.relays.get(relayId);
+    if (!relay) {
+      throw new Error('Relay not found.');
+    }
+    if (
+      relay.summary.status !== 'running' &&
+      relay.summary.status !== 'starting' &&
+      relay.summary.status !== 'paused'
+    ) {
+      throw new Error('Relay is not currently accepting message changes.');
+    }
+
+    const nextInterventions = relay.interventions.filter(
+      (entry) => entry.id !== interventionId
+    );
+    if (nextInterventions.length === relay.interventions.length) {
+      throw new Error('Intervention not found.');
+    }
+
+    relay.interventions = nextInterventions;
+    this.emitInterventionRemoved({ relayId, interventionId });
+  }
+
+  private async runRelay(relayId: string, startTurnNumber = 1) {
     const relay = this.relays.get(relayId);
     if (!relay) return;
+    if (relay.loopActive) return;
 
-    this.updateRelay(relayId, { status: 'running' });
+    relay.loopActive = true;
+    this.updateRelay(relayId, { status: 'running', endedAtMs: undefined });
 
-    const history: Array<{ speaker: string; content: string }> = [
-      { speaker: 'User', content: relay.summary.initialPrompt },
-    ];
+    try {
+      for (
+        let turnNumber = startTurnNumber;
+        turnNumber <= relay.summary.maxTurns;
+        turnNumber += 1
+      ) {
+        const currentRelay = this.relays.get(relayId);
+        if (!currentRelay || currentRelay.stopRequested) {
+          return;
+        }
+        if (currentRelay.pauseRequested) {
+          currentRelay.pauseRequested = false;
+          this.updateRelay(relayId, {
+            status: 'paused',
+            summary: buildRelaySummary(currentRelay.summary, currentRelay.turns),
+          });
+          return;
+        }
 
-    for (let turnNumber = 1; turnNumber <= relay.summary.maxTurns; turnNumber += 1) {
-      const currentRelay = this.relays.get(relayId);
-      if (!currentRelay || currentRelay.stopRequested) {
-        return;
-      }
+        const history = buildRelayHistory(
+          currentRelay.summary,
+          currentRelay.turns,
+          currentRelay.interventions
+        );
 
-      const participant = resolveParticipantForTurn(relay.summary.participants, turnNumber);
-      if (!participant) {
-        this.updateRelay(relayId, {
-          status: 'failed',
-          error: 'No relay participants configured.',
-          endedAtMs: Date.now(),
+        const participant = resolveParticipantForTurn(relay.summary.participants, turnNumber);
+        if (!participant) {
+          this.updateRelay(relayId, {
+            status: 'failed',
+            error: 'No relay participants configured.',
+            endedAtMs: Date.now(),
+          });
+          return;
+        }
+        const prompt = buildRelayTurnPrompt({
+          initialPrompt: relay.summary.initialPrompt,
+          history,
+          turnNumber,
+          maxTurns: relay.summary.maxTurns,
+          participant,
+          participants: relay.summary.participants,
+          systemPrompt: relay.summary.systemPrompt,
         });
-        return;
-      }
-      const prompt = buildRelayTurnPrompt({
-        initialPrompt: relay.summary.initialPrompt,
-        history,
-        turnNumber,
-        maxTurns: relay.summary.maxTurns,
-        participant,
-        participants: relay.summary.participants,
-        systemPrompt: relay.summary.systemPrompt,
-      });
 
-      const turn: AgentRelayTurnDTO = {
-        id: randomUUID(),
-        relayId,
-        turn: turnNumber,
-        agent: participant.provider,
-        participantId: participant.id,
-        participantLabel: participant.label,
-        prompt,
-        output: '',
-        startedAtMs: Date.now(),
-        status: 'running',
-      };
-      currentRelay.turns.push(turn);
-      this.updateRelay(relayId, { currentTurn: turnNumber });
-      this.emitTurn(turn);
+        const turn: AgentRelayTurnDTO = {
+          id: randomUUID(),
+          relayId,
+          turn: turnNumber,
+          agent: participant.provider,
+          participantId: participant.id,
+          participantLabel: participant.label,
+          prompt,
+          output: '',
+          startedAtMs: Date.now(),
+          status: 'running',
+        };
+        currentRelay.turns.push(turn);
+        this.updateRelay(relayId, { currentTurn: turnNumber });
+        this.emitTurn(turn);
 
-      try {
-        const result = await this.executeTurn(relayId, turn);
-        const latestRelay = this.relays.get(relayId);
-        if (!latestRelay) return;
-        if (latestRelay.stopRequested) {
-          this.updateTurn(relayId, turn.id, {
+        try {
+          const result = await this.executeTurn(relayId, turn);
+          const latestRelay = this.relays.get(relayId);
+          if (!latestRelay) return;
+          if (latestRelay.stopRequested) {
+            this.updateTurn(relayId, turn.id, {
+              output: result.output,
+              endedAtMs: Date.now(),
+              exitCode: result.exitCode,
+              status: 'stopped',
+            });
+            return;
+          }
+          const completedTurn = this.updateTurn(relayId, turn.id, {
             output: result.output,
             endedAtMs: Date.now(),
             exitCode: result.exitCode,
-            status: 'stopped',
+            status: result.exitCode === 0 ? 'completed' : 'failed',
+            error: result.exitCode === 0 ? undefined : result.output || `Exit code ${result.exitCode}`,
           });
-          return;
-        }
-        const completedTurn = this.updateTurn(relayId, turn.id, {
-          output: result.output,
-          endedAtMs: Date.now(),
-          exitCode: result.exitCode,
-          status: result.exitCode === 0 ? 'completed' : 'failed',
-          error: result.exitCode === 0 ? undefined : result.output || `Exit code ${result.exitCode}`,
-        });
 
-        if (!completedTurn) return;
+          if (!completedTurn) return;
 
-        history.push({
-          speaker: participant.label,
-          content: completedTurn.output || fallbackOutput(participant.label),
-        });
+          if (completedTurn.status === 'failed') {
+            this.updateRelay(relayId, {
+              status: 'failed',
+              error: completedTurn.error ?? `Turn ${turnNumber} failed.`,
+              summary: buildRelaySummary(relay.summary, currentRelay.turns),
+              endedAtMs: Date.now(),
+            });
+            return;
+          }
 
-        if (completedTurn.status === 'failed') {
+          if (latestRelay.pauseRequested) {
+            latestRelay.pauseRequested = false;
+            this.updateRelay(relayId, {
+              status: 'paused',
+              summary: buildRelaySummary(latestRelay.summary, latestRelay.turns),
+            });
+            return;
+          }
+        } catch (error) {
+          const message = error instanceof Error ? error.message : String(error);
+          this.updateTurn(relayId, turn.id, {
+            output: message,
+            endedAtMs: Date.now(),
+            status: relay.stopRequested ? 'stopped' : 'failed',
+            error: message,
+          });
+          if (relay.stopRequested) {
+            return;
+          }
           this.updateRelay(relayId, {
             status: 'failed',
-            error: completedTurn.error ?? `Turn ${turnNumber} failed.`,
-            summary: buildRelaySummary(relay.summary, currentRelay.turns),
+            error: message,
+            summary: buildRelaySummary(relay.summary, relay.turns),
             endedAtMs: Date.now(),
           });
           return;
         }
-      } catch (error) {
-        const message = error instanceof Error ? error.message : String(error);
-        this.updateTurn(relayId, turn.id, {
-          output: message,
-          endedAtMs: Date.now(),
-          status: relay.stopRequested ? 'stopped' : 'failed',
-          error: message,
-        });
-        if (relay.stopRequested) {
-          return;
-        }
-        this.updateRelay(relayId, {
-          status: 'failed',
-          error: message,
-          summary: buildRelaySummary(relay.summary, relay.turns),
-          endedAtMs: Date.now(),
-        });
+      }
+
+      const latestRelay = this.relays.get(relayId);
+      if (!latestRelay || latestRelay.stopRequested) {
         return;
       }
-    }
 
-    const latestRelay = this.relays.get(relayId);
-    if (!latestRelay || latestRelay.stopRequested) {
-      return;
+      this.updateRelay(relayId, {
+        status: 'completed',
+        summary: buildRelaySummary(latestRelay.summary, latestRelay.turns),
+        endedAtMs: Date.now(),
+      });
+    } finally {
+      const latestRelay = this.relays.get(relayId);
+      if (latestRelay) {
+        latestRelay.loopActive = false;
+      }
     }
-
-    this.updateRelay(relayId, {
-      status: 'completed',
-      summary: buildRelaySummary(latestRelay.summary, latestRelay.turns),
-      endedAtMs: Date.now(),
-    });
   }
 
   private executeTurn(relayId: string, turn: AgentRelayTurnDTO): Promise<{
@@ -328,6 +522,18 @@ export class AgentRelayManager {
     }
   }
 
+  private emitIntervention(intervention: AgentRelayInterventionDTO) {
+    for (const listener of this.interventionListeners) {
+      listener(intervention);
+    }
+  }
+
+  private emitInterventionRemoved(payload: { relayId: string; interventionId: string }) {
+    for (const listener of this.interventionRemovedListeners) {
+      listener(payload);
+    }
+  }
+
   private restore(restoredRelays: PersistedAgentRelayRecord[]) {
     const restoredAtMs = Date.now();
     for (const entry of restoredRelays) {
@@ -339,7 +545,14 @@ export class AgentRelayManager {
       this.relays.set(summary.id, {
         summary,
         turns,
+        interventions: Array.isArray(entry.interventions)
+          ? entry.interventions
+              .filter((intervention) => intervention.relayId === summary.id)
+              .slice(-80)
+          : [],
         stopRequested: false,
+        pauseRequested: false,
+        loopActive: false,
       });
     }
   }
@@ -385,6 +598,38 @@ function buildRelayTurnPrompt({
   ]
     .filter(Boolean)
     .join('\n');
+}
+
+function buildRelayHistory(
+  relay: AgentRelaySessionDTO,
+  turns: AgentRelayTurnDTO[],
+  interventions: AgentRelayInterventionDTO[]
+) {
+  const turnEntries = turns
+    .filter((turn) => turn.status !== 'running')
+    .map((turn) => ({
+      createdAtMs: turn.endedAtMs ?? turn.startedAtMs,
+      speaker: turn.participantLabel,
+      content: turn.output || fallbackOutput(turn.participantLabel),
+    }));
+
+  const interventionEntries = interventions.map((intervention) => ({
+    createdAtMs: intervention.createdAtMs,
+    speaker: 'User',
+    content: intervention.content,
+  }));
+
+  return [
+    {
+      createdAtMs: relay.createdAtMs,
+      speaker: 'User',
+      content: relay.initialPrompt,
+    },
+    ...turnEntries,
+    ...interventionEntries,
+  ]
+    .sort((a, b) => a.createdAtMs - b.createdAtMs)
+    .map(({ speaker, content }) => ({ speaker, content }));
 }
 
 function resolveParticipantForTurn(
