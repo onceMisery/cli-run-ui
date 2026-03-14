@@ -13,6 +13,7 @@ import {
 import { useSessionStream } from './hooks/useSessionStream.ts';
 import { useConversationStream } from './hooks/useConversationStream.ts';
 import { useRunSessions } from './hooks/useRunSessions.ts';
+import { useTaskSessions } from './hooks/useTaskSessions.ts';
 import { useTerminalSessions } from './hooks/useTerminalSessions.ts';
 import { useAgentRelaySessions } from './hooks/useAgentRelaySessions.ts';
 import { SessionList } from './views/SessionList.tsx';
@@ -45,6 +46,7 @@ export default function App() {
   const { language, isChinese, setLanguage } = useI18n();
   const { sessions, status: sessionStatus } = useSessionStream();
   const { runs, status: runStatus } = useRunSessions();
+  const { tasks, status: taskStatus } = useTaskSessions();
   const { terminals, status: terminalStatus } = useTerminalSessions();
   const { relays, status: relayStatus } = useAgentRelaySessions();
   const [activeSessionUid, setActiveSessionUid] = useState<string | null>(null);
@@ -125,6 +127,11 @@ export default function App() {
         (terminal) => terminal.status === 'open' || terminal.status === 'starting'
       ).length,
     [terminals]
+  );
+  const activeTaskCount = useMemo(
+    () =>
+      tasks.filter((task) => task.status === 'preparing' || task.status === 'running').length,
+    [tasks]
   );
   const activeRelayCount = useMemo(
     () =>
@@ -260,7 +267,7 @@ export default function App() {
                   helper={
                     isChinese
                       ? `${runningCount} 个 run / ${activeTerminalCount} 个 terminal / ${activeRelayCount} 个 relay`
-                      : `${runningCount} runs / ${activeTerminalCount} terminals / ${activeRelayCount} relays`
+                      : `${runningCount} runs / ${activeTaskCount} tasks / ${activeTerminalCount} terminals / ${activeRelayCount} relays`
                   }
                 />
               </div>
@@ -366,6 +373,8 @@ export default function App() {
                   activeSession={activeSession}
                   runs={runs}
                   runStatus={runStatus}
+                  tasks={tasks}
+                  taskStatus={taskStatus}
                   terminals={terminals}
                   terminalStatus={terminalStatus}
                   relays={relays}

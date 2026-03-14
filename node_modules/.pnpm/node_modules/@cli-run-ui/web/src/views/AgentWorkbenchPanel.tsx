@@ -10,8 +10,12 @@ import type {
   AgentRelayInterventionDTO,
   AgentRelaySessionDTO,
   AgentRelayTurnDTO,
+  AgentTaskDTO,
+  AgentTaskEventDTO,
+  ImportedGitHubIssueDraftDTO,
   RunSessionDTO,
   SessionDTO,
+  StartAgentTaskRequestDTO,
   StartAgentRelayRequestDTO,
   StartRunRequestDTO,
   StartTerminalRequestDTO,
@@ -27,9 +31,12 @@ import {
   Command,
   CornerDownLeft,
   Download,
+  GitBranch,
+  GitPullRequestArrow,
   Keyboard,
   LoaderCircle,
   MessageSquare,
+  RefreshCw,
   Monitor,
   Pause,
   Pencil,
@@ -47,18 +54,21 @@ import {
 import { useAgentRelayStream } from '@/hooks/useAgentRelayStream';
 import type { StreamStatus } from '@/hooks/useSessionStream';
 import { useRunStream } from '@/hooks/useRunStream';
+import { useTaskStream } from '@/hooks/useTaskStream';
 import { useTerminalStream } from '@/hooks/useTerminalStream';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useI18n } from '@/lib/i18n';
 import { cn } from '@/lib/utils';
 
-type LaunchSurface = 'run' | 'terminal' | 'relay';
+type LaunchSurface = 'task' | 'run' | 'terminal' | 'relay';
 
 interface AgentWorkbenchPanelProps {
   activeSession: SessionDTO | null;
   runs: RunSessionDTO[];
   runStatus: StreamStatus;
+  tasks: AgentTaskDTO[];
+  taskStatus: StreamStatus;
   terminals: TerminalSessionDTO[];
   terminalStatus: StreamStatus;
   relays: AgentRelaySessionDTO[];
@@ -77,6 +87,7 @@ interface WorkbenchPreferences {
   relayStarter: SessionDTO['provider'];
   relayTemplateId: RelayTemplateId;
   relayMaxTurns: number;
+  selectedTaskId: string | null;
   selectedRunId: string | null;
   selectedTerminalId: string | null;
   selectedRelayId: string | null;
@@ -118,6 +129,8 @@ export function AgentWorkbenchPanel({
   activeSession,
   runs,
   runStatus,
+  tasks,
+  taskStatus,
   terminals,
   terminalStatus,
   relays,
@@ -148,6 +161,16 @@ export function AgentWorkbenchPanel({
     savedPreferences?.relayTemplateId ?? 'duel'
   );
   const [relayMaxTurns, setRelayMaxTurns] = useState(savedPreferences?.relayMaxTurns ?? 4);
+  const [taskTitle, setTaskTitle] = useState('');
+  const [taskIssueUrl, setTaskIssueUrl] = useState('');
+  const [taskTestCommand, setTaskTestCommand] = useState('');
+  const [taskError, setTaskError] = useState<string | null>(null);
+  const [isLaunchingTask, setIsLaunchingTask] = useState(false);
+  const [isImportingTaskIssue, setIsImportingTaskIssue] = useState(false);
+  const [isRefreshingTask, setIsRefreshingTask] = useState(false);
+  const [isCreatingTaskPr, setIsCreatingTaskPr] = useState(false);
+  const [isReviewingTaskPr, setIsReviewingTaskPr] = useState(false);
+  const [isMergingTaskPr, setIsMergingTaskPr] = useState(false);
   const [runError, setRunError] = useState<string | null>(null);
   const [terminalError, setTerminalError] = useState<string | null>(null);
   const [chatError, setChatError] = useState<string | null>(null);
@@ -176,6 +199,9 @@ export function AgentWorkbenchPanel({
     null
   );
   const [relayTemplateError, setRelayTemplateError] = useState<string | null>(null);
+  const [selectedTaskId, setSelectedTaskId] = useState<string | null>(
+    savedPreferences?.selectedTaskId ?? tasks[0]?.id ?? null
+  );
   const [selectedRunId, setSelectedRunId] = useState<string | null>(
     savedPreferences?.selectedRunId ?? runs[0]?.id ?? null
   );
@@ -208,6 +234,7 @@ export function AgentWorkbenchPanel({
       relayStarter,
       relayTemplateId,
       relayMaxTurns,
+      selectedTaskId,
       selectedRunId,
       selectedTerminalId,
       selectedRelayId,
@@ -224,10 +251,20 @@ export function AgentWorkbenchPanel({
     relayStarter,
     relayTemplateId,
     selectedRelayId,
+    selectedTaskId,
     selectedRunId,
     selectedTerminalId,
     surface,
   ]);
+
+  useEffect(() => {
+    if (tasks.length === 0) {
+      setSelectedTaskId(null);
+      return;
+    }
+    if (selectedTaskId && tasks.some((task) => task.id === selectedTaskId)) return;
+    setSelectedTaskId(tasks[0]?.id ?? null);
+  }, [selectedTaskId, tasks]);
 
   useEffect(() => {
     if (runs.length === 0) {
@@ -262,6 +299,14 @@ export function AgentWorkbenchPanel({
     () => runs.find((entry) => entry.id === selectedRunId) ?? null,
     [runs, selectedRunId]
   );
+  const task = useMemo(
+    () => tasks.find((entry) => entry.id === selectedTaskId) ?? null,
+    [selectedTaskId, tasks]
+  );
+  const taskRun = useMemo(
+    () => runs.find((entry) => entry.id === (task?.runId ?? '')) ?? null,
+    [runs, task?.runId]
+  );
   const terminal = useMemo(
     () => terminals.find((entry) => entry.id === selectedTerminalId) ?? null,
     [selectedTerminalId, terminals]
@@ -272,6 +317,8 @@ export function AgentWorkbenchPanel({
   );
 
   const { run: liveRun, logs } = useRunStream(selectedRunId, run);
+  const { task: liveTask, events: taskEvents } = useTaskStream(selectedTaskId, task);
+  const { run: liveTaskRun, logs: taskLogs } = useRunStream(task?.runId ?? null, taskRun);
   const { terminal: liveTerminal, outputs } = useTerminalStream(
     selectedTerminalId,
     terminal
@@ -284,6 +331,11 @@ export function AgentWorkbenchPanel({
     !!activeSession.sessionId;
   const canLaunchRun =
     !isLaunchingRun &&
+    cwd.trim().length > 0 &&
+    prompt.trim().length > 0 &&
+    (mode === 'task' || canResume);
+  const canLaunchTask =
+    !isLaunchingTask &&
     cwd.trim().length > 0 &&
     prompt.trim().length > 0 &&
     (mode === 'task' || canResume);
@@ -430,6 +482,156 @@ export function AgentWorkbenchPanel({
     }
     if (relayTemplateId === templateId) {
       applyRelayTemplateSelection('duel');
+    }
+  };
+
+  const launchTask = async () => {
+    if (!canLaunchTask) return;
+    setIsLaunchingTask(true);
+    setTaskError(null);
+
+    try {
+      const payload: StartAgentTaskRequestDTO = {
+        title: taskTitle.trim() || undefined,
+        provider,
+        mode,
+        cwd: cwd.trim(),
+        prompt: prompt.trim(),
+        issueUrl: taskIssueUrl.trim() || undefined,
+        sessionUid: mode === 'resume' ? activeSession?.uid : undefined,
+        testCommand: taskTestCommand.trim() || undefined,
+      };
+      const response = await fetch('/api/tasks', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const data = (await response.json()) as { task?: AgentTaskDTO; error?: string };
+      if (!response.ok || !data.task) {
+        throw new Error(data.error ?? 'Failed to start task.');
+      }
+      startTransition(() => {
+        setSurface('task');
+        setSelectedTaskId(data.task!.id);
+      });
+    } catch (reason) {
+      setTaskError(reason instanceof Error ? reason.message : 'Failed to start task.');
+    } finally {
+      setIsLaunchingTask(false);
+    }
+  };
+
+  const importTaskIssue = async () => {
+    if (!taskIssueUrl.trim() || isImportingTaskIssue) return;
+    setIsImportingTaskIssue(true);
+    setTaskError(null);
+
+    try {
+      const response = await fetch('/api/tasks/import-issue', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ issueUrl: taskIssueUrl.trim(), cwd: cwd.trim() || undefined }),
+      });
+      const data = (await response.json()) as {
+        draft?: ImportedGitHubIssueDraftDTO;
+        error?: string;
+      };
+      if (!response.ok || !data.draft) {
+        throw new Error(data.error ?? 'Failed to import issue.');
+      }
+      setTaskTitle(data.draft.title);
+      setPrompt(data.draft.prompt);
+    } catch (reason) {
+      setTaskError(reason instanceof Error ? reason.message : 'Failed to import issue.');
+    } finally {
+      setIsImportingTaskIssue(false);
+    }
+  };
+
+  const refreshTaskArtifacts = async (rerunTests = false) => {
+    if (!liveTask || isRefreshingTask) return;
+    setIsRefreshingTask(true);
+    setTaskError(null);
+    try {
+      const response = await fetch(`/api/tasks/${encodeURIComponent(liveTask.id)}/refresh`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ rerunTests }),
+      });
+      const data = (await response.json()) as { task?: AgentTaskDTO; error?: string };
+      if (!response.ok || !data.task) {
+        throw new Error(data.error ?? 'Failed to refresh task.');
+      }
+    } catch (reason) {
+      setTaskError(reason instanceof Error ? reason.message : 'Failed to refresh task.');
+    } finally {
+      setIsRefreshingTask(false);
+    }
+  };
+
+  const createTaskPullRequest = async () => {
+    if (!liveTask || isCreatingTaskPr) return;
+    setIsCreatingTaskPr(true);
+    setTaskError(null);
+    try {
+      const response = await fetch(
+        `/api/tasks/${encodeURIComponent(liveTask.id)}/pull-request`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({}),
+        }
+      );
+      const data = (await response.json()) as { task?: AgentTaskDTO; error?: string };
+      if (!response.ok || !data.task) {
+        throw new Error(data.error ?? 'Failed to create pull request.');
+      }
+    } catch (reason) {
+      setTaskError(reason instanceof Error ? reason.message : 'Failed to create pull request.');
+    } finally {
+      setIsCreatingTaskPr(false);
+    }
+  };
+
+  const reviewTaskPullRequest = async (event: 'APPROVE' | 'REQUEST_CHANGES') => {
+    if (!liveTask?.pullRequest || isReviewingTaskPr) return;
+    setIsReviewingTaskPr(true);
+    setTaskError(null);
+    try {
+      const response = await fetch(`/api/tasks/${encodeURIComponent(liveTask.id)}/review`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ event }),
+      });
+      const data = (await response.json()) as { task?: AgentTaskDTO; error?: string };
+      if (!response.ok) {
+        throw new Error(data.error ?? 'Failed to review pull request.');
+      }
+    } catch (reason) {
+      setTaskError(reason instanceof Error ? reason.message : 'Failed to review pull request.');
+    } finally {
+      setIsReviewingTaskPr(false);
+    }
+  };
+
+  const mergeTaskPullRequest = async () => {
+    if (!liveTask?.pullRequest || isMergingTaskPr) return;
+    setIsMergingTaskPr(true);
+    setTaskError(null);
+    try {
+      const response = await fetch(`/api/tasks/${encodeURIComponent(liveTask.id)}/merge`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ method: 'squash' }),
+      });
+      const data = (await response.json()) as { task?: AgentTaskDTO; error?: string };
+      if (!response.ok) {
+        throw new Error(data.error ?? 'Failed to merge pull request.');
+      }
+    } catch (reason) {
+      setTaskError(reason instanceof Error ? reason.message : 'Failed to merge pull request.');
+    } finally {
+      setIsMergingTaskPr(false);
     }
   };
 
@@ -741,11 +943,15 @@ export function AgentWorkbenchPanel({
   };
 
   const resetDraft = () => {
+    setTaskTitle('');
+    setTaskIssueUrl('');
+    setTaskTestCommand('');
     setPrompt('');
     setRelayPrompt('');
     setRelayPinnedRulesDraft('');
     setRelaySystemPrompt('');
     setRunError(null);
+    setTaskError(null);
     setTerminalError(null);
     setChatError(null);
     setRelayError(null);
@@ -783,6 +989,9 @@ export function AgentWorkbenchPanel({
           </div>
         </div>
         <div className="flex gap-2">
+          <Badge className={streamBadgeClass(taskStatus)}>
+            {isChinese ? 'tasks' : 'tasks'} {taskStatus === 'open' ? 'live' : 'syncing'}
+          </Badge>
           <Badge className={streamBadgeClass(runStatus)}>
             {isChinese ? 'runs' : 'runs'} {runStatus === 'open' ? (isChinese ? '实时' : 'live') : isChinese ? '同步中' : 'syncing'}
           </Badge>
@@ -895,6 +1104,65 @@ export function AgentWorkbenchPanel({
               </div>
             </div>
 
+            <div className="mt-3">
+              <div className="mb-1 flex items-center justify-between text-xs uppercase tracking-[0.18em] text-slate-500">
+                <span>{isChinese ? 'GitHub issue' : 'GitHub issue'}</span>
+                <span className="normal-case tracking-normal text-slate-400">
+                  {isChinese ? '可选' : 'optional'}
+                </span>
+              </div>
+              <div className="flex gap-2">
+                <input
+                  value={taskIssueUrl}
+                  onChange={(event) => setTaskIssueUrl(event.target.value)}
+                  placeholder="https://github.com/owner/repo/issues/123"
+                  className="min-w-0 flex-1 rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 text-sm text-slate-100 outline-none placeholder:text-slate-500"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="border-white/10 bg-white/[0.03] text-slate-100 hover:bg-white/[0.08]"
+                  onClick={() => void importTaskIssue()}
+                  disabled={!taskIssueUrl.trim() || isImportingTaskIssue}
+                >
+                  {isImportingTaskIssue ? (
+                    <LoaderCircle className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <GitPullRequestArrow className="h-4 w-4" />
+                  )}
+                  {isChinese ? '导入' : 'Import'}
+                </Button>
+              </div>
+            </div>
+
+            <div className="mt-3">
+              <div className="mb-1 text-xs uppercase tracking-[0.18em] text-slate-500">
+                {isChinese ? 'Task title' : 'Task title'}
+              </div>
+              <input
+                value={taskTitle}
+                onChange={(event) => setTaskTitle(event.target.value)}
+                placeholder={isChinese ? '例如：实现 GitHub task loop' : 'For example: Ship the GitHub task loop'}
+                className="w-full rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 text-sm text-slate-100 outline-none placeholder:text-slate-500"
+              />
+            </div>
+
+            <div className="mt-3">
+              <div className="mb-1 flex items-center justify-between text-xs uppercase tracking-[0.18em] text-slate-500">
+                <span>{isChinese ? 'Test command' : 'Test command'}</span>
+                <span className="normal-case tracking-normal text-slate-400">
+                  {isChinese ? '可选' : 'optional'}
+                </span>
+              </div>
+              <input
+                value={taskTestCommand}
+                onChange={(event) => setTaskTestCommand(event.target.value)}
+                placeholder={isChinese ? '例如：corepack pnpm test' : 'For example: corepack pnpm test'}
+                className="w-full rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 text-sm text-slate-100 outline-none placeholder:text-slate-500"
+              />
+            </div>
+
             {!canResume && mode === 'resume' ? (
               <InlineNotice tone="warn">
                 {isChinese
@@ -902,10 +1170,23 @@ export function AgentWorkbenchPanel({
                   : 'Select a session from the same provider before trying to resume it.'}
               </InlineNotice>
             ) : null}
+            {taskError ? <InlineNotice tone="error">{taskError}</InlineNotice> : null}
             {runError ? <InlineNotice tone="error">{runError}</InlineNotice> : null}
             {terminalError ? <InlineNotice tone="error">{terminalError}</InlineNotice> : null}
 
             <div className="mt-4 grid gap-2">
+              <Button
+                onClick={() => void launchTask()}
+                disabled={!canLaunchTask}
+                className="w-full rounded-xl bg-[var(--theme-secondary-solid)] text-[var(--theme-secondary-foreground)] hover:bg-[var(--theme-secondary-solid-hover)]"
+              >
+                {isLaunchingTask ? (
+                  <LoaderCircle className="h-4 w-4 animate-spin" />
+                ) : (
+                  <GitBranch className="h-4 w-4" />
+                )}
+                {isChinese ? '启动 Task Loop' : 'Start task loop'}
+              </Button>
               <Button
                 onClick={() => void launchRun()}
                 disabled={!canLaunchRun}
@@ -1203,10 +1484,24 @@ export function AgentWorkbenchPanel({
                 {isChinese ? '活动历史' : 'Activity history'}
               </div>
               <Badge variant="muted" className="bg-white/5 text-slate-300">
-                {runs.length + terminals.length + relays.length}
+                {tasks.length + runs.length + terminals.length + relays.length}
               </Badge>
             </div>
             <div className="space-y-2">
+              {tasks.slice(0, 4).map((entry) => (
+                <PickerRow
+                  key={entry.id}
+                  active={entry.id === selectedTaskId && surface === 'task'}
+                  label={entry.title}
+                  sublabel={entry.branchName}
+                  badge={entry.status}
+                  badgeClass={taskBadgeClass(entry.status)}
+                  onClick={() => {
+                    setSurface('task');
+                    setSelectedTaskId(entry.id);
+                  }}
+                />
+              ))}
               {runs.slice(0, 4).map((entry) => (
                 <PickerRow
                   key={entry.id}
@@ -1249,11 +1544,11 @@ export function AgentWorkbenchPanel({
                   }}
                 />
               ))}
-              {runs.length === 0 && terminals.length === 0 && relays.length === 0 ? (
+              {tasks.length === 0 && runs.length === 0 && terminals.length === 0 && relays.length === 0 ? (
                 <div className="rounded-xl border border-dashed border-white/10 bg-white/[0.03] px-3 py-5 text-sm text-slate-400">
                   {isChinese
                     ? '还没有活动记录，先启动一个 run 或 terminal 吧。'
-                    : 'No activity yet. Launch a run, terminal, or relay to begin.'}
+                    : 'No activity yet. Launch a task, run, terminal, or relay to begin.'}
                 </div>
               ) : null}
             </div>
@@ -1278,6 +1573,12 @@ export function AgentWorkbenchPanel({
 
           <div className="flex gap-2">
             <SurfaceChip
+              active={surface === 'task'}
+              onClick={() => setSurface('task')}
+              icon={GitBranch}
+              label={isChinese ? 'Task loop' : 'Task loop'}
+            />
+            <SurfaceChip
               active={surface === 'run'}
               onClick={() => setSurface('run')}
               icon={Play}
@@ -1297,7 +1598,27 @@ export function AgentWorkbenchPanel({
             />
           </div>
 
-          {surface === 'run' ? (
+          {surface === 'task' ? (
+            <TaskLoopPane
+              task={liveTask}
+              tasks={tasks}
+              events={taskEvents}
+              logs={taskLogs}
+              run={liveTaskRun}
+              isRefreshing={isRefreshingTask}
+              isCreatingPullRequest={isCreatingTaskPr}
+              isReviewingPullRequest={isReviewingTaskPr}
+              isMergingPullRequest={isMergingTaskPr}
+              taskError={taskError}
+              onPick={setSelectedTaskId}
+              onRefresh={(rerunTests) => void refreshTaskArtifacts(rerunTests)}
+              onStop={(taskId) => void stopAgentTask(taskId)}
+              onCreatePullRequest={() => void createTaskPullRequest()}
+              onApprove={() => void reviewTaskPullRequest('APPROVE')}
+              onRequestChanges={() => void reviewTaskPullRequest('REQUEST_CHANGES')}
+              onMerge={() => void mergeTaskPullRequest()}
+            />
+          ) : surface === 'run' ? (
             <HeadlessRunPane
               run={liveRun}
               logs={logs}
@@ -1347,6 +1668,358 @@ export function AgentWorkbenchPanel({
           )}
         </div>
       </div>
+    </section>
+  );
+}
+
+function TaskLoopPane({
+  task,
+  tasks,
+  run,
+  logs,
+  events,
+  taskError,
+  isRefreshing,
+  isCreatingPullRequest,
+  isReviewingPullRequest,
+  isMergingPullRequest,
+  onPick,
+  onRefresh,
+  onStop,
+  onCreatePullRequest,
+  onApprove,
+  onRequestChanges,
+  onMerge,
+}: {
+  task: AgentTaskDTO | null;
+  tasks: AgentTaskDTO[];
+  run: RunSessionDTO | null;
+  logs: { id: string; text: string; stream: 'stdout' | 'stderr' | 'system'; timestampMs: number }[];
+  events: AgentTaskEventDTO[];
+  taskError: string | null;
+  isRefreshing: boolean;
+  isCreatingPullRequest: boolean;
+  isReviewingPullRequest: boolean;
+  isMergingPullRequest: boolean;
+  onPick: (id: string) => void;
+  onRefresh: (rerunTests: boolean) => void;
+  onStop: (id: string) => void;
+  onCreatePullRequest: () => void;
+  onApprove: () => void;
+  onRequestChanges: () => void;
+  onMerge: () => void;
+}) {
+  const { isChinese, language } = useI18n();
+  const logViewportRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const el = logViewportRef.current;
+    if (!el) return;
+    el.scrollTop = el.scrollHeight;
+  }, [logs]);
+
+  return (
+    <section className="rounded-2xl border border-white/10 bg-black/20 p-3">
+      <div className="mb-3 flex items-center justify-between gap-3">
+        <div>
+          <div className="text-xs uppercase tracking-[0.18em] text-slate-500">
+            {isChinese ? 'Task loop' : 'Task loop'}
+          </div>
+          <div className="mt-1 text-sm text-slate-300">
+            {task ? task.title : isChinese ? '选择一个任务' : 'Select a task'}
+          </div>
+        </div>
+        {task ? <Badge className={taskBadgeClass(task.status)}>{task.status}</Badge> : null}
+      </div>
+
+      <div className="mb-3 space-y-2">
+        {tasks.slice(0, 6).map((entry) => (
+          <PickerRow
+            key={entry.id}
+            active={task?.id === entry.id}
+            label={entry.title}
+            sublabel={`${entry.baseBranch} -> ${entry.branchName}`}
+            badge={entry.status}
+            badgeClass={taskBadgeClass(entry.status)}
+            onClick={() => onPick(entry.id)}
+          />
+        ))}
+        {tasks.length === 0 ? (
+          <div className="rounded-xl border border-dashed border-white/10 bg-white/[0.03] px-3 py-5 text-sm text-slate-400">
+            {isChinese ? '先启动一个任务分支。' : 'Start a task branch to begin.'}
+          </div>
+        ) : null}
+      </div>
+
+      {task ? (
+        <>
+          <div className="grid gap-3 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)]">
+            <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-3">
+              <div className="text-xs uppercase tracking-[0.18em] text-slate-500">
+                {isChinese ? 'Task summary' : 'Task summary'}
+              </div>
+              <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                <InfoPair label="Repo" value={task.repoName} />
+                <InfoPair label="Provider" value={task.provider} />
+                <InfoPair label="Base" value={task.baseBranch} />
+                <InfoPair label="Branch" value={task.branchName} />
+                <InfoPair label="Run" value={task.runId ?? (isChinese ? '未绑定' : 'Not attached')} />
+                <InfoPair label="Tests" value={task.testResult.status} />
+              </div>
+              {task.sourceIssue ? (
+                <div className="mt-3 rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-sm text-slate-300">
+                  <div className="text-xs uppercase tracking-[0.18em] text-slate-500">
+                    {isChinese ? 'Linked issue' : 'Linked issue'}
+                  </div>
+                  <a
+                    href={task.sourceIssue.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="mt-2 inline-flex items-center gap-1 text-sm text-[var(--theme-accent-text)] underline-offset-4 hover:underline"
+                  >
+                    #{task.sourceIssue.number} {task.sourceIssue.title}
+                  </a>
+                </div>
+              ) : null}
+              {task.github.connected ? (
+                <div className="mt-3 rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-sm text-slate-300">
+                  <div className="flex items-center justify-between gap-2">
+                    <span>GitHub</span>
+                    <Badge
+                      className={
+                        task.github.tokenConfigured
+                          ? 'border-emerald-400/30 bg-emerald-400/10 text-emerald-100'
+                          : 'border-amber-400/30 bg-amber-400/10 text-amber-100'
+                      }
+                    >
+                      {task.github.tokenConfigured ? 'token ready' : 'token missing'}
+                    </Badge>
+                  </div>
+                  <div className="mt-2 text-xs text-slate-400">
+                    {task.github.owner}/{task.github.name}
+                  </div>
+                  {task.pullRequest ? (
+                    <div className="mt-2 flex flex-wrap items-center gap-2">
+                      <a
+                        href={task.pullRequest.url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center gap-1 text-xs text-[var(--theme-accent-text)] underline-offset-4 hover:underline"
+                      >
+                        <GitPullRequestArrow className="h-3.5 w-3.5" />
+                        PR #{task.pullRequest.number}
+                      </a>
+                      <Badge className="border-white/15 bg-white/[0.06] text-slate-200">
+                        {task.pullRequest.state}
+                      </Badge>
+                    </div>
+                  ) : task.github.compareUrl ? (
+                    <a
+                      href={task.github.compareUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="mt-2 inline-flex items-center gap-1 text-xs text-[var(--theme-accent-text)] underline-offset-4 hover:underline"
+                    >
+                      <GitPullRequestArrow className="h-3.5 w-3.5" />
+                      {isChinese ? '查看 compare' : 'Open compare'}
+                    </a>
+                  ) : null}
+                </div>
+              ) : (
+                <InlineNotice tone="warn">
+                  {isChinese
+                    ? '当前仓库没有可识别的 GitHub origin remote。'
+                    : 'This repository does not expose a GitHub origin remote.'}
+                </InlineNotice>
+              )}
+            </div>
+
+            <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-3">
+              <div className="text-xs uppercase tracking-[0.18em] text-slate-500">
+                {isChinese ? 'Actions' : 'Actions'}
+              </div>
+              <div className="mt-3 grid gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="border-white/10 bg-white/[0.03] text-slate-100 hover:bg-white/[0.08]"
+                  onClick={() => onRefresh(false)}
+                  disabled={isRefreshing}
+                >
+                  {isRefreshing ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+                  {isChinese ? '刷新 diff' : 'Refresh diff'}
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="border-white/10 bg-white/[0.03] text-slate-100 hover:bg-white/[0.08]"
+                  onClick={() => onRefresh(true)}
+                  disabled={isRefreshing || !task.testCommand}
+                >
+                  <Command className="h-4 w-4" />
+                  {isChinese ? '重新跑测试' : 'Rerun tests'}
+                </Button>
+                {task.status === 'preparing' || task.status === 'running' ? (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="border-white/10 bg-white/[0.03] text-slate-100 hover:bg-white/[0.08]"
+                    onClick={() => onStop(task.id)}
+                  >
+                    <Square className="h-4 w-4" />
+                    {isChinese ? '停止任务' : 'Stop task'}
+                  </Button>
+                ) : null}
+                {!task.pullRequest ? (
+                  <Button
+                    size="sm"
+                    className="bg-[var(--theme-accent-solid)] text-[var(--theme-accent-foreground)] hover:bg-[var(--theme-accent-solid-hover)]"
+                    onClick={onCreatePullRequest}
+                    disabled={isCreatingPullRequest}
+                  >
+                    {isCreatingPullRequest ? (
+                      <LoaderCircle className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <GitPullRequestArrow className="h-4 w-4" />
+                    )}
+                    {isChinese ? 'Commit & open PR' : 'Commit & open PR'}
+                  </Button>
+                ) : (
+                  <>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="border-white/10 bg-white/[0.03] text-slate-100 hover:bg-white/[0.08]"
+                      onClick={onApprove}
+                      disabled={isReviewingPullRequest}
+                    >
+                      {isReviewingPullRequest ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <Play className="h-4 w-4" />}
+                      {isChinese ? 'Approve PR' : 'Approve PR'}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="border-white/10 bg-white/[0.03] text-slate-100 hover:bg-white/[0.08]"
+                      onClick={onRequestChanges}
+                      disabled={isReviewingPullRequest}
+                    >
+                      <MessageSquare className="h-4 w-4" />
+                      {isChinese ? 'Request changes' : 'Request changes'}
+                    </Button>
+                    <Button
+                      size="sm"
+                      className="bg-[var(--theme-secondary-solid)] text-[var(--theme-secondary-foreground)] hover:bg-[var(--theme-secondary-solid-hover)]"
+                      onClick={onMerge}
+                      disabled={isMergingPullRequest}
+                    >
+                      {isMergingPullRequest ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <GitPullRequestArrow className="h-4 w-4" />}
+                      {isChinese ? 'Merge PR' : 'Merge PR'}
+                    </Button>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {taskError ? <InlineNotice tone="error">{taskError}</InlineNotice> : null}
+
+          <div className="mt-3 grid gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+            <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-3">
+              <div className="text-xs uppercase tracking-[0.18em] text-slate-500">
+                {isChinese ? 'Diff stat' : 'Diff stat'}
+              </div>
+              <pre className="mt-2 overflow-x-auto whitespace-pre-wrap rounded-xl border border-white/10 bg-black/20 p-3 text-xs text-slate-200">
+                {task.diffStat ?? (isChinese ? '暂无 diff。' : 'No diff summary yet.')}
+              </pre>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {task.changedFiles.map((file) => (
+                  <Badge key={`${file.status}-${file.path}`} variant="muted" className="bg-white/5 text-slate-300">
+                    {file.status}: {file.path}
+                  </Badge>
+                ))}
+                {task.changedFiles.length === 0 ? (
+                  <div className="text-xs text-slate-500">
+                    {isChinese ? '还没有检测到文件变化。' : 'No changed files detected yet.'}
+                  </div>
+                ) : null}
+              </div>
+            </div>
+
+            <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-3">
+              <div className="text-xs uppercase tracking-[0.18em] text-slate-500">
+                {isChinese ? 'Test output' : 'Test output'}
+              </div>
+              <div className="mt-2 flex items-center gap-2">
+                <Badge className={taskTestBadgeClass(task.testResult.status)}>
+                  {task.testResult.status}
+                </Badge>
+                {task.testResult.command ? (
+                  <span className="text-xs text-slate-400">{task.testResult.command}</span>
+                ) : null}
+              </div>
+              <pre className="mt-2 max-h-56 overflow-auto whitespace-pre-wrap rounded-xl border border-white/10 bg-black/20 p-3 text-xs text-slate-200">
+                {task.testResult.output || (isChinese ? '没有测试输出。' : 'No test output yet.')}
+              </pre>
+            </div>
+          </div>
+
+          <div className="mt-3 grid gap-3 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
+            <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-3">
+              <div className="text-xs uppercase tracking-[0.18em] text-slate-500">
+                {isChinese ? 'Task events' : 'Task events'}
+              </div>
+              <div className="mt-3 space-y-2">
+                {events.map((event) => (
+                  <div
+                    key={event.id}
+                    className={cn(
+                      'rounded-xl border px-3 py-2 text-sm',
+                      taskEventToneClass(event.tone)
+                    )}
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      <span className="uppercase tracking-[0.16em] text-[11px] text-white/70">
+                        {event.kind}
+                      </span>
+                      <span className="text-[11px] text-white/60">
+                        {formatRelayTime(event.createdAtMs, language)}
+                      </span>
+                    </div>
+                    <div className="mt-1 whitespace-pre-wrap break-words">{event.message}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-3">
+              <div className="flex items-center justify-between gap-3">
+                <div className="text-xs uppercase tracking-[0.18em] text-slate-500">
+                  {isChinese ? 'Agent logs' : 'Agent logs'}
+                </div>
+                {run ? (
+                  <Badge className={runBadgeClass(run.status)}>{run.status}</Badge>
+                ) : null}
+              </div>
+              <div
+                ref={logViewportRef}
+                className="mt-3 max-h-[420px] overflow-auto rounded-2xl border border-white/10 bg-black/30 p-3 font-mono text-xs leading-5"
+              >
+                {logs.length === 0 ? (
+                  <div className="text-slate-500">
+                    {isChinese ? '任务运行后这里会显示 agent stdout/stderr。' : 'Agent stdout/stderr will appear here once the task run starts.'}
+                  </div>
+                ) : (
+                  logs.map((entry) => (
+                    <div key={entry.id} className={cn('whitespace-pre-wrap break-words', logClass(entry.stream))}>
+                      {entry.text}
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          </div>
+        </>
+      ) : null}
     </section>
   );
 }
@@ -2867,6 +3540,10 @@ async function stopRun(runId: string) {
   await fetch(`/api/runs/${encodeURIComponent(runId)}/stop`, { method: 'POST' });
 }
 
+async function stopAgentTask(taskId: string) {
+  await fetch(`/api/tasks/${encodeURIComponent(taskId)}/stop`, { method: 'POST' });
+}
+
 async function stopTerminal(terminalId: string) {
   await fetch(`/api/terminals/${encodeURIComponent(terminalId)}/stop`, { method: 'POST' });
 }
@@ -3301,6 +3978,31 @@ function streamBadgeClass(status: StreamStatus) {
       : 'border-amber-400/30 bg-amber-400/10 text-amber-100';
 }
 
+function taskBadgeClass(status: AgentTaskDTO['status']) {
+  if (status === 'ready') return 'border-emerald-400/30 bg-emerald-400/10 text-emerald-100';
+  if (status === 'merged') return 'border-sky-400/30 bg-sky-400/10 text-sky-100';
+  if (status === 'preparing' || status === 'running') {
+    return 'border-amber-400/30 bg-amber-400/10 text-amber-100';
+  }
+  if (status === 'stopped') return 'border-white/15 bg-white/[0.06] text-slate-200';
+  return 'border-rose-400/30 bg-rose-400/10 text-rose-100';
+}
+
+function taskTestBadgeClass(status: AgentTaskDTO['testResult']['status']) {
+  if (status === 'passed') return 'border-emerald-400/30 bg-emerald-400/10 text-emerald-100';
+  if (status === 'running') return 'border-amber-400/30 bg-amber-400/10 text-amber-100';
+  if (status === 'idle' || status === 'skipped') {
+    return 'border-white/15 bg-white/[0.06] text-slate-200';
+  }
+  return 'border-rose-400/30 bg-rose-400/10 text-rose-100';
+}
+
+function taskEventToneClass(tone: AgentTaskEventDTO['tone']) {
+  if (tone === 'success') return 'border-emerald-400/20 bg-emerald-400/[0.08] text-emerald-50';
+  if (tone === 'error') return 'border-rose-400/20 bg-rose-400/[0.08] text-rose-50';
+  return 'border-white/10 bg-white/[0.03] text-slate-200';
+}
+
 function runBadgeClass(status: RunSessionDTO['status']) {
   if (status === 'running' || status === 'starting') {
     return 'border-cyan-300/30 bg-cyan-300/10 text-cyan-100';
@@ -3346,6 +4048,15 @@ function logClass(stream: 'stdout' | 'stderr' | 'system') {
   return 'text-slate-200';
 }
 
+function InfoPair({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-xl border border-white/10 bg-black/20 px-3 py-2">
+      <div className="text-[11px] uppercase tracking-[0.16em] text-slate-500">{label}</div>
+      <div className="mt-1 break-all text-sm text-slate-100">{value}</div>
+    </div>
+  );
+}
+
 function readWorkbenchPreferences(): WorkbenchPreferences | null {
   if (typeof window === 'undefined') return null;
 
@@ -3375,6 +4086,7 @@ function readWorkbenchPreferences(): WorkbenchPreferences | null {
         typeof parsed.relayMaxTurns === 'number' && Number.isFinite(parsed.relayMaxTurns)
           ? Math.min(12, Math.max(2, Math.round(parsed.relayMaxTurns)))
           : 4,
+      selectedTaskId: typeof parsed.selectedTaskId === 'string' ? parsed.selectedTaskId : null,
       selectedRunId: typeof parsed.selectedRunId === 'string' ? parsed.selectedRunId : null,
       selectedTerminalId:
         typeof parsed.selectedTerminalId === 'string' ? parsed.selectedTerminalId : null,
@@ -3396,7 +4108,7 @@ function writeWorkbenchPreferences(preferences: WorkbenchPreferences) {
 }
 
 function isLaunchSurface(value: unknown): value is LaunchSurface {
-  return value === 'run' || value === 'terminal' || value === 'relay';
+  return value === 'task' || value === 'run' || value === 'terminal' || value === 'relay';
 }
 
 function isBuiltinRelayTemplateId(value: RelayTemplateId) {

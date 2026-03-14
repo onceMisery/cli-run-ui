@@ -4,6 +4,7 @@ const EMPTY_HISTORY = {
     runs: [],
     terminals: [],
     relays: [],
+    tasks: [],
 };
 export class HistoryStore {
     filePath;
@@ -20,6 +21,7 @@ export class HistoryStore {
                     ? parsed.terminals.filter(isTerminalRecord)
                     : [],
                 relays: Array.isArray(parsed.relays) ? parsed.relays.filter(isRelayRecord) : [],
+                tasks: Array.isArray(parsed.tasks) ? parsed.tasks.filter(isTaskRecord) : [],
             };
         }
         catch (error) {
@@ -37,11 +39,12 @@ export class HistoryStore {
         const directory = path.dirname(this.filePath);
         const tempPath = `${this.filePath}.tmp`;
         const payload = {
-            version: 2,
+            version: 3,
             savedAtMs: Date.now(),
             runs: trimRuns(snapshot.runs),
             terminals: trimTerminals(snapshot.terminals),
             relays: trimRelays(snapshot.relays),
+            tasks: trimTasks(snapshot.tasks),
         };
         await mkdir(directory, { recursive: true });
         await writeFile(tempPath, JSON.stringify(payload, null, 2), 'utf8');
@@ -82,5 +85,13 @@ function trimRelays(relays) {
 }
 function isRelayRecord(value) {
     return !!value && typeof value === 'object' && 'summary' in value && 'turns' in value;
+}
+function trimTasks(tasks) {
+    return [...tasks]
+        .sort((a, b) => b.summary.createdAtMs - a.summary.createdAtMs)
+        .slice(0, 80);
+}
+function isTaskRecord(value) {
+    return !!value && typeof value === 'object' && 'summary' in value && 'events' in value;
 }
 //# sourceMappingURL=HistoryStore.js.map

@@ -3,26 +3,30 @@ import path from 'node:path';
 
 import type { PersistedAgentRelayRecord } from './AgentRelayManager.js';
 import type { PersistedRunRecord } from './RunManager.js';
+import type { PersistedTaskRecord } from './TaskManager.js';
 import type { PersistedTerminalRecord } from './TerminalManager.js';
 
 interface RuntimeHistoryFile {
-  version: 2;
+  version: 3;
   savedAtMs: number;
   runs: PersistedRunRecord[];
   terminals: PersistedTerminalRecord[];
   relays: PersistedAgentRelayRecord[];
+  tasks: PersistedTaskRecord[];
 }
 
 interface RuntimeHistorySnapshot {
   runs: PersistedRunRecord[];
   terminals: PersistedTerminalRecord[];
   relays: PersistedAgentRelayRecord[];
+  tasks: PersistedTaskRecord[];
 }
 
 const EMPTY_HISTORY: RuntimeHistorySnapshot = {
   runs: [],
   terminals: [],
   relays: [],
+  tasks: [],
 };
 
 export class HistoryStore {
@@ -38,6 +42,7 @@ export class HistoryStore {
           ? parsed.terminals.filter(isTerminalRecord)
           : [],
         relays: Array.isArray(parsed.relays) ? parsed.relays.filter(isRelayRecord) : [],
+        tasks: Array.isArray(parsed.tasks) ? parsed.tasks.filter(isTaskRecord) : [],
       };
     } catch (error) {
       const code =
@@ -56,11 +61,12 @@ export class HistoryStore {
     const directory = path.dirname(this.filePath);
     const tempPath = `${this.filePath}.tmp`;
     const payload: RuntimeHistoryFile = {
-      version: 2,
+      version: 3,
       savedAtMs: Date.now(),
       runs: trimRuns(snapshot.runs),
       terminals: trimTerminals(snapshot.terminals),
       relays: trimRelays(snapshot.relays),
+      tasks: trimTasks(snapshot.tasks),
     };
 
     await mkdir(directory, { recursive: true });
@@ -111,4 +117,14 @@ function trimRelays(relays: PersistedAgentRelayRecord[]): PersistedAgentRelayRec
 
 function isRelayRecord(value: unknown): value is PersistedAgentRelayRecord {
   return !!value && typeof value === 'object' && 'summary' in value && 'turns' in value;
+}
+
+function trimTasks(tasks: PersistedTaskRecord[]): PersistedTaskRecord[] {
+  return [...tasks]
+    .sort((a, b) => b.summary.createdAtMs - a.summary.createdAtMs)
+    .slice(0, 80);
+}
+
+function isTaskRecord(value: unknown): value is PersistedTaskRecord {
+  return !!value && typeof value === 'object' && 'summary' in value && 'events' in value;
 }

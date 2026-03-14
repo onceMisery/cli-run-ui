@@ -5,6 +5,7 @@ import { ClaudeProvider, CodexProvider, WatcherHub, } from '@cli-run-ui/core';
 import { AgentRelayManager } from './AgentRelayManager.js';
 import { HistoryStore } from './HistoryStore.js';
 import { RunManager } from './RunManager.js';
+import { TaskManager } from './TaskManager.js';
 import { TerminalManager } from './TerminalManager.js';
 const app = new Hono();
 const providers = [new ClaudeProvider(), new CodexProvider()];
@@ -13,14 +14,17 @@ const watcherHub = new WatcherHub(providers);
 const historyStore = new HistoryStore();
 const historySnapshot = await historyStore.load();
 const runManager = new RunManager(historySnapshot.runs);
+const taskManager = new TaskManager(runManager, historySnapshot.tasks);
 const terminalManager = new TerminalManager(historySnapshot.terminals);
 const relayManager = new AgentRelayManager(historySnapshot.relays);
-const runtimePersistence = createRuntimePersistenceTask(historyStore, runManager, terminalManager, relayManager);
+const runtimePersistence = createRuntimePersistenceTask(historyStore, runManager, taskManager, terminalManager, relayManager);
 watcherHub.start();
 void listAllSessions();
 runtimePersistence.schedule();
 runManager.onRun(() => runtimePersistence.schedule());
 runManager.onLog(() => runtimePersistence.schedule());
+taskManager.onTask(() => runtimePersistence.schedule());
+taskManager.onEvent(() => runtimePersistence.schedule());
 terminalManager.onSession(() => runtimePersistence.schedule());
 terminalManager.onOutput(() => runtimePersistence.schedule());
 relayManager.onRelay(() => runtimePersistence.schedule());
@@ -41,7 +45,7 @@ if (enableCors) {
                 return null;
             return devOrigins.has(origin) ? origin : null;
         },
-        allowMethods: ['GET', 'POST'],
+        allowMethods: ['GET', 'POST', 'PATCH', 'DELETE'],
         allowHeaders: ['Content-Type', 'X-Auth-Token'],
     }));
 }
@@ -168,6 +172,137 @@ app.get('/api/runs/:id/stream', (c) => {
         return () => {
             offRun();
             offLog();
+            clearInterval(heartbeat);
+        };
+    });
+});
+app.get('/api/tasks', (c) => {
+    return c.json({ tasks: taskManager.listTasks() });
+});
+app.post('/api/tasks', async (c) => {
+    const body = await c.req.json().catch(() => null);
+    const request = body;
+    if (!request) {
+        return c.json({ error: 'invalid request body' }, 400);
+    }
+    try {
+        const task = await taskManager.startTask(request);
+        return c.json({ task }, 201);
+    }
+    catch (error) {
+        return c.json({
+            error: error instanceof Error ? error.message : 'failed to start task',
+        }, 400);
+    }
+});
+app.post('/api/tasks/import-issue', async (c) => {
+    const body = await c.req.json().catch(() => null);
+    const request = body;
+    if (!request) {
+        return c.json({ error: 'invalid request body' }, 400);
+    }
+    try {
+        const draft = await taskManager.importGitHubIssueDraft(request);
+        return c.json({ draft });
+    }
+    catch (error) {
+        return c.json({
+            error: error instanceof Error ? error.message : 'failed to import issue',
+        }, 400);
+    }
+});
+app.post('/api/tasks/:id/refresh', async (c) => {
+    const body = (await c.req.json().catch(() => ({})));
+    try {
+        const task = await taskManager.refreshTask(c.req.param('id'), body ?? {});
+        return c.json({ task });
+    }
+    catch (error) {
+        const message = error instanceof Error ? error.message : 'failed to refresh task';
+        return c.json({ error: message }, message === 'Task not found.' ? 404 : 400);
+    }
+});
+app.post('/api/tasks/:id/stop', (c) => {
+    const task = taskManager.stopTask(c.req.param('id'));
+    if (!task) {
+        return c.json({ error: 'task not found' }, 404);
+    }
+    return c.json({ task });
+});
+app.post('/api/tasks/:id/pull-request', async (c) => {
+    const body = (await c.req.json().catch(() => ({})));
+    try {
+        const task = await taskManager.createPullRequest(c.req.param('id'), body ?? {});
+        return c.json({ task });
+    }
+    catch (error) {
+        const message = error instanceof Error ? error.message : 'failed to create pull request';
+        return c.json({ error: message }, message === 'Task not found.' ? 404 : 400);
+    }
+});
+app.post('/api/tasks/:id/review', async (c) => {
+    const body = (await c.req.json().catch(() => null));
+    if (!body || !body.event) {
+        return c.json({ error: 'invalid request body' }, 400);
+    }
+    try {
+        const task = await taskManager.reviewPullRequest(c.req.param('id'), body);
+        return c.json({ task });
+    }
+    catch (error) {
+        const message = error instanceof Error ? error.message : 'failed to review pull request';
+        return c.json({ error: message }, message === 'Task not found.' ? 404 : 400);
+    }
+});
+app.post('/api/tasks/:id/merge', async (c) => {
+    const body = (await c.req.json().catch(() => ({})));
+    try {
+        const task = await taskManager.mergePullRequest(c.req.param('id'), body ?? {});
+        return c.json({ task });
+    }
+    catch (error) {
+        const message = error instanceof Error ? error.message : 'failed to merge pull request';
+        return c.json({ error: message }, message === 'Task not found.' ? 404 : 400);
+    }
+});
+app.get('/api/tasks/stream', (c) => {
+    return createSseResponse(c, async (stream) => {
+        stream.send('snapshot', { tasks: taskManager.listTasks() });
+        const offTask = taskManager.onTask((task) => {
+            stream.send('task', { task });
+        });
+        const heartbeat = setInterval(() => stream.comment('heartbeat'), 15000);
+        return () => {
+            offTask();
+            clearInterval(heartbeat);
+        };
+    });
+});
+app.get('/api/tasks/:id/stream', (c) => {
+    const taskId = c.req.param('id');
+    const task = taskManager.getTask(taskId);
+    if (!task) {
+        return c.json({ error: 'task not found' }, 404);
+    }
+    return createSseResponse(c, async (stream) => {
+        stream.send('snapshot', {
+            task,
+            events: taskManager.getEvents(taskId),
+        });
+        const offTask = taskManager.onTask((update) => {
+            if (update.id !== taskId)
+                return;
+            stream.send('task', { task: update });
+        });
+        const offEvent = taskManager.onEvent((event) => {
+            if (event.taskId !== taskId)
+                return;
+            stream.send('event', { event });
+        });
+        const heartbeat = setInterval(() => stream.comment('heartbeat'), 15000);
+        return () => {
+            offTask();
+            offEvent();
             clearInterval(heartbeat);
         };
     });
@@ -481,7 +616,7 @@ function createSseResponse(c, handler) {
         },
     });
 }
-function createRuntimePersistenceTask(store, runs, terminals, relays) {
+function createRuntimePersistenceTask(store, runs, tasks, terminals, relays) {
     let timer = null;
     let writing = false;
     let queued = false;
@@ -494,6 +629,7 @@ function createRuntimePersistenceTask(store, runs, terminals, relays) {
         try {
             await store.save({
                 runs: runs.listPersistedRuns(),
+                tasks: tasks.listPersistedTasks(),
                 terminals: terminals.listPersistedSessions(),
                 relays: relays.listPersistedRelays(),
             });
