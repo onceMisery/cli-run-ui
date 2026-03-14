@@ -21,7 +21,7 @@ export function useSessionStream() {
       source.addEventListener('sessions', (event) => {
         const data = safeParse(event.data);
         if (!Array.isArray(data)) return;
-        setSessions(data as SessionDTO[]);
+        setSessions(normalizeSessions(data as SessionDTO[]));
       });
 
       source.addEventListener('sessionsUpdate', (event) => {
@@ -59,9 +59,16 @@ export function useSessionStream() {
 }
 
 function mergeSessions(existing: SessionDTO[], incoming: SessionDTO[]): SessionDTO[] {
-  const map = new Map(existing.map((session) => [session.uid, session]));
-  for (const session of incoming) {
-    map.set(session.uid, session);
+  return normalizeSessions([...existing, ...incoming]);
+}
+
+function normalizeSessions(sessions: SessionDTO[]): SessionDTO[] {
+  const map = new Map<string, SessionDTO>();
+  for (const session of sessions) {
+    const existing = map.get(session.uid);
+    if (!existing || session.updatedAtMs >= existing.updatedAtMs) {
+      map.set(session.uid, session);
+    }
   }
   return Array.from(map.values()).sort((a, b) => b.updatedAtMs - a.updatedAtMs);
 }

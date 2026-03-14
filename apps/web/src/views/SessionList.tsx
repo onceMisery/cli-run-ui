@@ -35,7 +35,7 @@ export function SessionList({ sessions, activeUid, onSelect }: SessionListProps)
           const isActive = session.uid === activeUid;
           return (
             <button
-              key={session.uid}
+              key={`${virtualRow.key}:${session.uid}`}
               className={cn(
                 'absolute left-0 w-full rounded-2xl border px-4 py-3 text-left transition',
                 isActive

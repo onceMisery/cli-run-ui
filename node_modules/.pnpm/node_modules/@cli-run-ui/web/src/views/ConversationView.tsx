@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import type { ContentPart, MessageDTO, SessionDTO } from '@cli-run-ui/core';
-import { useVirtualizer } from '@tanstack/react-virtual';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import {
@@ -35,13 +34,6 @@ export function ConversationView({ session, messages }: ConversationViewProps) {
   const parentRef = useRef<HTMLDivElement | null>(null);
   const [stickToBottom, setStickToBottom] = useState(true);
 
-  const rowVirtualizer = useVirtualizer({
-    count: messages.length,
-    getScrollElement: () => parentRef.current,
-    estimateSize: () => 176,
-    overscan: 8,
-  });
-
   useEffect(() => {
     const el = parentRef.current;
     if (!el) return;
@@ -55,9 +47,13 @@ export function ConversationView({ session, messages }: ConversationViewProps) {
   }, []);
 
   useEffect(() => {
-    if (!stickToBottom || messages.length === 0) return;
-    rowVirtualizer.scrollToIndex(messages.length - 1, { align: 'end' });
-  }, [messages.length, rowVirtualizer, stickToBottom]);
+    const el = parentRef.current;
+    if (!el || !stickToBottom || messages.length === 0) return;
+    const frame = window.requestAnimationFrame(() => {
+      el.scrollTo({ top: el.scrollHeight });
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [messages.length, stickToBottom]);
 
   if (!session) {
     return (
@@ -80,7 +76,8 @@ export function ConversationView({ session, messages }: ConversationViewProps) {
   }
 
   return (
-    <div ref={parentRef} className="h-[calc(100vh-220px)] overflow-auto px-6 py-6">
+    <div className="flex h-full min-h-0 flex-col">
+      <div ref={parentRef} className="flex-1 overflow-y-auto px-6 py-6">
       <ConversationHero session={session} messageCount={messages.length} />
 
       {messages.length === 0 ? (
@@ -88,23 +85,13 @@ export function ConversationView({ session, messages }: ConversationViewProps) {
           {isChinese ? '等待 transcript 内容到达中。' : 'Waiting for transcript lines to arrive.'}
         </div>
       ) : (
-        <div className="relative mt-6 w-full" style={{ height: rowVirtualizer.getTotalSize() }}>
-          {rowVirtualizer.getVirtualItems().map((virtualRow) => {
-            const message = messages[virtualRow.index];
-            return (
-              <div
-                key={message.id}
-                className="absolute left-0 w-full pb-5"
-                style={{ transform: `translateY(${virtualRow.start}px)` }}
-                ref={rowVirtualizer.measureElement}
-                data-index={virtualRow.index}
-              >
-                <MessageCard message={message} />
-              </div>
-            );
-          })}
+        <div className="mt-6 flex flex-col gap-5 pb-6">
+          {messages.map((message) => (
+            <MessageCard key={message.id} message={message} />
+          ))}
         </div>
       )}
+      </div>
     </div>
   );
 }

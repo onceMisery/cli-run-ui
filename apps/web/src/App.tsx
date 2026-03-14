@@ -173,7 +173,7 @@ export default function App() {
   return (
     <div className="app-shell min-h-screen text-foreground">
       <div className="mx-auto flex min-h-screen max-w-[1800px] flex-col gap-6 px-4 py-4 lg:px-6">
-        <section className="grid gap-4 xl:grid-cols-[340px_minmax(0,1fr)_320px]">
+        <section className="grid min-h-[calc(100vh-2rem)] gap-4 xl:grid-cols-[340px_minmax(0,1fr)_320px]">
           <aside className="overflow-hidden rounded-[30px] border border-white/10 bg-[linear-gradient(180deg,rgba(8,15,28,0.96),rgba(8,14,24,0.88))] shadow-[0_24px_80px_rgba(0,0,0,0.35)] backdrop-blur">
             <div className="border-b border-white/10 px-5 py-5">
               <div className="flex items-start justify-between gap-4">
@@ -334,7 +334,7 @@ export default function App() {
             </div>
           </aside>
 
-          <main className="overflow-hidden rounded-[30px] border border-white/10 bg-[linear-gradient(180deg,rgba(7,16,26,0.95),rgba(7,13,22,0.84))] shadow-[0_24px_80px_rgba(0,0,0,0.35)] backdrop-blur">
+          <main className="flex min-h-0 flex-col overflow-hidden rounded-[30px] border border-white/10 bg-[linear-gradient(180deg,rgba(7,16,26,0.95),rgba(7,13,22,0.84))] shadow-[0_24px_80px_rgba(0,0,0,0.35)] backdrop-blur">
             <HeaderBar
               session={activeSession}
               sessionStatus={sessionStatus}
