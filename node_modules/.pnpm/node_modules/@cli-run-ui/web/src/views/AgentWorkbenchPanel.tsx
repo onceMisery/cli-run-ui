@@ -6,6 +6,7 @@ import {
   useState,
 } from 'react';
 import type {
+  AgentRelayParticipantInputDTO,
   AgentRelaySessionDTO,
   AgentRelayTurnDTO,
   RunSessionDTO,
@@ -20,8 +21,10 @@ import type { Terminal as XTermTerminal } from '@xterm/xterm';
 import '@xterm/xterm/css/xterm.css';
 import {
   ArrowUp,
+  Copy,
   Command,
   CornerDownLeft,
+  Download,
   Keyboard,
   LoaderCircle,
   MessageSquare,
@@ -32,6 +35,7 @@ import {
   Sparkles,
   Square,
   SquareTerminal,
+  Users,
 } from 'lucide-react';
 
 import { useAgentRelayStream } from '@/hooks/useAgentRelayStream';
@@ -62,16 +66,21 @@ interface WorkbenchPreferences {
   cwd: string;
   prompt: string;
   relayPrompt: string;
+  relaySystemPrompt: string;
   relayStarter: SessionDTO['provider'];
+  relayTemplateId: RelayTemplateId;
   relayMaxTurns: number;
   selectedRunId: string | null;
   selectedTerminalId: string | null;
   selectedRelayId: string | null;
 }
 
+type RelayTemplateId = 'duel' | 'review-trio' | 'delivery-room';
+
 const WORKBENCH_STORAGE_KEY = 'cli-run-ui.agent-workbench';
 const RECENT_CHAT_STORAGE_KEY = 'cli-run-ui.recent-chat-prompts';
 const MAX_RECENT_CHAT_PROMPTS = 6;
+const RELAY_TEMPLATE_IDS: RelayTemplateId[] = ['duel', 'review-trio', 'delivery-room'];
 
 export function AgentWorkbenchPanel({
   activeSession,
@@ -94,8 +103,14 @@ export function AgentWorkbenchPanel({
   const [cwd, setCwd] = useState(savedPreferences?.cwd ?? activeSession?.projectPath ?? '');
   const [prompt, setPrompt] = useState(savedPreferences?.prompt ?? '');
   const [relayPrompt, setRelayPrompt] = useState(savedPreferences?.relayPrompt ?? '');
+  const [relaySystemPrompt, setRelaySystemPrompt] = useState(
+    savedPreferences?.relaySystemPrompt ?? ''
+  );
   const [relayStarter, setRelayStarter] = useState<SessionDTO['provider']>(
     savedPreferences?.relayStarter ?? 'codex'
+  );
+  const [relayTemplateId, setRelayTemplateId] = useState<RelayTemplateId>(
+    savedPreferences?.relayTemplateId ?? 'duel'
   );
   const [relayMaxTurns, setRelayMaxTurns] = useState(savedPreferences?.relayMaxTurns ?? 4);
   const [runError, setRunError] = useState<string | null>(null);
@@ -137,7 +152,9 @@ export function AgentWorkbenchPanel({
       cwd,
       prompt,
       relayPrompt,
+      relaySystemPrompt,
       relayStarter,
+      relayTemplateId,
       relayMaxTurns,
       selectedRunId,
       selectedTerminalId,
@@ -147,10 +164,12 @@ export function AgentWorkbenchPanel({
     cwd,
     mode,
     prompt,
+    relaySystemPrompt,
     provider,
     relayMaxTurns,
     relayPrompt,
     relayStarter,
+    relayTemplateId,
     selectedRelayId,
     selectedRunId,
     selectedTerminalId,
@@ -228,6 +247,10 @@ export function AgentWorkbenchPanel({
     !isLaunchingRelay &&
     cwd.trim().length > 0 &&
     relayPrompt.trim().length > 0;
+  const relayTemplate = useMemo(
+    () => buildRelayTemplate(relayTemplateId, relayStarter, isChinese),
+    [isChinese, relayStarter, relayTemplateId]
+  );
 
   const presets = useMemo(
     () => buildPresets(activeSession, provider, isChinese),
@@ -341,7 +364,9 @@ export function AgentWorkbenchPanel({
       const payload: StartAgentRelayRequestDTO = {
         cwd: cwd.trim(),
         prompt: relayPrompt.trim(),
-        starter: relayStarter,
+        starter: relayTemplate.participants[0]?.provider ?? relayStarter,
+        participants: relayTemplate.participants,
+        systemPrompt: relaySystemPrompt.trim() || undefined,
         maxTurns: relayMaxTurns,
         title: relayPrompt.trim(),
       };
@@ -371,6 +396,7 @@ export function AgentWorkbenchPanel({
   const resetDraft = () => {
     setPrompt('');
     setRelayPrompt('');
+    setRelaySystemPrompt('');
     setRunError(null);
     setTerminalError(null);
     setChatError(null);
@@ -379,6 +405,7 @@ export function AgentWorkbenchPanel({
     setProvider(activeSession?.provider ?? 'codex');
     setMode(activeSession ? 'resume' : 'task');
     setRelayStarter('codex');
+    setRelayTemplateId('duel');
     setRelayMaxTurns(4);
     setCwd(activeSession?.projectPath ?? '');
     setSurface('run');
@@ -560,6 +587,17 @@ export function AgentWorkbenchPanel({
             </div>
 
             <div className="mt-3 flex gap-2">
+              {RELAY_TEMPLATE_IDS.map((templateId) => (
+                <ModeChip
+                  key={templateId}
+                  active={relayTemplateId === templateId}
+                  onClick={() => setRelayTemplateId(templateId)}
+                  label={relayTemplateLabel(templateId, isChinese)}
+                />
+              ))}
+            </div>
+
+            <div className="mt-3 flex gap-2">
               <ModeChip
                 active={relayStarter === 'codex'}
                 onClick={() => setRelayStarter('codex')}
@@ -570,6 +608,28 @@ export function AgentWorkbenchPanel({
                 onClick={() => setRelayStarter('claude')}
                 label={isChinese ? 'Claude 先说' : 'Claude starts'}
               />
+            </div>
+
+            <div className="mt-3 rounded-2xl border border-white/10 bg-white/[0.03] p-3">
+              <div className="flex items-center gap-2 text-xs uppercase tracking-[0.18em] text-slate-500">
+                <Users className="h-3.5 w-3.5" />
+                {isChinese ? '房间参与者' : 'Room participants'}
+              </div>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {relayTemplate.participants.map((participant) => (
+                  <Badge
+                    key={`${participant.provider}-${participant.label}`}
+                    className={
+                      participant.provider === 'claude'
+                        ? 'border-sky-400/30 bg-sky-400/10 text-sky-100'
+                        : 'border-emerald-400/30 bg-emerald-400/10 text-emerald-100'
+                    }
+                  >
+                    {participant.label}
+                  </Badge>
+                ))}
+              </div>
+              <div className="mt-2 text-xs text-slate-400">{relayTemplate.description}</div>
             </div>
 
             <label className="mt-3 block">
@@ -601,6 +661,23 @@ export function AgentWorkbenchPanel({
                   isChinese
                     ? '输入一个主题，让 Claude 和 Codex 围绕它轮流讨论、辩论或协作。'
                     : 'Give Claude and Codex a topic so they can alternate, debate, or collaborate.'
+                }
+              />
+            </div>
+
+            <div className="mt-3">
+              <div className="mb-1 text-xs uppercase tracking-[0.18em] text-slate-500">
+                {isChinese ? 'System prompt' : 'System prompt'}
+              </div>
+              <textarea
+                value={relaySystemPrompt}
+                onChange={(event) => setRelaySystemPrompt(event.target.value)}
+                rows={3}
+                className="w-full resize-none rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 text-sm text-slate-100 outline-none placeholder:text-slate-500"
+                placeholder={
+                  isChinese
+                    ? '给整个房间一条统一规则，比如先分析再决策，或重点关注风险与可执行性。'
+                    : 'Give the whole room a shared rule, like analyze before deciding or focus on risks and actionability.'
                 }
               />
             </div>
@@ -665,7 +742,7 @@ export function AgentWorkbenchPanel({
                 <PickerRow
                   key={entry.id}
                   active={entry.id === selectedRelayId && surface === 'relay'}
-                  label={`${entry.starter} relay`}
+                  label={`${entry.participants.length}-agent room`}
                   sublabel={entry.title}
                   badge={entry.status}
                   badgeClass={relayBadgeClass(entry.status)}
@@ -800,6 +877,83 @@ function HeadlessRunPane({
           </Button>
         ) : null}
       </div>
+
+      {relay ? (
+        <div className="mb-3 grid gap-3 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
+          <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-3">
+            <div className="flex items-center justify-between gap-3">
+              <div className="text-xs uppercase tracking-[0.18em] text-slate-500">
+                {isChinese ? '房间摘要' : 'Room summary'}
+              </div>
+              <div className="flex items-center gap-2">
+                {relay.summary ? (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="border-white/10 bg-white/[0.03] text-slate-100 hover:bg-white/[0.08]"
+                    onClick={async () => {
+                      await navigator.clipboard.writeText(relay.summary ?? '');
+                      setCopiedSummary(true);
+                      setTimeout(() => setCopiedSummary(false), 1500);
+                    }}
+                  >
+                    <Copy className="h-4 w-4" />
+                    {copiedSummary
+                      ? isChinese
+                        ? '已复制'
+                        : 'Copied'
+                      : isChinese
+                        ? '复制'
+                        : 'Copy'}
+                  </Button>
+                ) : null}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="border-white/10 bg-white/[0.03] text-slate-100 hover:bg-white/[0.08]"
+                  onClick={() => downloadRelayMarkdown(relay, turns)}
+                >
+                  <Download className="h-4 w-4" />
+                  {isChinese ? '导出' : 'Export'}
+                </Button>
+              </div>
+            </div>
+            <div className="mt-2 whitespace-pre-wrap text-sm leading-6 text-slate-200">
+              {relay.summary ??
+                (isChinese
+                  ? '对话推进到足够轮次后会自动整理摘要。'
+                  : 'A summary will appear automatically once the room has enough turns.')}
+            </div>
+          </div>
+          <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-3">
+            <div className="text-xs uppercase tracking-[0.18em] text-slate-500">
+              {isChinese ? '参与者' : 'Participants'}
+            </div>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {relay.participants.map((participant) => (
+                <Badge
+                  key={participant.id}
+                  className={
+                    participant.provider === 'claude'
+                      ? 'border-sky-400/30 bg-sky-400/10 text-sky-100'
+                      : 'border-emerald-400/30 bg-emerald-400/10 text-emerald-100'
+                  }
+                >
+                  {participant.label}
+                </Badge>
+              ))}
+            </div>
+            {relay.systemPrompt ? (
+              <div className="mt-3 rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-sm text-slate-300">
+                <div className="text-xs uppercase tracking-[0.18em] text-slate-500">
+                  {isChinese ? 'System prompt' : 'System prompt'}
+                </div>
+                <div className="mt-2 whitespace-pre-wrap">{relay.systemPrompt}</div>
+              </div>
+            ) : null}
+          </div>
+        </div>
+      ) : null}
 
       <div
         ref={viewportRef}
@@ -1016,6 +1170,7 @@ function AgentRelayPane({
 }) {
   const { isChinese, language } = useI18n();
   const viewportRef = useRef<HTMLDivElement | null>(null);
+  const [copiedSummary, setCopiedSummary] = useState(false);
 
   useEffect(() => {
     const el = viewportRef.current;
@@ -1076,7 +1231,7 @@ function AgentRelayPane({
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex items-center gap-2 text-sm font-medium text-white">
                     <Badge className={turn.agent === 'claude' ? 'border-sky-400/30 bg-sky-400/10 text-sky-100' : 'border-emerald-400/30 bg-emerald-400/10 text-emerald-100'}>
-                      {turn.agent}
+                      {turn.participantLabel}
                     </Badge>
                     <span>{isChinese ? `第 ${turn.turn} 轮` : `Turn ${turn.turn}`}</span>
                   </div>
@@ -1116,7 +1271,7 @@ function AgentRelayPane({
           <PickerRow
             key={entry.id}
             active={entry.id === relay?.id}
-            label={`${entry.starter} relay`}
+            label={`${entry.participants.length}-agent room`}
             sublabel={entry.title}
             badge={entry.status}
             badgeClass={relayBadgeClass(entry.status)}
@@ -1500,6 +1655,152 @@ function normalizeChatInput(value: string) {
   return `${value.replace(/\r?\n/g, '\r')}\r`;
 }
 
+function relayTemplateLabel(templateId: RelayTemplateId, isChinese: boolean) {
+  if (templateId === 'review-trio') {
+    return isChinese ? '评审三人组' : 'Review trio';
+  }
+  if (templateId === 'delivery-room') {
+    return isChinese ? '交付房间' : 'Delivery room';
+  }
+  return isChinese ? '经典对谈' : 'Classic duel';
+}
+
+function buildRelayTemplate(
+  templateId: RelayTemplateId,
+  starter: SessionDTO['provider'],
+  isChinese: boolean
+): {
+  participants: AgentRelayParticipantInputDTO[];
+  description: string;
+} {
+  if (templateId === 'review-trio') {
+    return {
+      participants: [
+        {
+          provider: 'claude',
+          label: isChinese ? 'Claude 架构师' : 'Claude architect',
+        },
+        {
+          provider: 'codex',
+          label: isChinese ? 'Codex 实现者' : 'Codex implementer',
+        },
+        {
+          provider: 'claude',
+          label: isChinese ? 'Claude 审查者' : 'Claude reviewer',
+        },
+      ],
+      description: isChinese
+        ? '适合先拆问题、再落实现、最后做质量回看。'
+        : 'Good for breaking down work, shipping changes, then reviewing quality.',
+    };
+  }
+
+  if (templateId === 'delivery-room') {
+    return {
+      participants: [
+        {
+          provider: 'codex',
+          label: isChinese ? 'Codex 构建者' : 'Codex builder',
+        },
+        {
+          provider: 'claude',
+          label: isChinese ? 'Claude 产品经理' : 'Claude product lead',
+        },
+        {
+          provider: 'codex',
+          label: isChinese ? 'Codex 修复者' : 'Codex fixer',
+        },
+        {
+          provider: 'claude',
+          label: isChinese ? 'Claude 发布官' : 'Claude ship captain',
+        },
+      ],
+      description: isChinese
+        ? '更像一个交付房间，强调推进、修补和最终拍板。'
+        : 'Feels like a shipping room with momentum, fixes, and a final ship decision.',
+    };
+  }
+
+  const second = starter === 'claude' ? 'codex' : 'claude';
+  return {
+    participants: [
+      {
+        provider: starter,
+        label:
+          starter === 'claude'
+            ? isChinese
+              ? 'Claude 主讲'
+              : 'Claude lead'
+            : isChinese
+              ? 'Codex 主讲'
+              : 'Codex lead',
+      },
+      {
+        provider: second,
+        label:
+          second === 'claude'
+            ? isChinese
+              ? 'Claude 评审'
+              : 'Claude reviewer'
+            : isChinese
+              ? 'Codex 评审'
+              : 'Codex reviewer',
+      },
+    ],
+    description: isChinese
+      ? '最接近原始 relay 的双人回合制，对话清晰、节奏快。'
+      : 'Closest to the original relay: a clear, fast two-agent back-and-forth.',
+  };
+}
+
+function downloadRelayMarkdown(relay: AgentRelaySessionDTO, turns: AgentRelayTurnDTO[]) {
+  if (typeof window === 'undefined') return;
+  const markdown = buildRelayMarkdown(relay, turns);
+  const blob = new Blob([markdown], { type: 'text/markdown;charset=utf-8' });
+  const url = window.URL.createObjectURL(blob);
+  const anchor = document.createElement('a');
+  anchor.href = url;
+  anchor.download = `${slugify(relay.title || 'agent-relay')}.md`;
+  anchor.click();
+  window.URL.revokeObjectURL(url);
+}
+
+function buildRelayMarkdown(relay: AgentRelaySessionDTO, turns: AgentRelayTurnDTO[]) {
+  const lines = [
+    `# ${relay.title}`,
+    '',
+    `- Status: ${relay.status}`,
+    `- Workspace: ${relay.cwd}`,
+    `- Turns: ${relay.currentTurn}/${relay.maxTurns}`,
+    `- Participants: ${relay.participants.map((entry) => `${entry.label} (${entry.provider})`).join(', ')}`,
+    '',
+    '## Goal',
+    '',
+    relay.initialPrompt,
+    '',
+  ];
+
+  if (relay.systemPrompt) {
+    lines.push('## System Prompt', '', relay.systemPrompt, '');
+  }
+
+  if (relay.summary) {
+    lines.push('## Summary', '', relay.summary, '');
+  }
+
+  lines.push('## Transcript', '');
+  for (const turn of turns) {
+    lines.push(`### Turn ${turn.turn} · ${turn.participantLabel}`, '', turn.output || '_No output_', '');
+  }
+
+  return lines.join('\n');
+}
+
+function slugify(value: string) {
+  const normalized = value.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-');
+  return normalized.replace(/^-+|-+$/g, '') || 'agent-relay';
+}
+
 function readRecentChatPrompts(): string[] {
   if (typeof window === 'undefined') return [];
   try {
@@ -1652,7 +1953,14 @@ function readWorkbenchPreferences(): WorkbenchPreferences | null {
       cwd: typeof parsed.cwd === 'string' ? parsed.cwd : '',
       prompt: typeof parsed.prompt === 'string' ? parsed.prompt : '',
       relayPrompt: typeof parsed.relayPrompt === 'string' ? parsed.relayPrompt : '',
+      relaySystemPrompt:
+        typeof parsed.relaySystemPrompt === 'string' ? parsed.relaySystemPrompt : '',
       relayStarter: parsed.relayStarter === 'claude' ? 'claude' : 'codex',
+      relayTemplateId:
+        typeof parsed.relayTemplateId === 'string' &&
+        RELAY_TEMPLATE_IDS.includes(parsed.relayTemplateId as RelayTemplateId)
+          ? (parsed.relayTemplateId as RelayTemplateId)
+          : 'duel',
       relayMaxTurns:
         typeof parsed.relayMaxTurns === 'number' && Number.isFinite(parsed.relayMaxTurns)
           ? Math.min(12, Math.max(2, Math.round(parsed.relayMaxTurns)))

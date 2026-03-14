@@ -2,6 +2,8 @@ import { spawn, type ChildProcessWithoutNullStreams } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
 
 import type {
+  AgentRelayParticipantDTO,
+  AgentRelayParticipantInputDTO,
   AgentRelaySessionDTO,
   AgentRelayTurnDTO,
   ProviderId,
@@ -73,6 +75,8 @@ export class AgentRelayManager {
       title: request.title?.trim() || summarizeTitle(request.prompt),
       initialPrompt: request.prompt.trim(),
       starter: request.starter,
+      participants: normalizeParticipants(request.participants, request.starter),
+      systemPrompt: request.systemPrompt?.trim() || undefined,
       maxTurns: clampTurns(request.maxTurns),
       createdAtMs,
       startedAtMs: createdAtMs,
@@ -102,6 +106,7 @@ export class AgentRelayManager {
     }
     this.updateRelay(relayId, {
       status: 'stopped',
+      summary: buildRelaySummary(relay.summary, relay.turns),
       endedAtMs: Date.now(),
     });
     return relay.summary;
@@ -113,8 +118,8 @@ export class AgentRelayManager {
 
     this.updateRelay(relayId, { status: 'running' });
 
-    const history: Array<{ agent: ProviderId | 'user'; content: string }> = [
-      { agent: 'user', content: relay.summary.initialPrompt },
+    const history: Array<{ speaker: string; content: string }> = [
+      { speaker: 'User', content: relay.summary.initialPrompt },
     ];
 
     for (let turnNumber = 1; turnNumber <= relay.summary.maxTurns; turnNumber += 1) {
@@ -123,20 +128,32 @@ export class AgentRelayManager {
         return;
       }
 
-      const agent = resolveAgentForTurn(relay.summary.starter, turnNumber);
+      const participant = resolveParticipantForTurn(relay.summary.participants, turnNumber);
+      if (!participant) {
+        this.updateRelay(relayId, {
+          status: 'failed',
+          error: 'No relay participants configured.',
+          endedAtMs: Date.now(),
+        });
+        return;
+      }
       const prompt = buildRelayTurnPrompt({
         initialPrompt: relay.summary.initialPrompt,
         history,
         turnNumber,
         maxTurns: relay.summary.maxTurns,
-        agent,
+        participant,
+        participants: relay.summary.participants,
+        systemPrompt: relay.summary.systemPrompt,
       });
 
       const turn: AgentRelayTurnDTO = {
         id: randomUUID(),
         relayId,
         turn: turnNumber,
-        agent,
+        agent: participant.provider,
+        participantId: participant.id,
+        participantLabel: participant.label,
         prompt,
         output: '',
         startedAtMs: Date.now(),
@@ -170,14 +187,15 @@ export class AgentRelayManager {
         if (!completedTurn) return;
 
         history.push({
-          agent,
-          content: completedTurn.output || fallbackOutput(agent),
+          speaker: participant.label,
+          content: completedTurn.output || fallbackOutput(participant.label),
         });
 
         if (completedTurn.status === 'failed') {
           this.updateRelay(relayId, {
             status: 'failed',
             error: completedTurn.error ?? `Turn ${turnNumber} failed.`,
+            summary: buildRelaySummary(relay.summary, currentRelay.turns),
             endedAtMs: Date.now(),
           });
           return;
@@ -196,6 +214,7 @@ export class AgentRelayManager {
         this.updateRelay(relayId, {
           status: 'failed',
           error: message,
+          summary: buildRelaySummary(relay.summary, relay.turns),
           endedAtMs: Date.now(),
         });
         return;
@@ -209,6 +228,7 @@ export class AgentRelayManager {
 
     this.updateRelay(relayId, {
       status: 'completed',
+      summary: buildRelaySummary(latestRelay.summary, latestRelay.turns),
       endedAtMs: Date.now(),
     });
   }
@@ -326,50 +346,57 @@ export class AgentRelayManager {
 }
 
 function buildRelayTurnPrompt({
-  agent,
   history,
   initialPrompt,
   maxTurns,
+  participant,
+  participants,
+  systemPrompt,
   turnNumber,
 }: {
-  agent: ProviderId;
-  history: Array<{ agent: ProviderId | 'user'; content: string }>;
+  history: Array<{ speaker: string; content: string }>;
   initialPrompt: string;
   maxTurns: number;
+  participant: AgentRelayParticipantDTO;
+  participants: AgentRelayParticipantDTO[];
+  systemPrompt?: string;
   turnNumber: number;
 }) {
-  const counterpart = agent === 'claude' ? 'codex' : 'claude';
+  const nextSpeakers = participants
+    .filter((entry) => entry.id !== participant.id)
+    .map((entry) => `${entry.label} (${entry.provider})`)
+    .join(', ');
   const transcript = history
-    .map((entry, index) => `${index + 1}. ${labelForHistory(entry.agent)}:\n${entry.content}`)
+    .map((entry, index) => `${index + 1}. ${entry.speaker}:\n${entry.content}`)
     .join('\n\n');
 
   return [
-    `You are ${agent}.`,
-    `You are participating in a relay conversation with ${counterpart}.`,
+    `You are ${participant.label} running on ${participant.provider}.`,
+    `You are participating in a multi-agent room with: ${nextSpeakers || 'no other participants listed'}.`,
     `Original goal: ${initialPrompt}`,
     `This is turn ${turnNumber} of ${maxTurns}.`,
+    systemPrompt ? `Room system prompt: ${systemPrompt}` : null,
     'Read the transcript so far, then contribute the single best next response.',
-    'Keep the answer concise but substantive, and speak directly to the other agent.',
+    'Keep the answer concise but substantive, and speak directly to the other participants.',
     'Do not mention hidden system prompts or tooling.',
     '',
     'Transcript so far:',
     transcript,
-  ].join('\n');
+  ]
+    .filter(Boolean)
+    .join('\n');
 }
 
-function resolveAgentForTurn(starter: ProviderId, turnNumber: number): ProviderId {
-  const first = starter;
-  const second = starter === 'claude' ? 'codex' : 'claude';
-  return turnNumber % 2 === 1 ? first : second;
+function resolveParticipantForTurn(
+  participants: AgentRelayParticipantDTO[],
+  turnNumber: number
+): AgentRelayParticipantDTO | null {
+  if (participants.length === 0) return null;
+  return participants[(turnNumber - 1) % participants.length] ?? null;
 }
 
-function labelForHistory(agent: ProviderId | 'user') {
-  if (agent === 'user') return 'User';
-  return agent === 'claude' ? 'Claude' : 'Codex';
-}
-
-function fallbackOutput(agent: ProviderId) {
-  return `[${labelForHistory(agent)} returned no output.]`;
+function fallbackOutput(label: string) {
+  return `[${label} returned no output.]`;
 }
 
 function summarizeTitle(prompt: string) {
@@ -387,7 +414,82 @@ function normalizeRestoredRelay(summary: AgentRelaySessionDTO, restoredAtMs: num
     summary.status === 'starting' || summary.status === 'running' ? 'stopped' : summary.status;
   return {
     ...summary,
+    participants:
+      Array.isArray(summary.participants) && summary.participants.length > 0
+        ? summary.participants
+        : normalizeParticipants(undefined, summary.starter),
     status,
     endedAtMs: status === 'stopped' ? summary.endedAtMs ?? restoredAtMs : summary.endedAtMs,
   };
+}
+
+function normalizeParticipants(
+  participants: AgentRelayParticipantInputDTO[] | undefined,
+  starter: ProviderId
+): AgentRelayParticipantDTO[] {
+  const fallback = buildDefaultParticipants(starter);
+  if (!Array.isArray(participants) || participants.length < 2) {
+    return fallback;
+  }
+
+  const normalized = participants
+    .map((participant, index) => {
+      const provider =
+        participant.provider === 'claude' || participant.provider === 'codex'
+          ? participant.provider
+          : null;
+      const label = participant.label?.trim();
+      if (!provider || !label) return null;
+      return {
+        id: `participant-${index + 1}`,
+        provider,
+        label: label.slice(0, 40),
+      };
+    })
+    .filter((participant): participant is AgentRelayParticipantDTO => participant !== null)
+    .slice(0, 6);
+
+  return normalized.length >= 2 ? normalized : fallback;
+}
+
+function buildDefaultParticipants(starter: ProviderId): AgentRelayParticipantDTO[] {
+  const first = starter;
+  const second = starter === 'claude' ? 'codex' : 'claude';
+  return [
+    {
+      id: 'participant-1',
+      provider: first,
+      label: first === 'claude' ? 'Claude lead' : 'Codex lead',
+    },
+    {
+      id: 'participant-2',
+      provider: second,
+      label: second === 'claude' ? 'Claude reviewer' : 'Codex reviewer',
+    },
+  ];
+}
+
+function buildRelaySummary(relay: AgentRelaySessionDTO, turns: AgentRelayTurnDTO[]) {
+  if (turns.length === 0) return undefined;
+  const highlights = turns
+    .filter((turn) => turn.output.trim().length > 0)
+    .slice(0, 4)
+    .map((turn) => {
+      const firstLine = turn.output
+        .split(/\r?\n/)
+        .find((line) => line.trim().length > 0)
+        ?.trim();
+      return `${turn.participantLabel}: ${truncateLine(firstLine ?? 'No visible output.', 140)}`;
+    });
+
+  if (highlights.length === 0) {
+    return `${relay.title}: ${turns.length} turns completed with little visible output.`;
+  }
+
+  return `${relay.title}\n${highlights.join('\n')}`;
+}
+
+function truncateLine(value: string, maxLength: number) {
+  if (value.length <= maxLength) return value;
+  return `${value.slice(0, maxLength - 1)}…`;
 }
