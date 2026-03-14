@@ -107,3 +107,43 @@ export interface StartTerminalRequestDTO {
   cols?: number;
   rows?: number;
 }
+
+export type AgentRelayStatus = 'starting' | 'running' | 'completed' | 'failed' | 'stopped';
+export type AgentRelayTurnStatus = 'running' | 'completed' | 'failed' | 'stopped';
+
+export interface AgentRelaySessionDTO {
+  id: string;
+  cwd: string;
+  title: string;
+  initialPrompt: string;
+  starter: ProviderId;
+  maxTurns: number;
+  createdAtMs: number;
+  startedAtMs?: number;
+  endedAtMs?: number;
+  currentTurn: number;
+  status: AgentRelayStatus;
+  error?: string;
+}
+
+export interface AgentRelayTurnDTO {
+  id: string;
+  relayId: string;
+  turn: number;
+  agent: ProviderId;
+  prompt: string;
+  output: string;
+  startedAtMs: number;
+  endedAtMs?: number;
+  status: AgentRelayTurnStatus;
+  exitCode?: number | null;
+  error?: string;
+}
+
+export interface StartAgentRelayRequestDTO {
+  cwd: string;
+  prompt: string;
+  starter: ProviderId;
+  maxTurns: number;
+  title?: string;
+}

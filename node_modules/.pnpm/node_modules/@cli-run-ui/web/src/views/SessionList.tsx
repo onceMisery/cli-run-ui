@@ -39,7 +39,7 @@ export function SessionList({ sessions, activeUid, onSelect }: SessionListProps)
               className={cn(
                 'absolute left-0 w-full rounded-2xl border px-4 py-3 text-left transition',
                 isActive
-                  ? 'border-cyan-300/40 bg-cyan-300/[0.11] shadow-[0_12px_32px_rgba(45,212,191,0.12)]'
+                  ? 'border-[var(--theme-accent-border)] bg-[var(--theme-accent-soft)] shadow-[0_12px_32px_rgba(0,0,0,0.18)]'
                   : 'border-white/10 bg-white/[0.03] hover:bg-white/[0.07]'
               )}
               onClick={() => onSelect(session.uid)}
@@ -72,7 +72,7 @@ export function SessionList({ sessions, activeUid, onSelect }: SessionListProps)
                 <div
                   className={cn(
                     'mt-1 h-2.5 w-2.5 rounded-full',
-                    isActive ? 'bg-cyan-300 shadow-[0_0_14px_rgba(103,232,249,0.85)]' : 'bg-slate-600'
+                    isActive ? 'bg-[var(--theme-accent-solid)] shadow-[0_0_14px_var(--theme-accent-soft)]' : 'bg-slate-600'
                   )}
                 />
               </div>

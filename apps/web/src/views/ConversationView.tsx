@@ -63,8 +63,8 @@ export function ConversationView({ session, messages }: ConversationViewProps) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center p-8">
         <div className="max-w-md rounded-[28px] border border-dashed border-white/10 bg-white/[0.03] px-8 py-12 text-center">
-          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-cyan-300/20 bg-cyan-300/10">
-            <Sparkles className="h-6 w-6 text-cyan-200" />
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-[var(--theme-accent-border)] bg-[var(--theme-accent-soft)]">
+            <Sparkles className="h-6 w-6 text-[var(--theme-accent-text)]" />
           </div>
           <h2 className="mt-5 text-xl font-semibold text-white">
             {isChinese ? '选择一个实时 transcript' : 'Choose a live transcript'}
@@ -130,7 +130,7 @@ function ConversationHero({
           </div>
           <div className="mt-4 text-xl font-semibold text-white">{session.title}</div>
           <div className="mt-2 max-w-2xl text-sm leading-6 text-slate-300">
-            {isChinese ? 'Transcript 来源：' : 'Transcript source: '}
+            {isChinese ? 'Transcript 来源: ' : 'Transcript source: '}
             {session.source.filePath}
           </div>
         </div>
@@ -160,25 +160,23 @@ function HeroStat({ label, value }: { label: string; value: string }) {
 function MessageCard({ message }: { message: MessageDTO }) {
   const { isChinese } = useI18n();
   const toolGroups = useMemo(() => groupToolParts(message.parts), [message.parts]);
-  const accentClass =
-    message.role === 'user'
-      ? 'border-amber-300/20 bg-amber-300/[0.06]'
-      : message.role === 'assistant'
-        ? 'border-cyan-300/20 bg-cyan-300/[0.05]'
-        : 'border-white/10 bg-white/[0.03]';
+  const tone = getMessageTone(message.role);
 
   return (
-    <article className={cn('rounded-[26px] border p-4 shadow-[0_20px_50px_rgba(0,0,0,0.18)]', accentClass)}>
+    <article
+      className={cn(
+        'relative overflow-hidden rounded-[26px] border p-4 shadow-[0_20px_50px_rgba(0,0,0,0.18)]',
+        tone.containerClass
+      )}
+    >
+      <div className={cn('pointer-events-none absolute inset-x-0 top-0 h-1.5', tone.barClass)} />
+
       <div className="mb-4 flex items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <div
             className={cn(
-              'flex h-10 w-10 items-center justify-center rounded-2xl border',
-              message.role === 'user'
-                ? 'border-amber-300/20 bg-amber-300/10 text-amber-100'
-                : message.role === 'assistant'
-                  ? 'border-cyan-300/20 bg-cyan-300/10 text-cyan-100'
-                  : 'border-white/10 bg-white/[0.04] text-slate-200'
+              'flex h-10 w-10 items-center justify-center rounded-2xl border shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]',
+              tone.iconClass
             )}
           >
             {message.role === 'user' ? (
@@ -190,16 +188,25 @@ function MessageCard({ message }: { message: MessageDTO }) {
             )}
           </div>
           <div>
-            <div className="text-sm font-medium text-white">{roleLabel(message.role, isChinese)}</div>
+            <div className={cn('text-sm font-medium', tone.titleClass)}>
+              {roleLabel(message.role, isChinese)}
+            </div>
             <div className="text-xs text-slate-400">
               {new Date(message.createdAtMs).toLocaleTimeString()}
               {message.model ? ` / ${message.model}` : ''}
             </div>
           </div>
         </div>
-        <Badge variant="muted" className="border-white/10 bg-white/[0.04] text-slate-300">
-          {message.parts.length} {isChinese ? '段' : `part${message.parts.length > 1 ? 's' : ''}`}
-        </Badge>
+        <div className="flex items-center gap-2">
+          <InlineCopyButton
+            value={buildMessageCopyText(message)}
+            label={isChinese ? '复制消息' : 'Copy message'}
+          />
+          <Badge className={tone.badgeClass}>{roleBadgeLabel(message.role, isChinese)}</Badge>
+          <Badge variant="muted" className="border-white/10 bg-white/[0.04] text-slate-300">
+            {message.parts.length} {isChinese ? '段' : `part${message.parts.length > 1 ? 's' : ''}`}
+          </Badge>
+        </div>
       </div>
 
       <div className="flex flex-col gap-3">
@@ -310,27 +317,57 @@ function ToolBlock({
           </div>
         </AccordionTrigger>
         <AccordionContent className="mt-1 px-3 pb-3">
-          <div className="grid gap-3 xl:grid-cols-2">
-            <div>
-              <div className="text-xs uppercase tracking-[0.2em] text-slate-500">
-                {isChinese ? '输入' : 'Input'}
-              </div>
-              <pre className="mt-2 whitespace-pre-wrap rounded-2xl border border-white/10 bg-black/40 p-3 text-xs font-mono text-slate-200">
-                {JSON.stringify(call.input, null, 2)}
-              </pre>
-            </div>
-            <div>
-              <div className="text-xs uppercase tracking-[0.2em] text-slate-500">
-                {isChinese ? '输出' : 'Output'}
-              </div>
-              <pre className="mt-2 whitespace-pre-wrap rounded-2xl border border-white/10 bg-black/40 p-3 text-xs font-mono text-emerald-100">
-                {result?.output ?? ''}
-              </pre>
-            </div>
+          <div className="grid items-start gap-3 xl:grid-cols-2">
+            <ToolPanel
+              label={isChinese ? '输入' : 'Input'}
+              value={JSON.stringify(call.input, null, 2)}
+              tone="neutral"
+            />
+            <ToolPanel
+              label={isChinese ? '输出' : 'Output'}
+              value={result?.output ?? ''}
+              tone={result?.isError ? 'error' : 'success'}
+            />
           </div>
         </AccordionContent>
       </AccordionItem>
     </Accordion>
+  );
+}
+
+function ToolPanel({
+  label,
+  value,
+  tone,
+}: {
+  label: string;
+  value: string;
+  tone: 'neutral' | 'success' | 'error';
+}) {
+  const { isChinese } = useI18n();
+
+  return (
+    <div className="min-w-0">
+      <div className="mb-2 flex items-center justify-between gap-2">
+        <div className="text-xs uppercase tracking-[0.2em] text-slate-500">{label}</div>
+        <InlineCopyButton
+          value={value}
+          label={isChinese ? `复制${label}` : `Copy ${label}`}
+        />
+      </div>
+      <pre
+        className={cn(
+          'max-h-72 overflow-auto whitespace-pre-wrap break-words rounded-2xl border p-3 text-xs font-mono',
+          tone === 'success'
+            ? 'border-emerald-400/15 bg-black/35 text-emerald-100'
+            : tone === 'error'
+              ? 'border-rose-400/15 bg-black/35 text-rose-100'
+              : 'border-white/10 bg-black/35 text-slate-200'
+        )}
+      >
+        {value || ' '}
+      </pre>
+    </div>
   );
 }
 
@@ -343,10 +380,16 @@ function ToolResultBlock({
 
   return (
     <div className="rounded-2xl border border-white/10 bg-black/30 p-3 text-xs">
-      <div className="text-xs uppercase tracking-[0.18em] text-slate-500">
-        {isChinese ? '工具输出' : 'Tool output'}
+      <div className="flex items-center justify-between gap-2">
+        <div className="text-xs uppercase tracking-[0.18em] text-slate-500">
+          {isChinese ? '工具输出' : 'Tool output'}
+        </div>
+        <InlineCopyButton
+          value={result.output}
+          label={isChinese ? '复制工具输出' : 'Copy tool output'}
+        />
       </div>
-      <pre className="mt-2 whitespace-pre-wrap font-mono text-emerald-100">
+      <pre className="mt-2 max-h-72 overflow-auto whitespace-pre-wrap break-words font-mono text-emerald-100">
         {result.output}
       </pre>
     </div>
@@ -360,6 +403,7 @@ function ReasoningBlock({
 }) {
   const { isChinese } = useI18n();
   const label = part.summary || (isChinese ? '推理' : 'Reasoning');
+
   return (
     <Collapsible>
       <div className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/[0.03] px-3 py-2.5">
@@ -419,7 +463,7 @@ function MarkdownCode({
   if (inline) {
     return (
       <code
-        className="rounded-md border border-white/10 bg-white/[0.06] px-1.5 py-0.5 text-xs text-cyan-100"
+        className="rounded-md border border-white/10 bg-white/[0.06] px-1.5 py-0.5 text-xs text-[var(--theme-accent-text)]"
         {...props}
       >
         {children}
@@ -461,6 +505,42 @@ function CopyButton({ value }: { value: string }) {
   );
 }
 
+function InlineCopyButton({
+  value,
+  label,
+}: {
+  value: string;
+  label: string;
+}) {
+  const [copied, setCopied] = useState(false);
+
+  const onCopy = async () => {
+    if (!value) return;
+    try {
+      await navigator.clipboard.writeText(value);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch {
+      setCopied(false);
+    }
+  };
+
+  return (
+    <Button
+      type="button"
+      variant="ghost"
+      size="sm"
+      onClick={onCopy}
+      className="h-7 rounded-full border border-white/10 bg-black/20 px-2.5 text-[11px] text-slate-300 hover:bg-white/[0.08] hover:text-white"
+      aria-label={label}
+      title={label}
+      disabled={!value}
+    >
+      {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+    </Button>
+  );
+}
+
 function extractText(node: ReactNode): string {
   if (typeof node === 'string') return node;
   if (typeof node === 'number') return String(node);
@@ -473,6 +553,31 @@ function extractText(node: ReactNode): string {
   return '';
 }
 
+function buildMessageCopyText(message: MessageDTO): string {
+  return message.parts
+    .map((part) => {
+      if (part.kind === 'text') return part.text;
+      if (part.kind === 'code') {
+        return `\`\`\`${part.lang ?? ''}\n${part.text}\n\`\`\``;
+      }
+      if (part.kind === 'tool_call') {
+        return `Tool call: ${part.name}\n${JSON.stringify(part.input, null, 2)}`;
+      }
+      if (part.kind === 'tool_result') {
+        return `Tool output:\n${part.output}`;
+      }
+      if (part.kind === 'reasoning') {
+        return part.summary ? `Reasoning: ${part.summary}` : 'Reasoning';
+      }
+      if (part.kind === 'raw') {
+        return JSON.stringify(part.json, null, 2);
+      }
+      return '';
+    })
+    .filter((value) => value.length > 0)
+    .join('\n\n');
+}
+
 function providerBadgeClass(provider: SessionDTO['provider']) {
   return provider === 'claude'
     ? 'border-sky-400/30 bg-sky-400/10 text-sky-100'
@@ -481,12 +586,57 @@ function providerBadgeClass(provider: SessionDTO['provider']) {
 
 function roleLabel(role: MessageDTO['role'], isChinese: boolean): string {
   if (!isChinese) {
+    if (role === 'assistant') return 'Agent';
     return role.charAt(0).toUpperCase() + role.slice(1);
   }
 
   if (role === 'user') return '用户';
-  if (role === 'assistant') return '助手';
+  if (role === 'assistant') return '智能体';
   if (role === 'system') return '系统';
   if (role === 'tool') return '工具';
   return '开发者';
+}
+
+function roleBadgeLabel(role: MessageDTO['role'], isChinese: boolean): string {
+  if (role === 'assistant') return 'Agent';
+  if (role === 'user') return 'User';
+  if (role === 'tool') return 'Tool';
+  if (role === 'system') return 'System';
+  return 'Dev';
+}
+
+function getMessageTone(role: MessageDTO['role']) {
+  if (role === 'user') {
+    return {
+      containerClass:
+        'border-[var(--user-border)] bg-[image:var(--user-soft)] shadow-[0_20px_50px_var(--user-shadow)]',
+      barClass: 'bg-[image:var(--user-bar)]',
+      iconClass:
+        'border-[var(--user-icon-border)] bg-[var(--user-icon-bg)] text-[var(--user-text)]',
+      titleClass: 'text-[var(--user-text)]',
+      badgeClass:
+        'border-[var(--user-badge-border)] bg-[var(--user-badge-bg)] text-[var(--user-badge-text)]',
+    };
+  }
+
+  if (role === 'assistant') {
+    return {
+      containerClass:
+        'border-[var(--agent-border)] bg-[image:var(--agent-soft)] shadow-[0_20px_50px_var(--agent-shadow)]',
+      barClass: 'bg-[image:var(--agent-bar)]',
+      iconClass:
+        'border-[var(--agent-icon-border)] bg-[var(--agent-icon-bg)] text-[var(--agent-text)]',
+      titleClass: 'text-[var(--agent-text)]',
+      badgeClass:
+        'border-[var(--agent-badge-border)] bg-[var(--agent-badge-bg)] text-[var(--agent-badge-text)]',
+    };
+  }
+
+  return {
+    containerClass: 'border-white/10 bg-white/[0.03]',
+    barClass: 'bg-[linear-gradient(90deg,rgba(148,163,184,0.75),rgba(148,163,184,0.12))]',
+    iconClass: 'border-white/10 bg-white/[0.04] text-slate-200',
+    titleClass: 'text-white',
+    badgeClass: 'border-white/10 bg-white/[0.04] text-slate-300',
+  };
 }

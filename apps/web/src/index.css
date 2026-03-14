@@ -19,6 +19,156 @@
   --color-secondary-foreground: 220 55% 10%;
 }
 
+:root {
+  --theme-glow-a: rgba(242, 201, 76, 0.14);
+  --theme-glow-b: rgba(78, 205, 196, 0.14);
+  --theme-accent-soft: rgba(103, 232, 249, 0.14);
+  --theme-accent-border: rgba(103, 232, 249, 0.34);
+  --theme-accent-text: rgb(207, 250, 254);
+  --theme-accent-solid: rgb(34, 211, 238);
+  --theme-accent-solid-hover: rgb(103, 232, 249);
+  --theme-accent-foreground: rgb(8, 20, 31);
+  --theme-secondary-soft: rgba(251, 191, 36, 0.14);
+  --theme-secondary-border: rgba(251, 191, 36, 0.28);
+  --theme-secondary-text: rgb(254, 243, 199);
+  --theme-secondary-solid: rgb(245, 158, 11);
+  --theme-secondary-solid-hover: rgb(251, 191, 36);
+  --theme-secondary-foreground: rgb(24, 16, 4);
+  --theme-selection: rgba(34, 211, 238, 0.24);
+  --theme-scroll-a: rgba(45, 212, 191, 0.7);
+  --theme-scroll-b: rgba(251, 191, 36, 0.55);
+  --user-soft: linear-gradient(135deg, rgba(251, 191, 36, 0.10), rgba(120, 53, 15, 0.10));
+  --user-border: rgba(251, 191, 36, 0.30);
+  --user-bar: linear-gradient(90deg, rgba(251, 191, 36, 0.95), rgba(245, 158, 11, 0.35));
+  --user-icon-bg: rgba(251, 191, 36, 0.12);
+  --user-icon-border: rgba(251, 191, 36, 0.30);
+  --user-text: rgb(255, 251, 235);
+  --user-badge-bg: rgba(251, 191, 36, 0.12);
+  --user-badge-border: rgba(251, 191, 36, 0.30);
+  --user-badge-text: rgb(254, 243, 199);
+  --user-shadow: rgba(120, 53, 15, 0.14);
+  --agent-soft: linear-gradient(135deg, rgba(34, 211, 238, 0.10), rgba(8, 47, 73, 0.14));
+  --agent-border: rgba(34, 211, 238, 0.30);
+  --agent-bar: linear-gradient(90deg, rgba(103, 232, 249, 0.95), rgba(34, 211, 238, 0.35));
+  --agent-icon-bg: rgba(34, 211, 238, 0.12);
+  --agent-icon-border: rgba(34, 211, 238, 0.30);
+  --agent-text: rgb(236, 254, 255);
+  --agent-badge-bg: rgba(34, 211, 238, 0.12);
+  --agent-badge-border: rgba(34, 211, 238, 0.30);
+  --agent-badge-text: rgb(207, 250, 254);
+  --agent-shadow: rgba(8, 145, 178, 0.16);
+}
+
+html[data-theme='ember'] {
+  --theme-glow-a: rgba(251, 113, 133, 0.15);
+  --theme-glow-b: rgba(245, 158, 11, 0.15);
+  --theme-accent-soft: rgba(251, 113, 133, 0.14);
+  --theme-accent-border: rgba(251, 113, 133, 0.34);
+  --theme-accent-text: rgb(255, 228, 230);
+  --theme-accent-solid: rgb(244, 63, 94);
+  --theme-accent-solid-hover: rgb(251, 113, 133);
+  --theme-accent-foreground: rgb(30, 10, 15);
+  --theme-secondary-soft: rgba(245, 158, 11, 0.14);
+  --theme-secondary-border: rgba(245, 158, 11, 0.28);
+  --theme-secondary-text: rgb(254, 243, 199);
+  --theme-secondary-solid: rgb(245, 158, 11);
+  --theme-secondary-solid-hover: rgb(251, 191, 36);
+  --theme-secondary-foreground: rgb(28, 18, 4);
+  --theme-selection: rgba(251, 113, 133, 0.24);
+  --theme-scroll-a: rgba(251, 113, 133, 0.72);
+  --theme-scroll-b: rgba(245, 158, 11, 0.56);
+  --agent-soft: linear-gradient(135deg, rgba(251, 113, 133, 0.10), rgba(136, 19, 55, 0.14));
+  --agent-border: rgba(251, 113, 133, 0.30);
+  --agent-bar: linear-gradient(90deg, rgba(251, 113, 133, 0.95), rgba(225, 29, 72, 0.35));
+  --agent-icon-bg: rgba(251, 113, 133, 0.12);
+  --agent-icon-border: rgba(251, 113, 133, 0.30);
+  --agent-text: rgb(255, 241, 242);
+  --agent-badge-bg: rgba(251, 113, 133, 0.12);
+  --agent-badge-border: rgba(251, 113, 133, 0.30);
+  --agent-badge-text: rgb(255, 228, 230);
+  --agent-shadow: rgba(159, 18, 57, 0.16);
+}
+
+html[data-theme='forest'] {
+  --theme-glow-a: rgba(74, 222, 128, 0.14);
+  --theme-glow-b: rgba(20, 184, 166, 0.14);
+  --theme-accent-soft: rgba(74, 222, 128, 0.14);
+  --theme-accent-border: rgba(74, 222, 128, 0.34);
+  --theme-accent-text: rgb(220, 252, 231);
+  --theme-accent-solid: rgb(34, 197, 94);
+  --theme-accent-solid-hover: rgb(74, 222, 128);
+  --theme-accent-foreground: rgb(5, 22, 10);
+  --theme-secondary-soft: rgba(20, 184, 166, 0.14);
+  --theme-secondary-border: rgba(20, 184, 166, 0.28);
+  --theme-secondary-text: rgb(204, 251, 241);
+  --theme-secondary-solid: rgb(20, 184, 166);
+  --theme-secondary-solid-hover: rgb(45, 212, 191);
+  --theme-secondary-foreground: rgb(6, 24, 23);
+  --theme-selection: rgba(74, 222, 128, 0.24);
+  --theme-scroll-a: rgba(74, 222, 128, 0.72);
+  --theme-scroll-b: rgba(20, 184, 166, 0.56);
+  --user-soft: linear-gradient(135deg, rgba(20, 184, 166, 0.12), rgba(15, 118, 110, 0.12));
+  --user-border: rgba(45, 212, 191, 0.28);
+  --user-bar: linear-gradient(90deg, rgba(45, 212, 191, 0.92), rgba(20, 184, 166, 0.35));
+  --user-icon-bg: rgba(45, 212, 191, 0.12);
+  --user-icon-border: rgba(45, 212, 191, 0.28);
+  --user-text: rgb(240, 253, 250);
+  --user-badge-bg: rgba(45, 212, 191, 0.12);
+  --user-badge-border: rgba(45, 212, 191, 0.28);
+  --user-badge-text: rgb(204, 251, 241);
+  --user-shadow: rgba(15, 118, 110, 0.14);
+  --agent-soft: linear-gradient(135deg, rgba(74, 222, 128, 0.10), rgba(20, 83, 45, 0.14));
+  --agent-border: rgba(74, 222, 128, 0.30);
+  --agent-bar: linear-gradient(90deg, rgba(134, 239, 172, 0.95), rgba(34, 197, 94, 0.35));
+  --agent-icon-bg: rgba(74, 222, 128, 0.12);
+  --agent-icon-border: rgba(74, 222, 128, 0.30);
+  --agent-text: rgb(240, 253, 244);
+  --agent-badge-bg: rgba(74, 222, 128, 0.12);
+  --agent-badge-border: rgba(74, 222, 128, 0.30);
+  --agent-badge-text: rgb(220, 252, 231);
+  --agent-shadow: rgba(21, 128, 61, 0.16);
+}
+
+html[data-theme='rose'] {
+  --theme-glow-a: rgba(244, 114, 182, 0.14);
+  --theme-glow-b: rgba(167, 139, 250, 0.14);
+  --theme-accent-soft: rgba(244, 114, 182, 0.14);
+  --theme-accent-border: rgba(244, 114, 182, 0.34);
+  --theme-accent-text: rgb(252, 231, 243);
+  --theme-accent-solid: rgb(236, 72, 153);
+  --theme-accent-solid-hover: rgb(244, 114, 182);
+  --theme-accent-foreground: rgb(31, 9, 24);
+  --theme-secondary-soft: rgba(167, 139, 250, 0.14);
+  --theme-secondary-border: rgba(167, 139, 250, 0.28);
+  --theme-secondary-text: rgb(237, 233, 254);
+  --theme-secondary-solid: rgb(168, 85, 247);
+  --theme-secondary-solid-hover: rgb(196, 181, 253);
+  --theme-secondary-foreground: rgb(21, 12, 36);
+  --theme-selection: rgba(244, 114, 182, 0.24);
+  --theme-scroll-a: rgba(244, 114, 182, 0.72);
+  --theme-scroll-b: rgba(167, 139, 250, 0.56);
+  --user-soft: linear-gradient(135deg, rgba(167, 139, 250, 0.10), rgba(88, 28, 135, 0.14));
+  --user-border: rgba(167, 139, 250, 0.30);
+  --user-bar: linear-gradient(90deg, rgba(196, 181, 253, 0.95), rgba(168, 85, 247, 0.35));
+  --user-icon-bg: rgba(167, 139, 250, 0.12);
+  --user-icon-border: rgba(167, 139, 250, 0.30);
+  --user-text: rgb(245, 243, 255);
+  --user-badge-bg: rgba(167, 139, 250, 0.12);
+  --user-badge-border: rgba(167, 139, 250, 0.30);
+  --user-badge-text: rgb(237, 233, 254);
+  --user-shadow: rgba(88, 28, 135, 0.14);
+  --agent-soft: linear-gradient(135deg, rgba(244, 114, 182, 0.10), rgba(131, 24, 67, 0.14));
+  --agent-border: rgba(244, 114, 182, 0.30);
+  --agent-bar: linear-gradient(90deg, rgba(249, 168, 212, 0.95), rgba(236, 72, 153, 0.35));
+  --agent-icon-bg: rgba(244, 114, 182, 0.12);
+  --agent-icon-border: rgba(244, 114, 182, 0.30);
+  --agent-text: rgb(253, 242, 248);
+  --agent-badge-bg: rgba(244, 114, 182, 0.12);
+  --agent-badge-border: rgba(244, 114, 182, 0.30);
+  --agent-badge-text: rgb(252, 231, 243);
+  --agent-shadow: rgba(190, 24, 93, 0.16);
+}
+
 @layer base {
   * {
     @apply border-border;
@@ -43,7 +193,7 @@
   }
 
   ::selection {
-    background: rgba(34, 211, 238, 0.24);
+    background: var(--theme-selection);
   }
 
   ::-webkit-scrollbar {
@@ -58,9 +208,16 @@
   ::-webkit-scrollbar-thumb {
     border-radius: 999px;
     border: 2px solid transparent;
-    background: linear-gradient(180deg, rgba(45, 212, 191, 0.7), rgba(251, 191, 36, 0.55));
+    background: linear-gradient(180deg, var(--theme-scroll-a), var(--theme-scroll-b));
     background-clip: padding-box;
   }
+}
+
+.app-shell {
+  background-image:
+    radial-gradient(circle_at_top_left, var(--theme-glow-a), transparent 20%),
+    radial-gradient(circle_at_top_right, var(--theme-glow-b), transparent 24%),
+    linear-gradient(145deg, #08111c 0%, #0d1726 45%, #060b12 100%);
 }
 
 .shiki {

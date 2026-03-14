@@ -2,6 +2,7 @@ import { serve } from '@hono/node-server';
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { ClaudeProvider, CodexProvider, WatcherHub, } from '@cli-run-ui/core';
+import { AgentRelayManager } from './AgentRelayManager.js';
 import { HistoryStore } from './HistoryStore.js';
 import { RunManager } from './RunManager.js';
 import { TerminalManager } from './TerminalManager.js';
@@ -13,7 +14,8 @@ const historyStore = new HistoryStore();
 const historySnapshot = await historyStore.load();
 const runManager = new RunManager(historySnapshot.runs);
 const terminalManager = new TerminalManager(historySnapshot.terminals);
-const runtimePersistence = createRuntimePersistenceTask(historyStore, runManager, terminalManager);
+const relayManager = new AgentRelayManager(historySnapshot.relays);
+const runtimePersistence = createRuntimePersistenceTask(historyStore, runManager, terminalManager, relayManager);
 watcherHub.start();
 void listAllSessions();
 runtimePersistence.schedule();
@@ -21,6 +23,8 @@ runManager.onRun(() => runtimePersistence.schedule());
 runManager.onLog(() => runtimePersistence.schedule());
 terminalManager.onSession(() => runtimePersistence.schedule());
 terminalManager.onOutput(() => runtimePersistence.schedule());
+relayManager.onRelay(() => runtimePersistence.schedule());
+relayManager.onTurn(() => runtimePersistence.schedule());
 const devOrigins = new Set([
     'http://localhost:5173',
     'http://127.0.0.1:5173',
@@ -256,6 +260,74 @@ app.get('/api/terminals/:id/stream', (c) => {
         };
     });
 });
+app.get('/api/relays', (c) => {
+    return c.json({ relays: relayManager.listRelays() });
+});
+app.post('/api/relays', async (c) => {
+    const body = await c.req.json().catch(() => null);
+    const request = body;
+    if (!request) {
+        return c.json({ error: 'invalid request body' }, 400);
+    }
+    try {
+        const relay = await relayManager.startRelay(request);
+        return c.json({ relay }, 201);
+    }
+    catch (error) {
+        return c.json({
+            error: error instanceof Error ? error.message : 'failed to start relay',
+        }, 400);
+    }
+});
+app.post('/api/relays/:id/stop', (c) => {
+    const relay = relayManager.stopRelay(c.req.param('id'));
+    if (!relay) {
+        return c.json({ error: 'relay not found' }, 404);
+    }
+    return c.json({ relay });
+});
+app.get('/api/relays/stream', (c) => {
+    return createSseResponse(c, async (stream) => {
+        stream.send('snapshot', { relays: relayManager.listRelays() });
+        const offRelay = relayManager.onRelay((relay) => {
+            stream.send('relay', { relay });
+        });
+        const heartbeat = setInterval(() => stream.comment('heartbeat'), 15000);
+        return () => {
+            offRelay();
+            clearInterval(heartbeat);
+        };
+    });
+});
+app.get('/api/relays/:id/stream', (c) => {
+    const relayId = c.req.param('id');
+    const relay = relayManager.getRelay(relayId);
+    if (!relay) {
+        return c.json({ error: 'relay not found' }, 404);
+    }
+    return createSseResponse(c, async (stream) => {
+        stream.send('snapshot', {
+            relay,
+            turns: relayManager.getTurns(relayId),
+        });
+        const offRelay = relayManager.onRelay((update) => {
+            if (update.id !== relayId)
+                return;
+            stream.send('relay', { relay: update });
+        });
+        const offTurn = relayManager.onTurn((turn) => {
+            if (turn.relayId !== relayId)
+                return;
+            stream.send('turn', { turn });
+        });
+        const heartbeat = setInterval(() => stream.comment('heartbeat'), 15000);
+        return () => {
+            offRelay();
+            offTurn();
+            clearInterval(heartbeat);
+        };
+    });
+});
 app.get('/', (c) => c.text('cli-run-ui server'));
 const port = Number(process.env.PORT ?? 4000);
 serve({
@@ -319,7 +391,7 @@ function createSseResponse(c, handler) {
         },
     });
 }
-function createRuntimePersistenceTask(store, runs, terminals) {
+function createRuntimePersistenceTask(store, runs, terminals, relays) {
     let timer = null;
     let writing = false;
     let queued = false;
@@ -333,6 +405,7 @@ function createRuntimePersistenceTask(store, runs, terminals) {
             await store.save({
                 runs: runs.listPersistedRuns(),
                 terminals: terminals.listPersistedSessions(),
+                relays: relays.listPersistedRelays(),
             });
         }
         catch (error) {

@@ -3,6 +3,7 @@ import path from 'node:path';
 const EMPTY_HISTORY = {
     runs: [],
     terminals: [],
+    relays: [],
 };
 export class HistoryStore {
     filePath;
@@ -18,6 +19,7 @@ export class HistoryStore {
                 terminals: Array.isArray(parsed.terminals)
                     ? parsed.terminals.filter(isTerminalRecord)
                     : [],
+                relays: Array.isArray(parsed.relays) ? parsed.relays.filter(isRelayRecord) : [],
             };
         }
         catch (error) {
@@ -35,10 +37,11 @@ export class HistoryStore {
         const directory = path.dirname(this.filePath);
         const tempPath = `${this.filePath}.tmp`;
         const payload = {
-            version: 1,
+            version: 2,
             savedAtMs: Date.now(),
             runs: trimRuns(snapshot.runs),
             terminals: trimTerminals(snapshot.terminals),
+            relays: trimRelays(snapshot.relays),
         };
         await mkdir(directory, { recursive: true });
         await writeFile(tempPath, JSON.stringify(payload, null, 2), 'utf8');
@@ -71,5 +74,13 @@ function isRunRecord(value) {
 }
 function isTerminalRecord(value) {
     return !!value && typeof value === 'object' && 'summary' in value && 'outputs' in value;
+}
+function trimRelays(relays) {
+    return [...relays]
+        .sort((a, b) => b.summary.createdAtMs - a.summary.createdAtMs)
+        .slice(0, 40);
+}
+function isRelayRecord(value) {
+    return !!value && typeof value === 'object' && 'summary' in value && 'turns' in value;
 }
 //# sourceMappingURL=HistoryStore.js.map

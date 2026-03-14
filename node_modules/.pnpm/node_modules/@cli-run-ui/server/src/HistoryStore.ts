@@ -1,24 +1,28 @@
 import { mkdir, readFile, rename, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 
+import type { PersistedAgentRelayRecord } from './AgentRelayManager.js';
 import type { PersistedRunRecord } from './RunManager.js';
 import type { PersistedTerminalRecord } from './TerminalManager.js';
 
 interface RuntimeHistoryFile {
-  version: 1;
+  version: 2;
   savedAtMs: number;
   runs: PersistedRunRecord[];
   terminals: PersistedTerminalRecord[];
+  relays: PersistedAgentRelayRecord[];
 }
 
 interface RuntimeHistorySnapshot {
   runs: PersistedRunRecord[];
   terminals: PersistedTerminalRecord[];
+  relays: PersistedAgentRelayRecord[];
 }
 
 const EMPTY_HISTORY: RuntimeHistorySnapshot = {
   runs: [],
   terminals: [],
+  relays: [],
 };
 
 export class HistoryStore {
@@ -33,6 +37,7 @@ export class HistoryStore {
         terminals: Array.isArray(parsed.terminals)
           ? parsed.terminals.filter(isTerminalRecord)
           : [],
+        relays: Array.isArray(parsed.relays) ? parsed.relays.filter(isRelayRecord) : [],
       };
     } catch (error) {
       const code =
@@ -51,10 +56,11 @@ export class HistoryStore {
     const directory = path.dirname(this.filePath);
     const tempPath = `${this.filePath}.tmp`;
     const payload: RuntimeHistoryFile = {
-      version: 1,
+      version: 2,
       savedAtMs: Date.now(),
       runs: trimRuns(snapshot.runs),
       terminals: trimTerminals(snapshot.terminals),
+      relays: trimRelays(snapshot.relays),
     };
 
     await mkdir(directory, { recursive: true });
@@ -95,4 +101,14 @@ function isRunRecord(value: unknown): value is PersistedRunRecord {
 
 function isTerminalRecord(value: unknown): value is PersistedTerminalRecord {
   return !!value && typeof value === 'object' && 'summary' in value && 'outputs' in value;
+}
+
+function trimRelays(relays: PersistedAgentRelayRecord[]): PersistedAgentRelayRecord[] {
+  return [...relays]
+    .sort((a, b) => b.summary.createdAtMs - a.summary.createdAtMs)
+    .slice(0, 40);
+}
+
+function isRelayRecord(value: unknown): value is PersistedAgentRelayRecord {
+  return !!value && typeof value === 'object' && 'summary' in value && 'turns' in value;
 }

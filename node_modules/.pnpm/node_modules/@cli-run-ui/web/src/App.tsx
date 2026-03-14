@@ -14,6 +14,7 @@ import { useSessionStream } from './hooks/useSessionStream.ts';
 import { useConversationStream } from './hooks/useConversationStream.ts';
 import { useRunSessions } from './hooks/useRunSessions.ts';
 import { useTerminalSessions } from './hooks/useTerminalSessions.ts';
+import { useAgentRelaySessions } from './hooks/useAgentRelaySessions.ts';
 import { SessionList } from './views/SessionList.tsx';
 import { HeaderBar } from './views/HeaderBar.tsx';
 import { Badge } from './components/ui/badge.tsx';
@@ -25,6 +26,7 @@ import {
   useI18n,
   type Language,
 } from './lib/i18n.tsx';
+import { useTheme } from './lib/theme.tsx';
 
 type ProviderFilter = 'all' | SessionDTO['provider'];
 
@@ -39,10 +41,12 @@ const AgentWorkbenchPanel = lazy(async () => {
 });
 
 export default function App() {
+  const { theme, setTheme, themes } = useTheme();
   const { language, isChinese, setLanguage } = useI18n();
   const { sessions, status: sessionStatus } = useSessionStream();
   const { runs, status: runStatus } = useRunSessions();
   const { terminals, status: terminalStatus } = useTerminalSessions();
+  const { relays, status: relayStatus } = useAgentRelaySessions();
   const [activeSessionUid, setActiveSessionUid] = useState<string | null>(null);
   const [providerFilter, setProviderFilter] = useState<ProviderFilter>('all');
   const [query, setQuery] = useState('');
@@ -122,6 +126,12 @@ export default function App() {
       ).length,
     [terminals]
   );
+  const activeRelayCount = useMemo(
+    () =>
+      relays.filter((relay) => relay.status === 'running' || relay.status === 'starting')
+        .length,
+    [relays]
+  );
 
   const highlightedProjects = useMemo(() => {
     const grouped = new Map<
@@ -154,14 +164,14 @@ export default function App() {
   }, [filteredSessions, isChinese]);
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(242,201,76,0.14),transparent_20%),radial-gradient(circle_at_top_right,rgba(78,205,196,0.14),transparent_24%),linear-gradient(145deg,#08111c_0%,#0d1726_45%,#060b12_100%)] text-foreground">
+    <div className="app-shell min-h-screen text-foreground">
       <div className="mx-auto flex min-h-screen max-w-[1800px] flex-col gap-6 px-4 py-4 lg:px-6">
         <section className="grid gap-4 xl:grid-cols-[340px_minmax(0,1fr)_320px]">
           <aside className="overflow-hidden rounded-[30px] border border-white/10 bg-[linear-gradient(180deg,rgba(8,15,28,0.96),rgba(8,14,24,0.88))] shadow-[0_24px_80px_rgba(0,0,0,0.35)] backdrop-blur">
             <div className="border-b border-white/10 px-5 py-5">
               <div className="flex items-start justify-between gap-4">
                 <div className="space-y-2">
-                  <Badge className="w-fit border-cyan-400/30 bg-cyan-400/10 text-cyan-100">
+                  <Badge className="w-fit border-[var(--theme-accent-border)] bg-[var(--theme-accent-soft)] text-[var(--theme-accent-text)]">
                     {isChinese ? '多 Agent 工作台' : 'Multi-agent runboard'}
                   </Badge>
                   <div>
@@ -183,7 +193,7 @@ export default function App() {
                       className={cn(
                         'rounded-full px-3 py-1 text-xs transition',
                         language === 'en'
-                          ? 'bg-cyan-300/15 text-cyan-50'
+                          ? 'bg-[var(--theme-accent-soft)] text-[var(--theme-accent-text)]'
                           : 'text-slate-400 hover:text-slate-100'
                       )}
                     >
@@ -194,12 +204,29 @@ export default function App() {
                       className={cn(
                         'rounded-full px-3 py-1 text-xs transition',
                         language === 'zh-CN'
-                          ? 'bg-cyan-300/15 text-cyan-50'
+                          ? 'bg-[var(--theme-accent-soft)] text-[var(--theme-accent-text)]'
                           : 'text-slate-400 hover:text-slate-100'
                       )}
                     >
                       中文
                     </button>
+                  </div>
+                  <div className="flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-2 py-1">
+                    {themes.map((option) => (
+                      <button
+                        key={option.id}
+                        onClick={() => setTheme(option.id)}
+                        title={option.label}
+                        aria-label={option.label}
+                        className={cn(
+                          'h-5 w-5 rounded-full border transition',
+                          theme === option.id
+                            ? 'scale-110 border-white shadow-[0_0_0_2px_rgba(255,255,255,0.18)]'
+                            : 'border-white/10 hover:scale-105'
+                        )}
+                        style={{ backgroundImage: option.swatch }}
+                      />
+                    ))}
                   </div>
                   <StatusBeacon status={sessionStatus} isChinese={isChinese} />
                 </div>
@@ -232,8 +259,8 @@ export default function App() {
                   value={providerCounts.codex}
                   helper={
                     isChinese
-                      ? `${runningCount} 个 run / ${activeTerminalCount} 个 terminal`
-                      : `${runningCount} runs / ${activeTerminalCount} terminals`
+                      ? `${runningCount} 个 run / ${activeTerminalCount} 个 terminal / ${activeRelayCount} 个 relay`
+                      : `${runningCount} runs / ${activeTerminalCount} terminals / ${activeRelayCount} relays`
                   }
                 />
               </div>
@@ -341,6 +368,8 @@ export default function App() {
                   runStatus={runStatus}
                   terminals={terminals}
                   terminalStatus={terminalStatus}
+                  relays={relays}
+                  relayStatus={relayStatus}
                 />
               </Suspense>
 
@@ -466,7 +495,7 @@ function FilterChip({
       className={cn(
         'rounded-full border px-3 py-1.5 text-xs font-medium transition',
         active
-          ? 'border-cyan-300/40 bg-cyan-300/15 text-cyan-50'
+          ? 'border-[var(--theme-accent-border)] bg-[var(--theme-accent-soft)] text-[var(--theme-accent-text)]'
           : 'border-white/10 bg-white/[0.03] text-slate-400 hover:text-slate-200'
       )}
     >

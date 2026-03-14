@@ -6,8 +6,11 @@ import {
   useState,
 } from 'react';
 import type {
+  AgentRelaySessionDTO,
+  AgentRelayTurnDTO,
   RunSessionDTO,
   SessionDTO,
+  StartAgentRelayRequestDTO,
   StartRunRequestDTO,
   StartTerminalRequestDTO,
   TerminalSessionDTO,
@@ -16,16 +19,22 @@ import type { FitAddon as XTermFitAddon } from '@xterm/addon-fit';
 import type { Terminal as XTermTerminal } from '@xterm/xterm';
 import '@xterm/xterm/css/xterm.css';
 import {
+  ArrowUp,
   Command,
+  CornerDownLeft,
+  Keyboard,
   LoaderCircle,
+  MessageSquare,
   Monitor,
   Play,
+  SplitSquareVertical,
   RotateCcw,
   Sparkles,
   Square,
   SquareTerminal,
 } from 'lucide-react';
 
+import { useAgentRelayStream } from '@/hooks/useAgentRelayStream';
 import type { StreamStatus } from '@/hooks/useSessionStream';
 import { useRunStream } from '@/hooks/useRunStream';
 import { useTerminalStream } from '@/hooks/useTerminalStream';
@@ -34,7 +43,7 @@ import { Button } from '@/components/ui/button';
 import { useI18n } from '@/lib/i18n';
 import { cn } from '@/lib/utils';
 
-type LaunchSurface = 'run' | 'terminal';
+type LaunchSurface = 'run' | 'terminal' | 'relay';
 
 interface AgentWorkbenchPanelProps {
   activeSession: SessionDTO | null;
@@ -42,6 +51,8 @@ interface AgentWorkbenchPanelProps {
   runStatus: StreamStatus;
   terminals: TerminalSessionDTO[];
   terminalStatus: StreamStatus;
+  relays: AgentRelaySessionDTO[];
+  relayStatus: StreamStatus;
 }
 
 interface WorkbenchPreferences {
@@ -50,11 +61,17 @@ interface WorkbenchPreferences {
   mode: 'task' | 'resume';
   cwd: string;
   prompt: string;
+  relayPrompt: string;
+  relayStarter: SessionDTO['provider'];
+  relayMaxTurns: number;
   selectedRunId: string | null;
   selectedTerminalId: string | null;
+  selectedRelayId: string | null;
 }
 
 const WORKBENCH_STORAGE_KEY = 'cli-run-ui.agent-workbench';
+const RECENT_CHAT_STORAGE_KEY = 'cli-run-ui.recent-chat-prompts';
+const MAX_RECENT_CHAT_PROMPTS = 6;
 
 export function AgentWorkbenchPanel({
   activeSession,
@@ -62,6 +79,8 @@ export function AgentWorkbenchPanel({
   runStatus,
   terminals,
   terminalStatus,
+  relays,
+  relayStatus,
 }: AgentWorkbenchPanelProps) {
   const { isChinese } = useI18n();
   const savedPreferences = useMemo(readWorkbenchPreferences, []);
@@ -74,15 +93,31 @@ export function AgentWorkbenchPanel({
   );
   const [cwd, setCwd] = useState(savedPreferences?.cwd ?? activeSession?.projectPath ?? '');
   const [prompt, setPrompt] = useState(savedPreferences?.prompt ?? '');
+  const [relayPrompt, setRelayPrompt] = useState(savedPreferences?.relayPrompt ?? '');
+  const [relayStarter, setRelayStarter] = useState<SessionDTO['provider']>(
+    savedPreferences?.relayStarter ?? 'codex'
+  );
+  const [relayMaxTurns, setRelayMaxTurns] = useState(savedPreferences?.relayMaxTurns ?? 4);
   const [runError, setRunError] = useState<string | null>(null);
   const [terminalError, setTerminalError] = useState<string | null>(null);
+  const [chatError, setChatError] = useState<string | null>(null);
+  const [relayError, setRelayError] = useState<string | null>(null);
   const [isLaunchingRun, setIsLaunchingRun] = useState(false);
   const [isLaunchingTerminal, setIsLaunchingTerminal] = useState(false);
+  const [isSendingChat, setIsSendingChat] = useState(false);
+  const [isLaunchingRelay, setIsLaunchingRelay] = useState(false);
+  const [chatDraft, setChatDraft] = useState('');
+  const [recentChatPrompts, setRecentChatPrompts] = useState<string[]>(() =>
+    readRecentChatPrompts()
+  );
   const [selectedRunId, setSelectedRunId] = useState<string | null>(
     savedPreferences?.selectedRunId ?? runs[0]?.id ?? null
   );
   const [selectedTerminalId, setSelectedTerminalId] = useState<string | null>(
     savedPreferences?.selectedTerminalId ?? terminals[0]?.id ?? null
+  );
+  const [selectedRelayId, setSelectedRelayId] = useState<string | null>(
+    savedPreferences?.selectedRelayId ?? relays[0]?.id ?? null
   );
 
   useEffect(() => {
@@ -101,10 +136,26 @@ export function AgentWorkbenchPanel({
       mode,
       cwd,
       prompt,
+      relayPrompt,
+      relayStarter,
+      relayMaxTurns,
       selectedRunId,
       selectedTerminalId,
+      selectedRelayId,
     });
-  }, [cwd, mode, prompt, provider, selectedRunId, selectedTerminalId, surface]);
+  }, [
+    cwd,
+    mode,
+    prompt,
+    provider,
+    relayMaxTurns,
+    relayPrompt,
+    relayStarter,
+    selectedRelayId,
+    selectedRunId,
+    selectedTerminalId,
+    surface,
+  ]);
 
   useEffect(() => {
     if (runs.length === 0) {
@@ -126,6 +177,15 @@ export function AgentWorkbenchPanel({
     setSelectedTerminalId(terminals[0]?.id ?? null);
   }, [selectedTerminalId, terminals]);
 
+  useEffect(() => {
+    if (relays.length === 0) {
+      setSelectedRelayId(null);
+      return;
+    }
+    if (selectedRelayId && relays.some((relay) => relay.id === selectedRelayId)) return;
+    setSelectedRelayId(relays[0]?.id ?? null);
+  }, [relays, selectedRelayId]);
+
   const run = useMemo(
     () => runs.find((entry) => entry.id === selectedRunId) ?? null,
     [runs, selectedRunId]
@@ -134,12 +194,17 @@ export function AgentWorkbenchPanel({
     () => terminals.find((entry) => entry.id === selectedTerminalId) ?? null,
     [selectedTerminalId, terminals]
   );
+  const relay = useMemo(
+    () => relays.find((entry) => entry.id === selectedRelayId) ?? null,
+    [relays, selectedRelayId]
+  );
 
   const { run: liveRun, logs } = useRunStream(selectedRunId, run);
   const { terminal: liveTerminal, outputs } = useTerminalStream(
     selectedTerminalId,
     terminal
   );
+  const { relay: liveRelay, turns } = useAgentRelayStream(selectedRelayId, relay);
 
   const canResume =
     !!activeSession &&
@@ -154,6 +219,15 @@ export function AgentWorkbenchPanel({
     !isLaunchingTerminal &&
     cwd.trim().length > 0 &&
     (mode === 'task' || canResume);
+  const canSendChat =
+    !isSendingChat &&
+    chatDraft.trim().length > 0 &&
+    cwd.trim().length > 0 &&
+    (mode === 'task' || canResume);
+  const canLaunchRelay =
+    !isLaunchingRelay &&
+    cwd.trim().length > 0 &&
+    relayPrompt.trim().length > 0;
 
   const presets = useMemo(
     () => buildPresets(activeSession, provider, isChinese),
@@ -192,36 +266,41 @@ export function AgentWorkbenchPanel({
     }
   };
 
+  const startTerminalSession = async (bootPrompt?: string) => {
+    const payload: StartTerminalRequestDTO = {
+      provider,
+      mode: mode === 'resume' ? 'resume' : 'new',
+      cwd: cwd.trim(),
+      sessionUid: mode === 'resume' ? activeSession?.uid : undefined,
+      bootPrompt,
+      cols: 120,
+      rows: 32,
+    };
+    const response = await fetch('/api/terminals', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    const data = (await response.json()) as {
+      terminal?: TerminalSessionDTO;
+      error?: string;
+    };
+    if (!response.ok || !data.terminal) {
+      throw new Error(data.error ?? 'Failed to open terminal.');
+    }
+    startTransition(() => {
+      setSurface('terminal');
+      setSelectedTerminalId(data.terminal.id);
+    });
+    return data.terminal;
+  };
+
   const launchTerminal = async () => {
     if (!canLaunchTerminal) return;
     setIsLaunchingTerminal(true);
     setTerminalError(null);
     try {
-      const payload: StartTerminalRequestDTO = {
-        provider,
-        mode: mode === 'resume' ? 'resume' : 'new',
-        cwd: cwd.trim(),
-        sessionUid: mode === 'resume' ? activeSession?.uid : undefined,
-        bootPrompt: prompt.trim() || undefined,
-        cols: 120,
-        rows: 32,
-      };
-      const response = await fetch('/api/terminals', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-      const data = (await response.json()) as {
-        terminal?: TerminalSessionDTO;
-        error?: string;
-      };
-      if (!response.ok || !data.terminal) {
-        throw new Error(data.error ?? 'Failed to open terminal.');
-      }
-      startTransition(() => {
-        setSurface('terminal');
-        setSelectedTerminalId(data.terminal.id);
-      });
+      await startTerminalSession(prompt.trim() || undefined);
     } catch (reason) {
       setTerminalError(reason instanceof Error ? reason.message : 'Failed to open terminal.');
     } finally {
@@ -229,12 +308,78 @@ export function AgentWorkbenchPanel({
     }
   };
 
+  const sendChatMessage = async () => {
+    if (!canSendChat) return;
+    const message = chatDraft.trim();
+    setIsSendingChat(true);
+    setChatError(null);
+
+    try {
+      if (liveTerminal?.status === 'open') {
+        await sendTerminalInput(liveTerminal.id, normalizeChatInput(message));
+        startTransition(() => setSurface('terminal'));
+      } else {
+        await startTerminalSession(message);
+      }
+      const nextRecentPrompts = rememberRecentChatPrompt(recentChatPrompts, message);
+      setRecentChatPrompts(nextRecentPrompts);
+      writeRecentChatPrompts(nextRecentPrompts);
+      setChatDraft('');
+    } catch (reason) {
+      setChatError(reason instanceof Error ? reason.message : 'Failed to send message.');
+    } finally {
+      setIsSendingChat(false);
+    }
+  };
+
+  const launchRelay = async () => {
+    if (!canLaunchRelay) return;
+    setIsLaunchingRelay(true);
+    setRelayError(null);
+
+    try {
+      const payload: StartAgentRelayRequestDTO = {
+        cwd: cwd.trim(),
+        prompt: relayPrompt.trim(),
+        starter: relayStarter,
+        maxTurns: relayMaxTurns,
+        title: relayPrompt.trim(),
+      };
+      const response = await fetch('/api/relays', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const data = (await response.json()) as {
+        relay?: AgentRelaySessionDTO;
+        error?: string;
+      };
+      if (!response.ok || !data.relay) {
+        throw new Error(data.error ?? 'Failed to start relay.');
+      }
+      startTransition(() => {
+        setSurface('relay');
+        setSelectedRelayId(data.relay.id);
+      });
+    } catch (reason) {
+      setRelayError(reason instanceof Error ? reason.message : 'Failed to start relay.');
+    } finally {
+      setIsLaunchingRelay(false);
+    }
+  };
+
   const resetDraft = () => {
     setPrompt('');
+    setRelayPrompt('');
     setRunError(null);
     setTerminalError(null);
+    setChatError(null);
+    setRelayError(null);
+    setChatDraft('');
     setProvider(activeSession?.provider ?? 'codex');
     setMode(activeSession ? 'resume' : 'task');
+    setRelayStarter('codex');
+    setRelayMaxTurns(4);
     setCwd(activeSession?.projectPath ?? '');
     setSurface('run');
   };
@@ -244,7 +389,7 @@ export function AgentWorkbenchPanel({
       <div className="flex items-center justify-between gap-3">
         <div>
           <div className="flex items-center gap-2 text-sm font-medium text-white">
-            <Sparkles className="h-4 w-4 text-cyan-300" />
+            <Sparkles className="h-4 w-4 text-[var(--theme-accent-text)]" />
             {isChinese ? 'Agent 工作台' : 'Agent Workspace'}
           </div>
           <div className="mt-1 text-xs text-slate-400">
@@ -260,6 +405,10 @@ export function AgentWorkbenchPanel({
           <Badge className={streamBadgeClass(terminalStatus)}>
             {isChinese ? 'terminals' : 'terminals'}{' '}
             {terminalStatus === 'open' ? (isChinese ? '实时' : 'live') : isChinese ? '同步中' : 'syncing'}
+          </Badge>
+          <Badge className={streamBadgeClass(relayStatus)}>
+            {isChinese ? 'relays' : 'relays'}{' '}
+            {relayStatus === 'open' ? (isChinese ? '实时' : 'live') : isChinese ? '同步中' : 'syncing'}
           </Badge>
         </div>
       </div>
@@ -376,7 +525,7 @@ export function AgentWorkbenchPanel({
               <Button
                 onClick={() => void launchRun()}
                 disabled={!canLaunchRun}
-                className="w-full rounded-xl bg-cyan-400 text-slate-950 hover:bg-cyan-300"
+                className="w-full rounded-xl bg-[var(--theme-accent-solid)] text-[var(--theme-accent-foreground)] hover:bg-[var(--theme-accent-solid-hover)]"
               >
                 {isLaunchingRun ? (
                   <LoaderCircle className="h-4 w-4 animate-spin" />
@@ -388,7 +537,7 @@ export function AgentWorkbenchPanel({
               <Button
                 onClick={() => void launchTerminal()}
                 disabled={!canLaunchTerminal}
-                className="w-full rounded-xl bg-emerald-400 text-slate-950 hover:bg-emerald-300"
+                className="w-full rounded-xl bg-[var(--theme-secondary-solid)] text-[var(--theme-secondary-foreground)] hover:bg-[var(--theme-secondary-solid-hover)]"
               >
                 {isLaunchingTerminal ? (
                   <LoaderCircle className="h-4 w-4 animate-spin" />
@@ -401,12 +550,86 @@ export function AgentWorkbenchPanel({
           </section>
 
           <section className="rounded-2xl border border-white/10 bg-black/20 p-3">
+            <div className="flex items-center justify-between gap-3">
+              <div className="text-xs uppercase tracking-[0.18em] text-slate-500">
+                Agent relay
+              </div>
+              <Badge variant="muted" className="bg-white/5 text-slate-300">
+                {relays.length}
+              </Badge>
+            </div>
+
+            <div className="mt-3 flex gap-2">
+              <ModeChip
+                active={relayStarter === 'codex'}
+                onClick={() => setRelayStarter('codex')}
+                label={isChinese ? 'Codex 先说' : 'Codex starts'}
+              />
+              <ModeChip
+                active={relayStarter === 'claude'}
+                onClick={() => setRelayStarter('claude')}
+                label={isChinese ? 'Claude 先说' : 'Claude starts'}
+              />
+            </div>
+
+            <label className="mt-3 block">
+              <div className="mb-1 flex items-center justify-between text-xs uppercase tracking-[0.18em] text-slate-500">
+                <span>{isChinese ? '对话轮数' : 'Turns'}</span>
+                <span className="normal-case tracking-normal text-slate-400">{relayMaxTurns}</span>
+              </div>
+              <input
+                type="range"
+                min={2}
+                max={12}
+                step={1}
+                value={relayMaxTurns}
+                onChange={(event) => setRelayMaxTurns(Number(event.target.value))}
+                className="w-full accent-[var(--theme-accent-solid)]"
+              />
+            </label>
+
+            <div className="mt-3">
+              <div className="mb-1 text-xs uppercase tracking-[0.18em] text-slate-500">
+                {isChinese ? 'Relay 提示词' : 'Relay prompt'}
+              </div>
+              <textarea
+                value={relayPrompt}
+                onChange={(event) => setRelayPrompt(event.target.value)}
+                rows={4}
+                className="w-full resize-none rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 text-sm text-slate-100 outline-none placeholder:text-slate-500"
+                placeholder={
+                  isChinese
+                    ? '输入一个主题，让 Claude 和 Codex 围绕它轮流讨论、辩论或协作。'
+                    : 'Give Claude and Codex a topic so they can alternate, debate, or collaborate.'
+                }
+              />
+            </div>
+
+            {relayError ? <InlineNotice tone="error">{relayError}</InlineNotice> : null}
+
+            <div className="mt-4">
+              <Button
+                onClick={() => void launchRelay()}
+                disabled={!canLaunchRelay}
+                className="w-full rounded-xl bg-[var(--theme-secondary-solid)] text-[var(--theme-secondary-foreground)] hover:bg-[var(--theme-secondary-solid-hover)]"
+              >
+                {isLaunchingRelay ? (
+                  <LoaderCircle className="h-4 w-4 animate-spin" />
+                ) : (
+                  <SplitSquareVertical className="h-4 w-4" />
+                )}
+                {isChinese ? '启动 Agent Relay' : 'Start agent relay'}
+              </Button>
+            </div>
+          </section>
+
+          <section className="rounded-2xl border border-white/10 bg-black/20 p-3">
             <div className="mb-2 flex items-center justify-between gap-3">
               <div className="text-xs uppercase tracking-[0.18em] text-slate-500">
                 {isChinese ? '活动历史' : 'Activity history'}
               </div>
               <Badge variant="muted" className="bg-white/5 text-slate-300">
-                {runs.length + terminals.length}
+                {runs.length + terminals.length + relays.length}
               </Badge>
             </div>
             <div className="space-y-2">
@@ -438,11 +661,25 @@ export function AgentWorkbenchPanel({
                   }}
                 />
               ))}
-              {runs.length === 0 && terminals.length === 0 ? (
+              {relays.slice(0, 4).map((entry) => (
+                <PickerRow
+                  key={entry.id}
+                  active={entry.id === selectedRelayId && surface === 'relay'}
+                  label={`${entry.starter} relay`}
+                  sublabel={entry.title}
+                  badge={entry.status}
+                  badgeClass={relayBadgeClass(entry.status)}
+                  onClick={() => {
+                    setSurface('relay');
+                    setSelectedRelayId(entry.id);
+                  }}
+                />
+              ))}
+              {runs.length === 0 && terminals.length === 0 && relays.length === 0 ? (
                 <div className="rounded-xl border border-dashed border-white/10 bg-white/[0.03] px-3 py-5 text-sm text-slate-400">
                   {isChinese
                     ? '还没有活动记录，先启动一个 run 或 terminal 吧。'
-                    : 'No activity yet. Launch a run or terminal to begin.'}
+                    : 'No activity yet. Launch a run, terminal, or relay to begin.'}
                 </div>
               ) : null}
             </div>
@@ -450,6 +687,21 @@ export function AgentWorkbenchPanel({
         </div>
 
         <div className="space-y-4">
+          <BrowserChatCard
+            chatDraft={chatDraft}
+            canSend={canSendChat}
+            chatError={chatError}
+            cwd={cwd}
+            isSending={isSendingChat}
+            mode={mode}
+            canResume={canResume}
+            recentPrompts={recentChatPrompts}
+            terminal={liveTerminal}
+            onDraftChange={setChatDraft}
+            onPickRecentPrompt={setChatDraft}
+            onSend={() => void sendChatMessage()}
+          />
+
           <div className="flex gap-2">
             <SurfaceChip
               active={surface === 'run'}
@@ -463,6 +715,12 @@ export function AgentWorkbenchPanel({
               icon={Monitor}
               label={isChinese ? '交互式终端' : 'Interactive terminal'}
             />
+            <SurfaceChip
+              active={surface === 'relay'}
+              onClick={() => setSurface('relay')}
+              icon={SplitSquareVertical}
+              label="Agent relay"
+            />
           </div>
 
           {surface === 'run' ? (
@@ -473,7 +731,7 @@ export function AgentWorkbenchPanel({
               onStop={stopRun}
               runs={runs}
             />
-          ) : (
+          ) : surface === 'terminal' ? (
             <InteractiveTerminalPane
               terminal={liveTerminal}
               terminals={terminals}
@@ -481,6 +739,14 @@ export function AgentWorkbenchPanel({
               selectedTerminalId={selectedTerminalId}
               onPick={setSelectedTerminalId}
               onStop={stopTerminal}
+            />
+          ) : (
+            <AgentRelayPane
+              relay={liveRelay}
+              relays={relays}
+              turns={turns}
+              onPick={setSelectedRelayId}
+              onStop={stopRelay}
             />
           )}
         </div>
@@ -735,6 +1001,368 @@ function InteractiveTerminalPane({
   );
 }
 
+function AgentRelayPane({
+  relay,
+  relays,
+  turns,
+  onPick,
+  onStop,
+}: {
+  relay: AgentRelaySessionDTO | null;
+  relays: AgentRelaySessionDTO[];
+  turns: AgentRelayTurnDTO[];
+  onPick: (id: string) => void;
+  onStop: (id: string) => Promise<void>;
+}) {
+  const { isChinese, language } = useI18n();
+  const viewportRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const el = viewportRef.current;
+    if (!el) return;
+    el.scrollTop = el.scrollHeight;
+  }, [turns]);
+
+  return (
+    <section className="rounded-2xl border border-white/10 bg-black/20 p-3">
+      <div className="mb-3 flex items-center justify-between gap-3">
+        <div>
+          <div className="text-xs uppercase tracking-[0.18em] text-slate-500">
+            {isChinese ? 'Agent Relay' : 'Agent Relay'}
+          </div>
+          <div className="mt-1 text-sm text-slate-300">
+            {relay
+              ? `${relay.starter} starts · ${relay.currentTurn}/${relay.maxTurns} turns · ${relay.status}`
+              : isChinese
+                ? '选择一个 relay 会话'
+                : 'Select an agent relay'}
+          </div>
+        </div>
+        {relay && (relay.status === 'starting' || relay.status === 'running') ? (
+          <Button
+            variant="outline"
+            size="sm"
+            className="border-white/10 bg-white/[0.03] text-slate-100 hover:bg-white/[0.08]"
+            onClick={() => void onStop(relay.id)}
+          >
+            <Square className="h-4 w-4" />
+            {isChinese ? '停止 relay' : 'Stop relay'}
+          </Button>
+        ) : null}
+      </div>
+
+      <div
+        ref={viewportRef}
+        className="h-[320px] overflow-auto rounded-2xl border border-white/10 bg-black/40 p-3"
+      >
+        {turns.length === 0 ? (
+          <div className="text-sm text-slate-500">
+            {isChinese
+              ? '启动一个 Agent Relay 后，这里会显示 Claude 和 Codex 的轮流对话。'
+              : 'Launch an agent relay to see Claude and Codex take turns here.'}
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {turns.map((turn) => (
+              <article
+                key={turn.id}
+                className={cn(
+                  'rounded-2xl border p-3',
+                  turn.agent === 'claude'
+                    ? 'border-sky-400/20 bg-sky-400/[0.06]'
+                    : 'border-emerald-400/20 bg-emerald-400/[0.06]'
+                )}
+              >
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-2 text-sm font-medium text-white">
+                    <Badge className={turn.agent === 'claude' ? 'border-sky-400/30 bg-sky-400/10 text-sky-100' : 'border-emerald-400/30 bg-emerald-400/10 text-emerald-100'}>
+                      {turn.agent}
+                    </Badge>
+                    <span>{isChinese ? `第 ${turn.turn} 轮` : `Turn ${turn.turn}`}</span>
+                  </div>
+                  <div className="text-xs text-slate-400">
+                    {new Intl.DateTimeFormat(language, {
+                      hour: '2-digit',
+                      minute: '2-digit',
+                      second: '2-digit',
+                    }).format(turn.startedAtMs)}
+                  </div>
+                </div>
+                <div className="mt-3 rounded-xl border border-white/10 bg-black/20 p-3">
+                  <div className="mb-2 text-[11px] uppercase tracking-[0.18em] text-slate-500">
+                    {isChinese ? '输出' : 'Output'}
+                  </div>
+                  <pre className="whitespace-pre-wrap break-words text-sm leading-6 text-slate-100">
+                    {turn.output || (turn.status === 'running'
+                      ? isChinese
+                        ? '等待当前 agent 回复中...'
+                        : 'Waiting for the current agent response...'
+                      : isChinese
+                        ? '该轮没有输出。'
+                        : 'No output for this turn.')}
+                  </pre>
+                </div>
+                {turn.error ? (
+                  <div className="mt-2 text-sm text-rose-200">{turn.error}</div>
+                ) : null}
+              </article>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div className="mt-3 space-y-2">
+        {relays.slice(0, 5).map((entry) => (
+          <PickerRow
+            key={entry.id}
+            active={entry.id === relay?.id}
+            label={`${entry.starter} relay`}
+            sublabel={entry.title}
+            badge={entry.status}
+            badgeClass={relayBadgeClass(entry.status)}
+            onClick={() => onPick(entry.id)}
+          />
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function BrowserChatCard({
+  chatDraft,
+  canResume,
+  canSend,
+  chatError,
+  cwd,
+  isSending,
+  mode,
+  recentPrompts,
+  terminal,
+  onDraftChange,
+  onPickRecentPrompt,
+  onSend,
+}: {
+  chatDraft: string;
+  canResume: boolean;
+  canSend: boolean;
+  chatError: string | null;
+  cwd: string;
+  isSending: boolean;
+  mode: 'task' | 'resume';
+  recentPrompts: string[];
+  terminal: TerminalSessionDTO | null;
+  onDraftChange: (value: string) => void;
+  onPickRecentPrompt: (value: string) => void;
+  onSend: () => void;
+}) {
+  const { isChinese } = useI18n();
+  const terminalReady = terminal?.status === 'open';
+  const hasRecentPrompts = recentPrompts.length > 0;
+  const disabledReason =
+    cwd.trim().length === 0
+      ? isChinese
+        ? '先填写工作区路径后再发送消息。'
+        : 'Add a workspace path before sending a message.'
+      : mode === 'resume' && !canResume
+        ? isChinese
+          ? '恢复模式需要先选中同 provider 的会话。'
+          : 'Resume mode requires an active session from the same provider.'
+        : null;
+  const statusText = isSending
+    ? isChinese
+      ? '正在把消息发送给 agent...'
+      : 'Sending your message to the agent...'
+    : terminalReady
+      ? isChinese
+        ? `当前已连接到 ${terminal.provider} terminal`
+        : `Connected to the ${terminal.provider} terminal`
+      : isChinese
+        ? '首条消息会自动启动 terminal 并开始对话'
+        : 'Your first message will auto-start a terminal and begin the conversation';
+
+  return (
+    <section className="flex min-h-[420px] flex-col rounded-2xl border border-white/10 bg-black/20 p-3">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <div className="flex items-center gap-2 text-xs uppercase tracking-[0.18em] text-slate-500">
+            <MessageSquare className="h-3.5 w-3.5" />
+            {isChinese ? '浏览器对话' : 'Browser chat'}
+          </div>
+          <div className="mt-1 text-sm text-slate-300">
+            {terminalReady
+              ? isChinese
+                ? '直接把消息发给当前打开的 agent terminal。'
+                : 'Send messages straight into the open agent terminal.'
+              : isChinese
+                ? '输入后会自动拉起一个 terminal，并把这条消息发送给 agent。'
+                : 'The first message will auto-open a terminal and send itself to the agent.'}
+          </div>
+        </div>
+        <Badge
+          className={
+            terminalReady
+              ? 'border-emerald-400/30 bg-emerald-400/10 text-emerald-100'
+              : 'border-white/10 bg-white/[0.04] text-slate-300'
+          }
+        >
+          {terminalReady
+            ? isChinese
+              ? '已连接'
+              : 'connected'
+            : isChinese
+              ? '自动启动'
+              : 'auto-start'}
+        </Badge>
+      </div>
+
+      <div className="mt-3 flex items-center justify-between gap-3 rounded-2xl border border-white/10 bg-white/[0.03] px-3 py-2.5">
+        <div className="flex min-w-0 items-center gap-2 text-sm text-slate-300">
+          <span
+            className={cn(
+              'h-2.5 w-2.5 rounded-full',
+              isSending
+                ? 'animate-pulse bg-[var(--theme-accent-foreground)] shadow-[0_0_16px_rgba(255,255,255,0.45)]'
+                : terminalReady
+                  ? 'bg-emerald-300 shadow-[0_0_16px_rgba(52,211,153,0.45)]'
+                  : 'bg-slate-500'
+            )}
+          />
+          <span className="truncate">{statusText}</span>
+        </div>
+        <div className="shrink-0 text-[11px] text-slate-500">
+          {isChinese ? '右侧终端实时回流' : 'Streams into the terminal pane'}
+        </div>
+      </div>
+
+      <div className="mt-3 flex-1 rounded-2xl border border-white/10 bg-white/[0.03] p-3">
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2 text-xs uppercase tracking-[0.18em] text-slate-500">
+            <Command className="h-3.5 w-3.5" />
+            {isChinese ? '历史快捷提问' : 'Recent prompts'}
+          </div>
+          <Badge variant="muted" className="bg-white/5 text-slate-300">
+            {recentPrompts.length}
+          </Badge>
+        </div>
+
+        {hasRecentPrompts ? (
+          <div className="mt-3 flex flex-wrap gap-2">
+            {recentPrompts.map((entry) => (
+              <button
+                key={entry}
+                type="button"
+                onClick={() => onPickRecentPrompt(entry)}
+                className="max-w-full rounded-full border border-white/10 bg-black/20 px-3 py-1.5 text-left text-xs text-slate-300 transition hover:border-[var(--theme-accent-border)] hover:bg-[var(--theme-accent-soft)] hover:text-white"
+                title={entry}
+              >
+                <span className="block max-w-[260px] truncate">{entry}</span>
+              </button>
+            ))}
+          </div>
+        ) : (
+          <div className="mt-3 rounded-2xl border border-dashed border-white/10 bg-black/20 px-3 py-4 text-sm text-slate-400">
+            {isChinese
+              ? '这里会记住你最近发给 agent 的问题，点击就能重新带回输入框。'
+              : 'Your latest prompts will show up here so you can reuse them with one click.'}
+          </div>
+        )}
+
+        <div className="mt-3 grid gap-2 md:grid-cols-2">
+          <div className="rounded-2xl border border-white/10 bg-black/20 px-3 py-2.5">
+            <div className="flex items-center gap-2 text-xs uppercase tracking-[0.18em] text-slate-500">
+              <Keyboard className="h-3.5 w-3.5" />
+              {isChinese ? '发送快捷键' : 'Shortcut'}
+            </div>
+            <div className="mt-2 text-sm text-slate-300">
+              {isChinese ? '`Ctrl/Cmd + Enter` 发送，`Enter` 换行。' : '`Ctrl/Cmd + Enter` sends, `Enter` adds a new line.'}
+            </div>
+          </div>
+          <div className="rounded-2xl border border-white/10 bg-black/20 px-3 py-2.5">
+            <div className="flex items-center gap-2 text-xs uppercase tracking-[0.18em] text-slate-500">
+              <CornerDownLeft className="h-3.5 w-3.5" />
+              {isChinese ? '发送方式' : 'Delivery'}
+            </div>
+            <div className="mt-2 text-sm text-slate-300">
+              {isChinese
+                ? '优先复用当前 terminal；没有打开会话时自动新建并发出首条消息。'
+                : 'Reuses the current terminal when available, otherwise opens one and delivers the first message automatically.'}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-3 shrink-0 rounded-[24px] border border-[var(--theme-accent-border)] bg-[linear-gradient(180deg,rgba(255,255,255,0.06),rgba(255,255,255,0.03))] p-3 shadow-[0_18px_40px_rgba(0,0,0,0.24)]">
+        <div className="mb-2 flex items-center justify-between gap-3">
+          <div className="text-xs uppercase tracking-[0.18em] text-slate-500">
+            {isChinese ? '消息输入' : 'Message composer'}
+          </div>
+          <div className="text-xs text-slate-400">
+            {isChinese ? '底部固定输入栏' : 'Docked composer'}
+          </div>
+        </div>
+        <textarea
+          value={chatDraft}
+          onChange={(event) => onDraftChange(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key !== 'Enter' || (!event.ctrlKey && !event.metaKey)) return;
+            event.preventDefault();
+            onSend();
+          }}
+          rows={4}
+          disabled={isSending}
+          className="w-full resize-none bg-transparent text-sm text-slate-100 outline-none placeholder:text-slate-500 disabled:cursor-wait disabled:opacity-70"
+          placeholder={
+            isChinese
+              ? '直接输入你想让 agent 做的事，Ctrl/Cmd + Enter 发送，Enter 换行。'
+              : 'Type what you want the agent to do. Press Ctrl/Cmd+Enter to send, Enter for a new line.'
+          }
+        />
+        <div className="mt-3 flex items-center justify-between gap-3 border-t border-white/10 pt-3">
+          <div className="min-w-0 text-xs text-slate-400">
+            {disabledReason ??
+              (isSending
+                ? isChinese
+                  ? '正在等待 agent 接收这条消息，输出会继续在终端面板滚动。'
+                  : 'Waiting for the agent to receive your message. Output will keep streaming in the terminal pane.'
+                : terminalReady
+                  ? isChinese
+                    ? `已连接到 ${terminal.provider} terminal，可继续对话`
+                    : `Connected to the ${terminal.provider} terminal and ready for the next turn`
+                  : isChinese
+                    ? '发送后会在右侧终端面板显示实时输出'
+                    : 'Output will stream into the terminal pane on the right')}
+          </div>
+          <div className="flex shrink-0 items-center gap-2">
+            <div className="hidden rounded-full border border-white/10 bg-black/20 px-2.5 py-1 text-[11px] text-slate-400 md:block">
+              {isChinese ? 'Ctrl/Cmd + Enter' : 'Ctrl/Cmd + Enter'}
+            </div>
+            <Button
+              onClick={onSend}
+              disabled={!canSend}
+              className="rounded-xl bg-[var(--theme-accent-solid)] text-[var(--theme-accent-foreground)] hover:bg-[var(--theme-accent-solid-hover)]"
+            >
+              {isSending ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <ArrowUp className="h-4 w-4" />}
+              {isSending
+                ? isChinese
+                  ? '发送中...'
+                  : 'Sending...'
+                : terminalReady
+                  ? isChinese
+                    ? '发送'
+                    : 'Send'
+                  : isChinese
+                    ? '启动并发送'
+                    : 'Start and send'}
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      {chatError ? <InlineNotice tone="error">{chatError}</InlineNotice> : null}
+    </section>
+  );
+}
+
 function PickerRow({
   active,
   label,
@@ -756,7 +1384,7 @@ function PickerRow({
       className={cn(
         'w-full rounded-xl border px-3 py-2 text-left transition',
         active
-          ? 'border-cyan-300/30 bg-cyan-300/10'
+          ? 'border-[var(--theme-accent-border)] bg-[var(--theme-accent-soft)]'
           : 'border-white/10 bg-white/[0.03] hover:bg-white/[0.08]'
       )}
     >
@@ -788,7 +1416,7 @@ function SurfaceChip({
       className={cn(
         'inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm transition',
         active
-          ? 'border-cyan-300/40 bg-cyan-300/15 text-cyan-50'
+          ? 'border-[var(--theme-accent-border)] bg-[var(--theme-accent-soft)] text-[var(--theme-accent-text)]'
           : 'border-white/10 bg-white/[0.03] text-slate-300 hover:bg-white/[0.08]'
       )}
     >
@@ -816,7 +1444,7 @@ function ModeChip({
       className={cn(
         'rounded-full border px-3 py-1.5 text-xs font-medium transition',
         active
-          ? 'border-cyan-300/40 bg-cyan-300/15 text-cyan-50'
+          ? 'border-[var(--theme-accent-border)] bg-[var(--theme-accent-soft)] text-[var(--theme-accent-text)]'
           : 'border-white/10 bg-white/[0.03] text-slate-400 hover:text-slate-200',
         disabled && 'cursor-not-allowed opacity-45'
       )}
@@ -855,6 +1483,10 @@ async function stopTerminal(terminalId: string) {
   await fetch(`/api/terminals/${encodeURIComponent(terminalId)}/stop`, { method: 'POST' });
 }
 
+async function stopRelay(relayId: string) {
+  await fetch(`/api/relays/${encodeURIComponent(relayId)}/stop`, { method: 'POST' });
+}
+
 async function sendTerminalInput(terminalId: string, input: string) {
   if (!input) return;
   await fetch(`/api/terminals/${encodeURIComponent(terminalId)}/input`, {
@@ -862,6 +1494,41 @@ async function sendTerminalInput(terminalId: string, input: string) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ input }),
   });
+}
+
+function normalizeChatInput(value: string) {
+  return `${value.replace(/\r?\n/g, '\r')}\r`;
+}
+
+function readRecentChatPrompts(): string[] {
+  if (typeof window === 'undefined') return [];
+  try {
+    const raw = window.localStorage.getItem(RECENT_CHAT_STORAGE_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw) as unknown;
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter((entry): entry is string => typeof entry === 'string').slice(0, MAX_RECENT_CHAT_PROMPTS);
+  } catch {
+    return [];
+  }
+}
+
+function writeRecentChatPrompts(prompts: string[]) {
+  if (typeof window === 'undefined') return;
+  try {
+    window.localStorage.setItem(RECENT_CHAT_STORAGE_KEY, JSON.stringify(prompts));
+  } catch {
+    // Ignore storage failures so the chat composer still works.
+  }
+}
+
+function rememberRecentChatPrompt(existing: string[], nextPrompt: string) {
+  const normalizedPrompt = nextPrompt.trim();
+  if (!normalizedPrompt) return existing;
+  return [normalizedPrompt, ...existing.filter((entry) => entry !== normalizedPrompt)].slice(
+    0,
+    MAX_RECENT_CHAT_PROMPTS
+  );
 }
 
 async function resizeTerminal(terminalId: string, cols: number, rows: number) {
@@ -948,6 +1615,19 @@ function terminalBadgeClass(status: TerminalSessionDTO['status']) {
   return 'border-slate-400/20 bg-slate-400/10 text-slate-200';
 }
 
+function relayBadgeClass(status: AgentRelaySessionDTO['status']) {
+  if (status === 'running' || status === 'starting') {
+    return 'border-violet-400/30 bg-violet-400/10 text-violet-100';
+  }
+  if (status === 'completed') {
+    return 'border-emerald-400/30 bg-emerald-400/10 text-emerald-100';
+  }
+  if (status === 'stopped') {
+    return 'border-amber-400/30 bg-amber-400/10 text-amber-100';
+  }
+  return 'border-rose-400/30 bg-rose-400/10 text-rose-100';
+}
+
 function logClass(stream: 'stdout' | 'stderr' | 'system') {
   if (stream === 'stderr') return 'text-rose-100';
   if (stream === 'system') return 'text-cyan-200';
@@ -971,9 +1651,16 @@ function readWorkbenchPreferences(): WorkbenchPreferences | null {
       mode: parsed.mode,
       cwd: typeof parsed.cwd === 'string' ? parsed.cwd : '',
       prompt: typeof parsed.prompt === 'string' ? parsed.prompt : '',
+      relayPrompt: typeof parsed.relayPrompt === 'string' ? parsed.relayPrompt : '',
+      relayStarter: parsed.relayStarter === 'claude' ? 'claude' : 'codex',
+      relayMaxTurns:
+        typeof parsed.relayMaxTurns === 'number' && Number.isFinite(parsed.relayMaxTurns)
+          ? Math.min(12, Math.max(2, Math.round(parsed.relayMaxTurns)))
+          : 4,
       selectedRunId: typeof parsed.selectedRunId === 'string' ? parsed.selectedRunId : null,
       selectedTerminalId:
         typeof parsed.selectedTerminalId === 'string' ? parsed.selectedTerminalId : null,
+      selectedRelayId: typeof parsed.selectedRelayId === 'string' ? parsed.selectedRelayId : null,
     };
   } catch {
     return null;
@@ -991,5 +1678,5 @@ function writeWorkbenchPreferences(preferences: WorkbenchPreferences) {
 }
 
 function isLaunchSurface(value: unknown): value is LaunchSurface {
-  return value === 'run' || value === 'terminal';
+  return value === 'run' || value === 'terminal' || value === 'relay';
 }
