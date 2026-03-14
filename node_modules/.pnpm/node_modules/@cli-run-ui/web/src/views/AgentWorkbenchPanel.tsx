@@ -103,6 +103,10 @@ interface RelayTemplateDefinition {
   description: string;
   defaultPinnedRules: string[];
   systemPrompt?: string;
+  focus?: string;
+  deliverable?: string;
+  promptPlaceholder?: string;
+  promptIdeas?: string[];
   starter?: SessionDTO['provider'];
   maxTurns?: number;
   custom?: boolean;
@@ -126,6 +130,11 @@ const MAX_RECENT_CHAT_PROMPTS = 6;
 const BUILTIN_RELAY_TEMPLATE_IDS = ['duel', 'review-trio', 'delivery-room'] as const;
 const RELAY_TEMPLATE_IDS: RelayTemplateId[] = [...BUILTIN_RELAY_TEMPLATE_IDS];
 const REQUEST_TIMEOUT_MS = 12000;
+const WORKBENCH_PANEL_CLASS = 'theme-panel rounded-[26px] p-4';
+const WORKBENCH_PANEL_MUTED_CLASS = 'theme-panel-muted rounded-2xl p-3';
+const WORKBENCH_PANEL_STRONG_CLASS = 'theme-panel-strong rounded-2xl p-3';
+const WORKBENCH_INPUT_CLASS =
+  'theme-input w-full rounded-xl px-3 py-2 text-sm text-slate-100 outline-none placeholder:text-slate-500';
 
 export function AgentWorkbenchPanel({
   activeSession,

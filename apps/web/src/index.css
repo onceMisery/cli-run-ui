@@ -22,6 +22,18 @@
 :root {
   --theme-glow-a: rgba(242, 201, 76, 0.14);
   --theme-glow-b: rgba(78, 205, 196, 0.14);
+  --theme-page-gradient: linear-gradient(145deg, #08111c 0%, #0d1726 45%, #060b12 100%);
+  --theme-shell-border: rgba(255, 255, 255, 0.08);
+  --theme-shell-bg: linear-gradient(180deg, rgba(8, 15, 28, 0.94), rgba(8, 14, 24, 0.82));
+  --theme-shell-muted-bg: linear-gradient(180deg, rgba(10, 19, 34, 0.92), rgba(8, 15, 27, 0.78));
+  --theme-panel-border: rgba(255, 255, 255, 0.08);
+  --theme-panel-bg: linear-gradient(180deg, rgba(14, 24, 40, 0.72), rgba(9, 16, 28, 0.62));
+  --theme-panel-muted-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0.02));
+  --theme-panel-strong-bg: linear-gradient(180deg, rgba(6, 12, 21, 0.8), rgba(5, 10, 18, 0.92));
+  --theme-input-bg: rgba(4, 10, 18, 0.44);
+  --theme-input-border: rgba(255, 255, 255, 0.08);
+  --theme-shadow-xl: 0 24px 80px rgba(0, 0, 0, 0.35);
+  --theme-card-shadow: 0 14px 40px rgba(0, 0, 0, 0.18);
   --theme-accent-soft: rgba(103, 232, 249, 0.14);
   --theme-accent-border: rgba(103, 232, 249, 0.34);
   --theme-accent-text: rgb(207, 250, 254);
@@ -62,6 +74,18 @@
 html[data-theme='ember'] {
   --theme-glow-a: rgba(251, 113, 133, 0.15);
   --theme-glow-b: rgba(245, 158, 11, 0.15);
+  --theme-page-gradient: linear-gradient(145deg, #180d11 0%, #251116 45%, #12090d 100%);
+  --theme-shell-border: rgba(251, 113, 133, 0.14);
+  --theme-shell-bg: linear-gradient(180deg, rgba(34, 13, 18, 0.94), rgba(24, 11, 15, 0.82));
+  --theme-shell-muted-bg: linear-gradient(180deg, rgba(40, 17, 24, 0.92), rgba(24, 12, 16, 0.8));
+  --theme-panel-border: rgba(251, 113, 133, 0.12);
+  --theme-panel-bg: linear-gradient(180deg, rgba(48, 20, 28, 0.72), rgba(29, 13, 17, 0.62));
+  --theme-panel-muted-bg: linear-gradient(180deg, rgba(251, 113, 133, 0.08), rgba(255, 255, 255, 0.02));
+  --theme-panel-strong-bg: linear-gradient(180deg, rgba(33, 11, 17, 0.82), rgba(22, 8, 12, 0.94));
+  --theme-input-bg: rgba(26, 10, 12, 0.5);
+  --theme-input-border: rgba(251, 113, 133, 0.14);
+  --theme-shadow-xl: 0 24px 80px rgba(17, 5, 7, 0.42);
+  --theme-card-shadow: 0 14px 40px rgba(30, 9, 14, 0.2);
   --theme-accent-soft: rgba(251, 113, 133, 0.14);
   --theme-accent-border: rgba(251, 113, 133, 0.34);
   --theme-accent-text: rgb(255, 228, 230);
@@ -92,6 +116,18 @@ html[data-theme='ember'] {
 html[data-theme='forest'] {
   --theme-glow-a: rgba(74, 222, 128, 0.14);
   --theme-glow-b: rgba(20, 184, 166, 0.14);
+  --theme-page-gradient: linear-gradient(145deg, #07160e 0%, #0a1f16 45%, #05100c 100%);
+  --theme-shell-border: rgba(74, 222, 128, 0.12);
+  --theme-shell-bg: linear-gradient(180deg, rgba(8, 24, 16, 0.94), rgba(7, 18, 13, 0.82));
+  --theme-shell-muted-bg: linear-gradient(180deg, rgba(10, 30, 20, 0.92), rgba(7, 19, 13, 0.8));
+  --theme-panel-border: rgba(74, 222, 128, 0.12);
+  --theme-panel-bg: linear-gradient(180deg, rgba(16, 36, 24, 0.72), rgba(10, 23, 16, 0.62));
+  --theme-panel-muted-bg: linear-gradient(180deg, rgba(74, 222, 128, 0.075), rgba(255, 255, 255, 0.02));
+  --theme-panel-strong-bg: linear-gradient(180deg, rgba(8, 23, 14, 0.82), rgba(5, 16, 10, 0.94));
+  --theme-input-bg: rgba(5, 16, 10, 0.5);
+  --theme-input-border: rgba(74, 222, 128, 0.14);
+  --theme-shadow-xl: 0 24px 80px rgba(4, 12, 7, 0.4);
+  --theme-card-shadow: 0 14px 40px rgba(7, 18, 12, 0.2);
   --theme-accent-soft: rgba(74, 222, 128, 0.14);
   --theme-accent-border: rgba(74, 222, 128, 0.34);
   --theme-accent-text: rgb(220, 252, 231);
@@ -132,6 +168,18 @@ html[data-theme='forest'] {
 html[data-theme='rose'] {
   --theme-glow-a: rgba(244, 114, 182, 0.14);
   --theme-glow-b: rgba(167, 139, 250, 0.14);
+  --theme-page-gradient: linear-gradient(145deg, #180d1a 0%, #20102b 45%, #110913 100%);
+  --theme-shell-border: rgba(244, 114, 182, 0.12);
+  --theme-shell-bg: linear-gradient(180deg, rgba(27, 11, 25, 0.94), rgba(19, 10, 24, 0.82));
+  --theme-shell-muted-bg: linear-gradient(180deg, rgba(34, 14, 33, 0.92), rgba(18, 10, 24, 0.8));
+  --theme-panel-border: rgba(244, 114, 182, 0.12);
+  --theme-panel-bg: linear-gradient(180deg, rgba(40, 17, 38, 0.72), rgba(23, 12, 29, 0.62));
+  --theme-panel-muted-bg: linear-gradient(180deg, rgba(244, 114, 182, 0.08), rgba(255, 255, 255, 0.02));
+  --theme-panel-strong-bg: linear-gradient(180deg, rgba(26, 11, 29, 0.82), rgba(16, 8, 19, 0.94));
+  --theme-input-bg: rgba(18, 8, 20, 0.52);
+  --theme-input-border: rgba(244, 114, 182, 0.14);
+  --theme-shadow-xl: 0 24px 80px rgba(17, 6, 18, 0.42);
+  --theme-card-shadow: 0 14px 40px rgba(23, 8, 24, 0.2);
   --theme-accent-soft: rgba(244, 114, 182, 0.14);
   --theme-accent-border: rgba(244, 114, 182, 0.34);
   --theme-accent-text: rgb(252, 231, 243);
@@ -217,7 +265,46 @@ html[data-theme='rose'] {
   background-image:
     radial-gradient(circle_at_top_left, var(--theme-glow-a), transparent 20%),
     radial-gradient(circle_at_top_right, var(--theme-glow-b), transparent 24%),
-    linear-gradient(145deg, #08111c 0%, #0d1726 45%, #060b12 100%);
+    var(--theme-page-gradient);
+}
+
+@layer components {
+  .theme-frame {
+    border: 1px solid var(--theme-shell-border);
+    background: var(--theme-shell-bg);
+    box-shadow: var(--theme-shadow-xl);
+    backdrop-filter: blur(20px);
+  }
+
+  .theme-frame-soft {
+    border: 1px solid var(--theme-shell-border);
+    background: var(--theme-shell-muted-bg);
+    box-shadow: var(--theme-shadow-xl);
+    backdrop-filter: blur(20px);
+  }
+
+  .theme-panel {
+    border: 1px solid var(--theme-panel-border);
+    background: var(--theme-panel-bg);
+    box-shadow: var(--theme-card-shadow);
+  }
+
+  .theme-panel-muted {
+    border: 1px solid var(--theme-panel-border);
+    background: var(--theme-panel-muted-bg);
+    box-shadow: var(--theme-card-shadow);
+  }
+
+  .theme-panel-strong {
+    border: 1px solid var(--theme-panel-border);
+    background: var(--theme-panel-strong-bg);
+    box-shadow: var(--theme-card-shadow);
+  }
+
+  .theme-input {
+    border: 1px solid var(--theme-input-border);
+    background: var(--theme-input-bg);
+  }
 }
 
 .shiki {
