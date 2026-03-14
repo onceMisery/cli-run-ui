@@ -3,6 +3,7 @@ import { Hono, type Context } from 'hono';
 import { cors } from 'hono/cors';
 
 import {
+  type MoveAgentRelayInterventionRequestDTO,
   type PatchAgentRelayInterventionRequestDTO,
   type PostAgentRelayInterventionRequestDTO,
   type RemoveAgentRelayInterventionDTO,
@@ -401,13 +402,35 @@ app.patch('/api/relays/:id/interventions/:interventionId', async (c) => {
     const intervention = relayManager.updateIntervention(
       c.req.param('id'),
       c.req.param('interventionId'),
-      body.content
+      body
     );
     return c.json({ intervention });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'failed to update intervention';
     const status =
       message === 'Relay not found.' || message === 'Intervention not found.' ? 404 : 400;
+    return c.json({ error: message }, status);
+  }
+});
+
+app.post('/api/relays/:id/interventions/:interventionId/move', async (c) => {
+  const body = (await c.req.json().catch(() => null)) as MoveAgentRelayInterventionRequestDTO | null;
+  if (!body || (body.direction !== 'up' && body.direction !== 'down')) {
+    return c.json({ error: 'invalid request body' }, 400);
+  }
+
+  try {
+    const intervention = relayManager.moveIntervention(
+      c.req.param('id'),
+      c.req.param('interventionId'),
+      body.direction
+    );
+    return c.json({ intervention });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'failed to move intervention';
+    const status =
+      message === 'Relay not found.' ||
+      message === 'Pinned intervention not found.' ? 404 : 400;
     return c.json({ error: message }, status);
   }
 });

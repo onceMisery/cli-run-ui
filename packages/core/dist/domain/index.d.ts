@@ -169,6 +169,8 @@ export interface AgentRelayInterventionDTO {
     content: string;
     createdAtMs: number;
     updatedAtMs?: number;
+    pinned?: boolean;
+    sortOrder?: number;
 }
 export interface StartAgentRelayRequestDTO {
     cwd: string;
@@ -178,15 +180,20 @@ export interface StartAgentRelayRequestDTO {
     title?: string;
     systemPrompt?: string;
     participants?: AgentRelayParticipantInputDTO[];
+    initialPinnedRules?: string[];
 }
 export interface PostAgentRelayInterventionRequestDTO {
     content: string;
 }
 export interface PatchAgentRelayInterventionRequestDTO {
-    content: string;
+    content?: string;
+    pinned?: boolean;
 }
 export interface RemoveAgentRelayInterventionDTO {
     relayId: string;
     interventionId: string;
+}
+export interface MoveAgentRelayInterventionRequestDTO {
+    direction: 'up' | 'down';
 }
 //# sourceMappingURL=index.d.ts.map

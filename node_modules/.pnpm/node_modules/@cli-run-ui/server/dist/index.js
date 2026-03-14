@@ -322,12 +322,28 @@ app.patch('/api/relays/:id/interventions/:interventionId', async (c) => {
         return c.json({ error: 'invalid request body' }, 400);
     }
     try {
-        const intervention = relayManager.updateIntervention(c.req.param('id'), c.req.param('interventionId'), body.content);
+        const intervention = relayManager.updateIntervention(c.req.param('id'), c.req.param('interventionId'), body);
         return c.json({ intervention });
     }
     catch (error) {
         const message = error instanceof Error ? error.message : 'failed to update intervention';
         const status = message === 'Relay not found.' || message === 'Intervention not found.' ? 404 : 400;
+        return c.json({ error: message }, status);
+    }
+});
+app.post('/api/relays/:id/interventions/:interventionId/move', async (c) => {
+    const body = (await c.req.json().catch(() => null));
+    if (!body || (body.direction !== 'up' && body.direction !== 'down')) {
+        return c.json({ error: 'invalid request body' }, 400);
+    }
+    try {
+        const intervention = relayManager.moveIntervention(c.req.param('id'), c.req.param('interventionId'), body.direction);
+        return c.json({ intervention });
+    }
+    catch (error) {
+        const message = error instanceof Error ? error.message : 'failed to move intervention';
+        const status = message === 'Relay not found.' ||
+            message === 'Pinned intervention not found.' ? 404 : 400;
         return c.json({ error: message }, status);
     }
 });

@@ -21,6 +21,7 @@ import type { FitAddon as XTermFitAddon } from '@xterm/addon-fit';
 import type { Terminal as XTermTerminal } from '@xterm/xterm';
 import '@xterm/xterm/css/xterm.css';
 import {
+  ArrowDown,
   ArrowUp,
   Copy,
   Command,
@@ -32,6 +33,7 @@ import {
   Monitor,
   Pause,
   Pencil,
+  Pin,
   Play,
   SplitSquareVertical,
   RotateCcw,
@@ -70,6 +72,7 @@ interface WorkbenchPreferences {
   cwd: string;
   prompt: string;
   relayPrompt: string;
+  relayPinnedRulesDraft: string;
   relaySystemPrompt: string;
   relayStarter: SessionDTO['provider'];
   relayTemplateId: RelayTemplateId;
@@ -79,12 +82,37 @@ interface WorkbenchPreferences {
   selectedRelayId: string | null;
 }
 
-type RelayTemplateId = 'duel' | 'review-trio' | 'delivery-room';
+type RelayTemplateId = string;
+
+interface RelayTemplateDefinition {
+  id: RelayTemplateId;
+  name: string;
+  participants: AgentRelayParticipantInputDTO[];
+  description: string;
+  defaultPinnedRules: string[];
+  systemPrompt?: string;
+  starter?: SessionDTO['provider'];
+  maxTurns?: number;
+  custom?: boolean;
+}
+
+interface CustomRelayTemplateRecord {
+  id: string;
+  name: string;
+  participants: AgentRelayParticipantInputDTO[];
+  description: string;
+  defaultPinnedRules: string[];
+  systemPrompt?: string;
+  starter: SessionDTO['provider'];
+  maxTurns: number;
+}
 
 const WORKBENCH_STORAGE_KEY = 'cli-run-ui.agent-workbench';
 const RECENT_CHAT_STORAGE_KEY = 'cli-run-ui.recent-chat-prompts';
+const CUSTOM_RELAY_TEMPLATES_STORAGE_KEY = 'cli-run-ui.custom-relay-templates';
 const MAX_RECENT_CHAT_PROMPTS = 6;
-const RELAY_TEMPLATE_IDS: RelayTemplateId[] = ['duel', 'review-trio', 'delivery-room'];
+const BUILTIN_RELAY_TEMPLATE_IDS = ['duel', 'review-trio', 'delivery-room'] as const;
+const RELAY_TEMPLATE_IDS: RelayTemplateId[] = [...BUILTIN_RELAY_TEMPLATE_IDS];
 
 export function AgentWorkbenchPanel({
   activeSession,
@@ -107,6 +135,9 @@ export function AgentWorkbenchPanel({
   const [cwd, setCwd] = useState(savedPreferences?.cwd ?? activeSession?.projectPath ?? '');
   const [prompt, setPrompt] = useState(savedPreferences?.prompt ?? '');
   const [relayPrompt, setRelayPrompt] = useState(savedPreferences?.relayPrompt ?? '');
+  const [relayPinnedRulesDraft, setRelayPinnedRulesDraft] = useState(
+    savedPreferences?.relayPinnedRulesDraft ?? ''
+  );
   const [relaySystemPrompt, setRelaySystemPrompt] = useState(
     savedPreferences?.relaySystemPrompt ?? ''
   );
@@ -129,12 +160,22 @@ export function AgentWorkbenchPanel({
   const [isUpdatingRelayLifecycle, setIsUpdatingRelayLifecycle] = useState(false);
   const [editingRelayInterventionId, setEditingRelayInterventionId] = useState<string | null>(null);
   const [isRemovingRelayIntervention, setIsRemovingRelayIntervention] = useState<string | null>(null);
+  const [isMovingRelayIntervention, setIsMovingRelayIntervention] = useState<string | null>(null);
+  const [isPinningRelayIntervention, setIsPinningRelayIntervention] = useState<string | null>(null);
   const [chatDraft, setChatDraft] = useState('');
   const [relayInterventionDraft, setRelayInterventionDraft] = useState('');
   const [relayInterventionError, setRelayInterventionError] = useState<string | null>(null);
   const [recentChatPrompts, setRecentChatPrompts] = useState<string[]>(() =>
     readRecentChatPrompts()
   );
+  const [customRelayTemplates, setCustomRelayTemplates] = useState<CustomRelayTemplateRecord[]>(() =>
+    readCustomRelayTemplates()
+  );
+  const [customRelayTemplateName, setCustomRelayTemplateName] = useState('');
+  const [editingCustomRelayTemplateId, setEditingCustomRelayTemplateId] = useState<string | null>(
+    null
+  );
+  const [relayTemplateError, setRelayTemplateError] = useState<string | null>(null);
   const [selectedRunId, setSelectedRunId] = useState<string | null>(
     savedPreferences?.selectedRunId ?? runs[0]?.id ?? null
   );
@@ -162,6 +203,7 @@ export function AgentWorkbenchPanel({
       cwd,
       prompt,
       relayPrompt,
+      relayPinnedRulesDraft,
       relaySystemPrompt,
       relayStarter,
       relayTemplateId,
@@ -174,6 +216,7 @@ export function AgentWorkbenchPanel({
     cwd,
     mode,
     prompt,
+    relayPinnedRulesDraft,
     relaySystemPrompt,
     provider,
     relayMaxTurns,
@@ -258,14 +301,137 @@ export function AgentWorkbenchPanel({
     cwd.trim().length > 0 &&
     relayPrompt.trim().length > 0;
   const relayTemplate = useMemo(
-    () => buildRelayTemplate(relayTemplateId, relayStarter, isChinese),
-    [isChinese, relayStarter, relayTemplateId]
+    () => resolveRelayTemplate(relayTemplateId, relayStarter, isChinese, customRelayTemplates),
+    [customRelayTemplates, isChinese, relayStarter, relayTemplateId]
   );
+  const currentPinnedRules = useMemo(
+    () => parsePinnedRulesDraft(relayPinnedRulesDraft),
+    [relayPinnedRulesDraft]
+  );
+  const relayParticipants = useMemo(
+    () => orderRelayParticipants(relayTemplate.participants, relayStarter),
+    [relayStarter, relayTemplate.participants]
+  );
+  const isEditingCustomRelayTemplate = editingCustomRelayTemplateId !== null;
+  const customRelayTemplateActionLabel = isChinese
+    ? isEditingCustomRelayTemplate
+      ? '更新模板'
+      : '保存模板'
+    : isEditingCustomRelayTemplate
+      ? 'Update'
+      : 'Save';
+  const customRelayTemplateHelpText = isChinese
+    ? isEditingCustomRelayTemplate
+      ? '会用当前参与者、system prompt、长期规则、起始 agent 和轮数覆盖这个已保存模板。'
+      : '会保存当前参与者、system prompt、长期规则、起始 agent 和轮数。'
+    : isEditingCustomRelayTemplate
+      ? 'Overwrites this saved template with the current participants, system prompt, pinned rules, starter, and turn count.'
+      : 'Saves the current participants, system prompt, pinned rules, starter, and turn count.';
 
   const presets = useMemo(
     () => buildPresets(activeSession, provider, isChinese),
     [activeSession, isChinese, provider]
   );
+
+  useEffect(() => {
+    if (isBuiltinRelayTemplateId(relayTemplateId)) return;
+    if (customRelayTemplates.some((entry) => entry.id === relayTemplateId)) return;
+    setRelayTemplateId('duel');
+  }, [customRelayTemplates, relayTemplateId]);
+
+  useEffect(() => {
+    if (relayPinnedRulesDraft.trim().length > 0) return;
+    if (relayTemplate.defaultPinnedRules.length === 0) return;
+    setRelayPinnedRulesDraft(relayTemplate.defaultPinnedRules.join('\n'));
+  }, [relayPinnedRulesDraft, relayTemplate.defaultPinnedRules]);
+
+  const applyRelayTemplateSelection = (
+    nextTemplateId: RelayTemplateId,
+    options?: { preserveEditing?: boolean }
+  ) => {
+    const nextTemplate = resolveRelayTemplate(
+      nextTemplateId,
+      relayStarter,
+      isChinese,
+      customRelayTemplates
+    );
+    setRelayTemplateError(null);
+    if (!options?.preserveEditing) {
+      setEditingCustomRelayTemplateId(null);
+      setCustomRelayTemplateName('');
+    }
+    setRelayTemplateId(nextTemplateId);
+    setRelayPinnedRulesDraft(nextTemplate.defaultPinnedRules.join('\n'));
+
+    if (nextTemplate.custom) {
+      setRelayStarter(nextTemplate.starter ?? relayStarter);
+      setRelaySystemPrompt(nextTemplate.systemPrompt ?? '');
+      setRelayMaxTurns(nextTemplate.maxTurns ?? 4);
+      return;
+    }
+
+    setRelaySystemPrompt('');
+  };
+
+  const startEditingCustomRelayTemplate = (template: CustomRelayTemplateRecord) => {
+    applyRelayTemplateSelection(template.id, { preserveEditing: true });
+    setEditingCustomRelayTemplateId(template.id);
+    setCustomRelayTemplateName(template.name);
+    setRelayTemplateError(null);
+  };
+
+  const cancelEditingCustomRelayTemplate = () => {
+    setEditingCustomRelayTemplateId(null);
+    setCustomRelayTemplateName('');
+    setRelayTemplateError(null);
+  };
+
+  const saveCustomRelayTemplate = () => {
+    const templateName = customRelayTemplateName.trim();
+    if (!templateName) {
+      setRelayTemplateError(
+        isChinese ? '先输入一个模板名字。' : 'Add a template name before saving.'
+      );
+      return;
+    }
+
+    const nextTemplate: CustomRelayTemplateRecord = {
+      id: editingCustomRelayTemplateId ?? `custom-${Date.now()}`,
+      name: templateName,
+      participants: relayParticipants,
+      description:
+        relayTemplate.description ||
+        (isChinese ? '自定义房间模板' : 'Custom room template'),
+      defaultPinnedRules: currentPinnedRules,
+      systemPrompt: relaySystemPrompt.trim() || undefined,
+      starter: relayStarter,
+      maxTurns: relayMaxTurns,
+    };
+
+    const nextTemplates = editingCustomRelayTemplateId
+      ? customRelayTemplates.map((entry) =>
+          entry.id === editingCustomRelayTemplateId ? nextTemplate : entry
+        )
+      : [nextTemplate, ...customRelayTemplates].slice(0, 12);
+    setCustomRelayTemplates(nextTemplates);
+    writeCustomRelayTemplates(nextTemplates);
+    setCustomRelayTemplateName('');
+    setEditingCustomRelayTemplateId(null);
+    setRelayTemplateError(null);
+    applyRelayTemplateSelection(nextTemplate.id);
+  };
+
+  const removeCustomRelayTemplate = (templateId: string) => {
+    const nextTemplates = customRelayTemplates.filter((entry) => entry.id !== templateId);
+    setCustomRelayTemplates(nextTemplates);
+    writeCustomRelayTemplates(nextTemplates);
+    if (editingCustomRelayTemplateId === templateId) {
+      cancelEditingCustomRelayTemplate();
+    }
+    if (relayTemplateId === templateId) {
+      applyRelayTemplateSelection('duel');
+    }
+  };
 
   const launchRun = async () => {
     if (!canLaunchRun) return;
@@ -374,9 +540,10 @@ export function AgentWorkbenchPanel({
       const payload: StartAgentRelayRequestDTO = {
         cwd: cwd.trim(),
         prompt: relayPrompt.trim(),
-        starter: relayTemplate.participants[0]?.provider ?? relayStarter,
-        participants: relayTemplate.participants,
+        starter: relayStarter,
+        participants: relayParticipants,
         systemPrompt: relaySystemPrompt.trim() || undefined,
+        initialPinnedRules: currentPinnedRules,
         maxTurns: relayMaxTurns,
         title: relayPrompt.trim(),
       };
@@ -485,6 +652,66 @@ export function AgentWorkbenchPanel({
     }
   };
 
+  const toggleRelayInterventionPin = async (
+    interventionId: string,
+    pinned: boolean
+  ) => {
+    if (!liveRelay || isPinningRelayIntervention) return;
+    setIsPinningRelayIntervention(interventionId);
+    setRelayInterventionError(null);
+
+    try {
+      const response = await fetch(
+        `/api/relays/${encodeURIComponent(liveRelay.id)}/interventions/${encodeURIComponent(interventionId)}`,
+        {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ pinned }),
+        }
+      );
+      const data = (await response.json().catch(() => null)) as { error?: string } | null;
+      if (!response.ok) {
+        throw new Error(data?.error ?? 'Failed to update rule pin.');
+      }
+    } catch (reason) {
+      setRelayInterventionError(
+        reason instanceof Error ? reason.message : 'Failed to update rule pin.'
+      );
+    } finally {
+      setIsPinningRelayIntervention(null);
+    }
+  };
+
+  const moveRelayIntervention = async (
+    interventionId: string,
+    direction: 'up' | 'down'
+  ) => {
+    if (!liveRelay || isMovingRelayIntervention) return;
+    setIsMovingRelayIntervention(interventionId);
+    setRelayInterventionError(null);
+
+    try {
+      const response = await fetch(
+        `/api/relays/${encodeURIComponent(liveRelay.id)}/interventions/${encodeURIComponent(interventionId)}/move`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ direction }),
+        }
+      );
+      const data = (await response.json().catch(() => null)) as { error?: string } | null;
+      if (!response.ok) {
+        throw new Error(data?.error ?? 'Failed to move pinned rule.');
+      }
+    } catch (reason) {
+      setRelayInterventionError(
+        reason instanceof Error ? reason.message : 'Failed to move pinned rule.'
+      );
+    } finally {
+      setIsMovingRelayIntervention(null);
+    }
+  };
+
   const pauseLiveRelay = async () => {
     if (!liveRelay || isUpdatingRelayLifecycle) return;
     setIsUpdatingRelayLifecycle(true);
@@ -516,16 +743,22 @@ export function AgentWorkbenchPanel({
   const resetDraft = () => {
     setPrompt('');
     setRelayPrompt('');
+    setRelayPinnedRulesDraft('');
     setRelaySystemPrompt('');
     setRunError(null);
     setTerminalError(null);
     setChatError(null);
     setRelayError(null);
+    setRelayTemplateError(null);
     setRelayInterventionError(null);
     setChatDraft('');
+    setCustomRelayTemplateName('');
+    setEditingCustomRelayTemplateId(null);
     setRelayInterventionDraft('');
     setEditingRelayInterventionId(null);
     setIsRemovingRelayIntervention(null);
+    setIsMovingRelayIntervention(null);
+    setIsPinningRelayIntervention(null);
     setProvider(activeSession?.provider ?? 'codex');
     setMode(activeSession ? 'resume' : 'task');
     setRelayStarter('codex');
@@ -715,11 +948,59 @@ export function AgentWorkbenchPanel({
                 <ModeChip
                   key={templateId}
                   active={relayTemplateId === templateId}
-                  onClick={() => setRelayTemplateId(templateId)}
+                  onClick={() => applyRelayTemplateSelection(templateId)}
                   label={relayTemplateLabel(templateId, isChinese)}
                 />
               ))}
             </div>
+
+            {customRelayTemplates.length > 0 ? (
+              <div className="mt-3 rounded-2xl border border-white/10 bg-white/[0.03] p-3">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="text-xs uppercase tracking-[0.18em] text-slate-500">
+                    {isChinese ? '自定义模板' : 'Saved templates'}
+                  </div>
+                  <Badge variant="muted" className="bg-white/5 text-slate-300">
+                    {customRelayTemplates.length}
+                  </Badge>
+                </div>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {customRelayTemplates.map((template) => (
+                    <div
+                      key={template.id}
+                      className={cn(
+                        'inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs',
+                        relayTemplateId === template.id
+                          ? 'border-[var(--theme-accent-border)] bg-[var(--theme-accent-soft)] text-[var(--theme-accent-text)]'
+                          : 'border-white/10 bg-black/20 text-slate-300',
+                        editingCustomRelayTemplateId === template.id &&
+                          'shadow-[0_0_0_1px_var(--theme-secondary-border)]'
+                      )}
+                    >
+                      <button type="button" onClick={() => applyRelayTemplateSelection(template.id)}>
+                        {template.name}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => startEditingCustomRelayTemplate(template)}
+                        className="text-slate-400 transition hover:text-white"
+                        aria-label={isChinese ? '编辑模板' : 'Edit template'}
+                      >
+                        <Pencil className="h-3 w-3" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => removeCustomRelayTemplate(template.id)}
+                        className="text-slate-400 transition hover:text-white"
+                        aria-label={isChinese ? '删除模板' : 'Delete template'}
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : null}
 
             <div className="mt-3 flex gap-2">
               <ModeChip
@@ -740,7 +1021,7 @@ export function AgentWorkbenchPanel({
                 {isChinese ? '房间参与者' : 'Room participants'}
               </div>
               <div className="mt-3 flex flex-wrap gap-2">
-                {relayTemplate.participants.map((participant) => (
+                {relayParticipants.map((participant) => (
                   <Badge
                     key={`${participant.provider}-${participant.label}`}
                     className={
@@ -753,8 +1034,29 @@ export function AgentWorkbenchPanel({
                   </Badge>
                 ))}
               </div>
-              <div className="mt-2 text-xs text-slate-400">{relayTemplate.description}</div>
-            </div>
+            <div className="mt-2 text-xs text-slate-400">{relayTemplate.description}</div>
+            {currentPinnedRules.length > 0 ? (
+              <div className="mt-3 rounded-2xl border border-violet-400/20 bg-violet-400/[0.06] p-3">
+                <div className="flex items-center gap-2 text-xs uppercase tracking-[0.18em] text-violet-100">
+                  <Pin className="h-3.5 w-3.5" />
+                  {isChinese ? '长期规则预览' : 'Pinned rules preview'}
+                </div>
+                <div className="mt-2 space-y-2">
+                  {currentPinnedRules.map((rule, index) => (
+                    <div
+                      key={`${relayTemplateId}-rule-${index + 1}`}
+                      className="rounded-xl border border-violet-300/15 bg-black/20 px-3 py-2 text-sm text-violet-50"
+                    >
+                      <div className="text-[11px] uppercase tracking-[0.18em] text-violet-200/80">
+                        {isChinese ? `规则 ${index + 1}` : `Rule ${index + 1}`}
+                      </div>
+                      <div className="mt-1 whitespace-pre-wrap break-words">{rule}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : null}
+          </div>
 
             <label className="mt-3 block">
               <div className="mb-1 flex items-center justify-between text-xs uppercase tracking-[0.18em] text-slate-500">
@@ -806,6 +1108,77 @@ export function AgentWorkbenchPanel({
               />
             </div>
 
+            <div className="mt-3">
+              <div className="mb-1 flex items-center justify-between text-xs uppercase tracking-[0.18em] text-slate-500">
+                <span>{isChinese ? '长期规则' : 'Pinned rules'}</span>
+                <span className="normal-case tracking-normal text-slate-400">
+                  {isChinese ? '每行一条' : 'one per line'}
+                </span>
+              </div>
+              <textarea
+                value={relayPinnedRulesDraft}
+                onChange={(event) => setRelayPinnedRulesDraft(event.target.value)}
+                rows={4}
+                className="w-full resize-none rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 text-sm text-slate-100 outline-none placeholder:text-slate-500"
+                placeholder={
+                  isChinese
+                    ? '输入房间长期规则，每行一条。比如：先统一结论，再给行动计划。'
+                    : 'Enter long-running room rules, one per line. For example: align on one conclusion before giving an action plan.'
+                }
+              />
+            </div>
+
+            <div className="mt-3 rounded-2xl border border-white/10 bg-white/[0.03] p-3">
+              <div className="flex items-center justify-between gap-3">
+                <div className="text-xs uppercase tracking-[0.18em] text-slate-500">
+                  {isChinese ? '保存为模板' : 'Save as template'}
+                </div>
+                <Badge variant="muted" className="bg-white/5 text-slate-300">
+                  {customRelayTemplates.length}
+                </Badge>
+              </div>
+              {editingCustomRelayTemplateId ? (
+                <div className="mt-3 flex items-center justify-between gap-3 rounded-xl border border-[var(--theme-accent-border)] bg-[var(--theme-accent-soft)] px-3 py-2 text-sm text-[var(--theme-accent-text)]">
+                  <span>
+                    {isChinese
+                      ? `正在编辑模板：${customRelayTemplateName || '未命名模板'}`
+                      : `Editing template: ${customRelayTemplateName || 'Untitled template'}`}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={cancelEditingCustomRelayTemplate}
+                    className="rounded-full border border-white/10 px-2.5 py-1 text-xs text-white transition hover:bg-white/10"
+                  >
+                    {isChinese ? '取消' : 'Cancel'}
+                  </button>
+                </div>
+              ) : null}
+              <div className="mt-3 flex gap-2">
+                <input
+                  value={customRelayTemplateName}
+                  onChange={(event) => setCustomRelayTemplateName(event.target.value)}
+                  placeholder={isChinese ? '例如：我的交付房间' : 'For example: My shipping room'}
+                  className="min-w-0 flex-1 rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-sm text-slate-100 outline-none placeholder:text-slate-500"
+                />
+                <Button
+                  type="button"
+                  onClick={saveCustomRelayTemplate}
+                  aria-label={customRelayTemplateActionLabel}
+                  title={customRelayTemplateActionLabel}
+                  className="rounded-xl bg-[var(--theme-accent-solid)] text-[var(--theme-accent-foreground)] hover:bg-[var(--theme-accent-solid-hover)]"
+                >
+                  {isChinese ? '保存' : 'Save'}
+                </Button>
+              </div>
+              <div className="mt-2 text-xs text-slate-400">{customRelayTemplateHelpText}</div>
+              <div className="hidden text-xs text-slate-400">
+                {isChinese
+                  ? '会保存当前参与者、system prompt、长期规则、起始 agent 和轮数。'
+                  : 'Saves the current participants, system prompt, pinned rules, starter, and turn count.'}
+              </div>
+            </div>
+
+            {relayTemplateError ? <InlineNotice tone="error">{relayTemplateError}</InlineNotice> : null}
             {relayError ? <InlineNotice tone="error">{relayError}</InlineNotice> : null}
 
             <div className="mt-4">
@@ -952,10 +1325,18 @@ export function AgentWorkbenchPanel({
               interventionError={relayInterventionError}
               isSendingIntervention={isSendingRelayIntervention}
               isUpdatingLifecycle={isUpdatingRelayLifecycle}
+              movingInterventionId={isMovingRelayIntervention}
+              pinningInterventionId={isPinningRelayIntervention}
               removingInterventionId={isRemovingRelayIntervention}
               onInterventionDraftChange={setRelayInterventionDraft}
               onCancelInterventionEdit={cancelEditingRelayIntervention}
               onEditIntervention={startEditingRelayIntervention}
+              onMoveIntervention={(id, direction) =>
+                void moveRelayIntervention(id, direction)
+              }
+              onToggleInterventionPin={(id, pinned) =>
+                void toggleRelayInterventionPin(id, pinned)
+              }
               onRemoveIntervention={(id) => void removeRelayIntervention(id)}
               onSendIntervention={() => void sendRelayIntervention()}
               onPick={setSelectedRelayId}
@@ -1598,10 +1979,14 @@ function AgentRelayRoomPane({
   interventionError,
   isSendingIntervention,
   isUpdatingLifecycle,
+  movingInterventionId,
+  pinningInterventionId,
   removingInterventionId,
   onInterventionDraftChange,
   onCancelInterventionEdit,
   onEditIntervention,
+  onMoveIntervention,
+  onToggleInterventionPin,
   onRemoveIntervention,
   onSendIntervention,
   onPick,
@@ -1618,10 +2003,14 @@ function AgentRelayRoomPane({
   interventionError: string | null;
   isSendingIntervention: boolean;
   isUpdatingLifecycle: boolean;
+  movingInterventionId: string | null;
+  pinningInterventionId: string | null;
   removingInterventionId: string | null;
   onInterventionDraftChange: (value: string) => void;
   onCancelInterventionEdit: () => void;
   onEditIntervention: (intervention: AgentRelayInterventionDTO) => void;
+  onMoveIntervention: (interventionId: string, direction: 'up' | 'down') => void;
+  onToggleInterventionPin: (interventionId: string, pinned: boolean) => void;
   onRemoveIntervention: (interventionId: string) => void;
   onSendIntervention: () => void;
   onPick: (id: string) => void;
@@ -1635,6 +2024,14 @@ function AgentRelayRoomPane({
   const timeline = useMemo(
     () => buildRelayTimeline(turns, interventions),
     [interventions, turns]
+  );
+  const pinnedRules = useMemo(
+    () => interventions.filter((entry) => entry.pinned).sort(comparePinnedRules),
+    [interventions]
+  );
+  const recentInterventions = useMemo(
+    () => [...interventions].sort((left, right) => right.createdAtMs - left.createdAtMs).slice(0, 4),
+    [interventions]
   );
 
   useEffect(() => {
@@ -1801,6 +2198,11 @@ function AgentRelayRoomPane({
                         {isChinese ? '人工' : 'Human'}
                       </Badge>
                       <span>{isChinese ? '房间插话' : 'Room steer'}</span>
+                      {entry.pinned ? (
+                        <Badge className="border-violet-400/30 bg-violet-400/10 text-violet-100">
+                          {isChinese ? '长期规则' : 'Pinned rule'}
+                        </Badge>
+                      ) : null}
                     </div>
                     <div className="text-xs text-slate-400">
                       {formatRelayTime(entry.createdAtMs, language)}
@@ -1948,13 +2350,73 @@ function AgentRelayRoomPane({
           </Button>
         </div>
         {interventionError ? <InlineNotice tone="error">{interventionError}</InlineNotice> : null}
-        {interventions.length > 0 ? (
+        {pinnedRules.length > 0 ? (
           <div className="mt-3 space-y-2">
-            {interventions
-              .slice()
-              .reverse()
-              .slice(0, 4)
-              .map((entry) => (
+            <div className="text-[11px] uppercase tracking-[0.18em] text-slate-500">
+              {isChinese ? '长期规则' : 'Pinned rules'}
+            </div>
+            {pinnedRules.map((entry, index) => (
+              <div
+                key={entry.id}
+                className="rounded-xl border border-violet-400/20 bg-violet-400/[0.06] px-3 py-2"
+              >
+                <div className="flex items-center justify-between gap-3">
+                  <div className="inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.18em] text-violet-200/80">
+                    <Pin className="h-3 w-3" />
+                    {isChinese ? `规则 ${index + 1}` : `Rule ${index + 1}`}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => onMoveIntervention(entry.id, 'up')}
+                      disabled={
+                        index === 0 ||
+                        isMovingIntervention === entry.id ||
+                        pinningInterventionId === entry.id
+                      }
+                      className="inline-flex items-center gap-1 rounded-full border border-violet-300/20 px-2 py-1 text-[11px] text-violet-100 transition hover:bg-violet-300/10 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      <ArrowUp className="h-3 w-3" />
+                      {isChinese ? '上移' : 'Up'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => onMoveIntervention(entry.id, 'down')}
+                      disabled={
+                        index === pinnedRules.length - 1 ||
+                        isMovingIntervention === entry.id ||
+                        pinningInterventionId === entry.id
+                      }
+                      className="inline-flex items-center gap-1 rounded-full border border-violet-300/20 px-2 py-1 text-[11px] text-violet-100 transition hover:bg-violet-300/10 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      <ArrowDown className="h-3 w-3" />
+                      {isChinese ? '下移' : 'Down'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => onToggleInterventionPin(entry.id, false)}
+                      disabled={pinningInterventionId === entry.id}
+                      className="inline-flex items-center gap-1 rounded-full border border-violet-300/20 px-2 py-1 text-[11px] text-violet-100 transition hover:bg-violet-300/10 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      {pinningInterventionId === entry.id ? (
+                        <LoaderCircle className="h-3 w-3 animate-spin" />
+                      ) : (
+                        <Pin className="h-3 w-3" />
+                      )}
+                      {isChinese ? '取消置顶' : 'Unpin'}
+                    </button>
+                  </div>
+                </div>
+                <div className="mt-1 whitespace-pre-wrap break-words text-sm text-violet-50">
+                  {entry.content}
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : null}
+        {recentInterventions.length > 0 ? (
+          <div className="mt-3 space-y-2">
+            {recentInterventions.map((entry) => (
                 <div
                   key={entry.id}
                   className="rounded-xl border border-amber-400/20 bg-amber-400/[0.06] px-3 py-2"
@@ -1967,7 +2429,11 @@ function AgentRelayRoomPane({
                       <button
                         type="button"
                         onClick={() => onEditIntervention(entry)}
-                        disabled={isSendingIntervention || removingInterventionId === entry.id}
+                        disabled={
+                          isSendingIntervention ||
+                          removingInterventionId === entry.id ||
+                          movingInterventionId === entry.id
+                        }
                         className="inline-flex items-center gap-1 rounded-full border border-amber-300/20 px-2 py-1 text-[11px] text-amber-100 transition hover:bg-amber-300/10 disabled:cursor-not-allowed disabled:opacity-50"
                       >
                         <Pencil className="h-3 w-3" />
@@ -1975,8 +2441,34 @@ function AgentRelayRoomPane({
                       </button>
                       <button
                         type="button"
+                        onClick={() => onToggleInterventionPin(entry.id, !entry.pinned)}
+                        disabled={
+                          pinningInterventionId === entry.id ||
+                          removingInterventionId === entry.id
+                        }
+                        className="inline-flex items-center gap-1 rounded-full border border-violet-300/20 px-2 py-1 text-[11px] text-violet-100 transition hover:bg-violet-300/10 disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        {pinningInterventionId === entry.id ? (
+                          <LoaderCircle className="h-3 w-3 animate-spin" />
+                        ) : (
+                          <Pin className="h-3 w-3" />
+                        )}
+                        {entry.pinned
+                          ? isChinese
+                            ? '取消置顶'
+                            : 'Unpin'
+                          : isChinese
+                            ? '置顶为规则'
+                            : 'Pin rule'}
+                      </button>
+                      <button
+                        type="button"
                         onClick={() => onRemoveIntervention(entry.id)}
-                        disabled={isSendingIntervention || removingInterventionId === entry.id}
+                        disabled={
+                          isSendingIntervention ||
+                          removingInterventionId === entry.id ||
+                          pinningInterventionId === entry.id
+                        }
                         className="inline-flex items-center gap-1 rounded-full border border-rose-300/20 px-2 py-1 text-[11px] text-rose-100 transition hover:bg-rose-300/10 disabled:cursor-not-allowed disabled:opacity-50"
                       >
                         {removingInterventionId === entry.id ? (
@@ -1991,6 +2483,11 @@ function AgentRelayRoomPane({
                   <div className="mt-1 whitespace-pre-wrap break-words text-sm text-amber-50">
                     {entry.content}
                   </div>
+                  {entry.pinned ? (
+                    <div className="mt-1 text-[11px] text-violet-100">
+                      {isChinese ? '已置顶为长期规则' : 'Pinned as a long-running room rule'}
+                    </div>
+                  ) : null}
                   {entry.updatedAtMs ? (
                     <div className="mt-1 text-[11px] text-amber-200/80">
                       {isChinese ? '已编辑' : 'Edited'}
@@ -2411,7 +2908,19 @@ function normalizeChatInput(value: string) {
   return `${value.replace(/\r?\n/g, '\r')}\r`;
 }
 
+function orderRelayParticipants(
+  participants: AgentRelayParticipantInputDTO[],
+  starter: SessionDTO['provider']
+) {
+  const firstIndex = participants.findIndex((participant) => participant.provider === starter);
+  if (firstIndex <= 0) return participants;
+  return [...participants.slice(firstIndex), ...participants.slice(0, firstIndex)];
+}
+
 function relayTemplateLabel(templateId: RelayTemplateId, isChinese: boolean) {
+  if (!isBuiltinRelayTemplateId(templateId)) {
+    return isChinese ? '自定义模板' : 'Custom template';
+  }
   if (templateId === 'review-trio') {
     return isChinese ? '评审三人组' : 'Review trio';
   }
@@ -2421,6 +2930,30 @@ function relayTemplateLabel(templateId: RelayTemplateId, isChinese: boolean) {
   return isChinese ? '经典对谈' : 'Classic duel';
 }
 
+function resolveRelayTemplate(
+  templateId: RelayTemplateId,
+  starter: SessionDTO['provider'],
+  isChinese: boolean,
+  customTemplates: CustomRelayTemplateRecord[]
+): RelayTemplateDefinition {
+  const customTemplate = customTemplates.find((entry) => entry.id === templateId);
+  if (customTemplate) {
+    return {
+      ...customTemplate,
+      id: customTemplate.id,
+      name: customTemplate.name,
+      custom: true,
+    };
+  }
+
+  const builtIn = buildRelayTemplate(templateId, starter, isChinese);
+  return {
+    ...builtIn,
+    id: templateId,
+    name: relayTemplateLabel(templateId, isChinese),
+  };
+}
+
 function buildRelayTemplate(
   templateId: RelayTemplateId,
   starter: SessionDTO['provider'],
@@ -2428,6 +2961,7 @@ function buildRelayTemplate(
 ): {
   participants: AgentRelayParticipantInputDTO[];
   description: string;
+  defaultPinnedRules: string[];
 } {
   if (templateId === 'review-trio') {
     return {
@@ -2448,6 +2982,17 @@ function buildRelayTemplate(
       description: isChinese
         ? '适合先拆问题、再落实现、最后做质量回看。'
         : 'Good for breaking down work, shipping changes, then reviewing quality.',
+      defaultPinnedRules: isChinese
+        ? [
+            '先统一问题定义，再拆成可以验证的小结论。',
+            '每一轮都指出一个风险或盲点，不要只重复赞同。',
+            '建议尽量落到可执行的下一步，而不是停在抽象意见。',
+          ]
+        : [
+            'Align on the problem definition before splitting into testable conclusions.',
+            'In every turn, surface at least one risk or blind spot instead of only agreeing.',
+            'Push recommendations toward actionable next steps instead of abstract opinions.',
+          ],
     };
   }
 
@@ -2474,6 +3019,17 @@ function buildRelayTemplate(
       description: isChinese
         ? '更像一个交付房间，强调推进、修补和最终拍板。'
         : 'Feels like a shipping room with momentum, fixes, and a final ship decision.',
+      defaultPinnedRules: isChinese
+        ? [
+            '优先推进到可交付结果，避免无止境讨论。',
+            '发现阻塞时，先给出绕行方案，再讨论理想解。',
+            '在结束前明确产出物、风险和推荐决策。',
+          ]
+        : [
+            'Bias toward a shippable outcome instead of endless discussion.',
+            'When blocked, propose a workable path before debating the ideal solution.',
+            'Before ending, make the deliverable, risks, and recommended decision explicit.',
+          ],
     };
   }
 
@@ -2506,6 +3062,15 @@ function buildRelayTemplate(
     description: isChinese
       ? '最接近原始 relay 的双人回合制，对话清晰、节奏快。'
       : 'Closest to the original relay: a clear, fast two-agent back-and-forth.',
+    defaultPinnedRules: isChinese
+      ? [
+          '保持短回合，但每轮都要推进讨论而不是重复前文。',
+          '如果意见不同，先明确分歧点，再尝试收敛。',
+        ]
+      : [
+          'Keep turns short, but make sure every turn advances the discussion instead of repeating it.',
+          'If you disagree, name the exact point of disagreement before trying to converge.',
+        ],
   };
 }
 
@@ -2557,7 +3122,7 @@ function buildRelayMarkdown(
   for (const entry of timeline) {
     if (entry.type === 'intervention') {
       lines.push(
-        `### Human steer · ${new Date(entry.createdAtMs).toLocaleString()}`,
+        `### ${entry.pinned ? 'Pinned rule' : 'Human steer'} · ${new Date(entry.createdAtMs).toLocaleString()}`,
         '',
         entry.content,
         ''
@@ -2619,6 +3184,24 @@ function formatRelayTime(createdAtMs: number, language: string) {
     minute: '2-digit',
     second: '2-digit',
   }).format(createdAtMs);
+}
+
+function comparePinnedRules(
+  left: AgentRelayInterventionDTO,
+  right: AgentRelayInterventionDTO
+) {
+  return (
+    (left.sortOrder ?? left.createdAtMs) - (right.sortOrder ?? right.createdAtMs) ||
+    left.createdAtMs - right.createdAtMs
+  );
+}
+
+function parsePinnedRulesDraft(value: string) {
+  return value
+    .split(/\r?\n/)
+    .map((entry) => entry.trim())
+    .filter(Boolean)
+    .slice(0, 8);
 }
 
 function slugify(value: string) {
@@ -2781,14 +3364,13 @@ function readWorkbenchPreferences(): WorkbenchPreferences | null {
       cwd: typeof parsed.cwd === 'string' ? parsed.cwd : '',
       prompt: typeof parsed.prompt === 'string' ? parsed.prompt : '',
       relayPrompt: typeof parsed.relayPrompt === 'string' ? parsed.relayPrompt : '',
+      relayPinnedRulesDraft:
+        typeof parsed.relayPinnedRulesDraft === 'string' ? parsed.relayPinnedRulesDraft : '',
       relaySystemPrompt:
         typeof parsed.relaySystemPrompt === 'string' ? parsed.relaySystemPrompt : '',
       relayStarter: parsed.relayStarter === 'claude' ? 'claude' : 'codex',
       relayTemplateId:
-        typeof parsed.relayTemplateId === 'string' &&
-        RELAY_TEMPLATE_IDS.includes(parsed.relayTemplateId as RelayTemplateId)
-          ? (parsed.relayTemplateId as RelayTemplateId)
-          : 'duel',
+        typeof parsed.relayTemplateId === 'string' ? parsed.relayTemplateId : 'duel',
       relayMaxTurns:
         typeof parsed.relayMaxTurns === 'number' && Number.isFinite(parsed.relayMaxTurns)
           ? Math.min(12, Math.max(2, Math.round(parsed.relayMaxTurns)))
@@ -2815,4 +3397,47 @@ function writeWorkbenchPreferences(preferences: WorkbenchPreferences) {
 
 function isLaunchSurface(value: unknown): value is LaunchSurface {
   return value === 'run' || value === 'terminal' || value === 'relay';
+}
+
+function isBuiltinRelayTemplateId(value: RelayTemplateId) {
+  return BUILTIN_RELAY_TEMPLATE_IDS.includes(value as (typeof BUILTIN_RELAY_TEMPLATE_IDS)[number]);
+}
+
+function readCustomRelayTemplates(): CustomRelayTemplateRecord[] {
+  if (typeof window === 'undefined') return [];
+  try {
+    const raw = window.localStorage.getItem(CUSTOM_RELAY_TEMPLATES_STORAGE_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw) as unknown;
+    if (!Array.isArray(parsed)) return [];
+    return parsed
+      .filter((entry): entry is CustomRelayTemplateRecord => {
+        if (!entry || typeof entry !== 'object') return false;
+        const candidate = entry as Partial<CustomRelayTemplateRecord>;
+        return (
+          typeof candidate.id === 'string' &&
+          typeof candidate.name === 'string' &&
+          Array.isArray(candidate.participants) &&
+          typeof candidate.description === 'string' &&
+          Array.isArray(candidate.defaultPinnedRules) &&
+          (candidate.starter === 'claude' || candidate.starter === 'codex') &&
+          typeof candidate.maxTurns === 'number'
+        );
+      })
+      .slice(0, 12);
+  } catch {
+    return [];
+  }
+}
+
+function writeCustomRelayTemplates(templates: CustomRelayTemplateRecord[]) {
+  if (typeof window === 'undefined') return;
+  try {
+    window.localStorage.setItem(
+      CUSTOM_RELAY_TEMPLATES_STORAGE_KEY,
+      JSON.stringify(templates)
+    );
+  } catch {
+    // Ignore storage failures and keep the workspace usable.
+  }
 }

@@ -113,7 +113,7 @@ export class AgentRelayManager {
     const internal: InternalRelay = {
       summary,
       turns: [],
-      interventions: [],
+      interventions: normalizeInitialPinnedRules(request.initialPinnedRules, relayId, createdAtMs),
       stopRequested: false,
       pauseRequested: false,
       loopActive: false,
@@ -207,6 +207,8 @@ export class AgentRelayManager {
       relayId,
       content: normalized,
       createdAtMs: Date.now(),
+      pinned: false,
+      sortOrder: getNextInterventionSortOrder(relay.interventions),
     };
 
     relay.interventions.push(intervention);
@@ -217,7 +219,10 @@ export class AgentRelayManager {
   updateIntervention(
     relayId: string,
     interventionId: string,
-    content: string
+    patch: {
+      content?: string;
+      pinned?: boolean;
+    }
   ): AgentRelayInterventionDTO {
     const relay = this.relays.get(relayId);
     if (!relay) {
@@ -231,11 +236,6 @@ export class AgentRelayManager {
       throw new Error('Relay is not currently accepting message edits.');
     }
 
-    const normalized = content.trim();
-    if (!normalized) {
-      throw new Error('Message content is required.');
-    }
-
     const index = relay.interventions.findIndex((entry) => entry.id === interventionId);
     if (index === -1) {
       throw new Error('Intervention not found.');
@@ -245,14 +245,72 @@ export class AgentRelayManager {
     if (!current) {
       throw new Error('Intervention not found.');
     }
+
+    const normalizedContent = patch.content?.trim();
+    if (patch.content !== undefined && !normalizedContent) {
+      throw new Error('Message content is required.');
+    }
+
+    const nextPinned =
+      typeof patch.pinned === 'boolean' ? patch.pinned : (current.pinned ?? false);
     const next: AgentRelayInterventionDTO = {
       ...current,
-      content: normalized,
+      content: normalizedContent ?? current.content,
       updatedAtMs: Date.now(),
+      pinned: nextPinned,
+      sortOrder:
+        nextPinned && !(current.pinned ?? false)
+          ? getNextPinnedInterventionSortOrder(relay.interventions)
+          : current.sortOrder ?? current.createdAtMs,
     };
     relay.interventions[index] = next;
     this.emitIntervention(next);
     return next;
+  }
+
+  moveIntervention(relayId: string, interventionId: string, direction: 'up' | 'down') {
+    const relay = this.relays.get(relayId);
+    if (!relay) {
+      throw new Error('Relay not found.');
+    }
+    if (
+      relay.summary.status !== 'running' &&
+      relay.summary.status !== 'starting' &&
+      relay.summary.status !== 'paused'
+    ) {
+      throw new Error('Relay is not currently accepting message changes.');
+    }
+
+    const pinned = relay.interventions
+      .filter((entry) => entry.pinned)
+      .sort(comparePinnedInterventions);
+    const index = pinned.findIndex((entry) => entry.id === interventionId);
+    if (index === -1) {
+      throw new Error('Pinned intervention not found.');
+    }
+
+    const swapIndex = direction === 'up' ? index - 1 : index + 1;
+    const current = pinned[index];
+    const target = pinned[swapIndex];
+    if (!current || !target) {
+      return current ?? null;
+    }
+
+    const currentStored = relay.interventions.find((entry) => entry.id === current.id);
+    const targetStored = relay.interventions.find((entry) => entry.id === target.id);
+    if (!currentStored || !targetStored) {
+      throw new Error('Pinned intervention not found.');
+    }
+
+    const currentOrder = currentStored.sortOrder ?? currentStored.createdAtMs;
+    currentStored.sortOrder = targetStored.sortOrder ?? targetStored.createdAtMs;
+    currentStored.updatedAtMs = Date.now();
+    targetStored.sortOrder = currentOrder;
+    targetStored.updatedAtMs = Date.now();
+
+    this.emitIntervention(currentStored);
+    this.emitIntervention(targetStored);
+    return currentStored;
   }
 
   removeIntervention(relayId: string, interventionId: string) {
@@ -548,6 +606,7 @@ export class AgentRelayManager {
         interventions: Array.isArray(entry.interventions)
           ? entry.interventions
               .filter((intervention) => intervention.relayId === summary.id)
+              .map((intervention) => normalizeIntervention(intervention))
               .slice(-80)
           : [],
         stopRequested: false,
@@ -619,14 +678,28 @@ function buildRelayHistory(
     content: intervention.content,
   }));
 
+  const pinnedEntries = interventions
+    .filter((intervention) => intervention.pinned)
+    .sort(comparePinnedInterventions)
+    .map((intervention) => ({
+      createdAtMs: relay.createdAtMs,
+      speaker: 'User rule',
+      content: intervention.content,
+    }));
+
+  const transientInterventionEntries = interventionEntries.filter(
+    (_, index) => !interventions[index]?.pinned
+  );
+
   return [
     {
       createdAtMs: relay.createdAtMs,
       speaker: 'User',
       content: relay.initialPrompt,
     },
+    ...pinnedEntries,
     ...turnEntries,
-    ...interventionEntries,
+    ...transientInterventionEntries,
   ]
     .sort((a, b) => a.createdAtMs - b.createdAtMs)
     .map(({ speaker, content }) => ({ speaker, content }));
@@ -666,6 +739,58 @@ function normalizeRestoredRelay(summary: AgentRelaySessionDTO, restoredAtMs: num
     status,
     endedAtMs: status === 'stopped' ? summary.endedAtMs ?? restoredAtMs : summary.endedAtMs,
   };
+}
+
+function normalizeIntervention(intervention: AgentRelayInterventionDTO): AgentRelayInterventionDTO {
+  return {
+    ...intervention,
+    pinned: intervention.pinned ?? false,
+    sortOrder: intervention.sortOrder ?? intervention.createdAtMs,
+  };
+}
+
+function normalizeInitialPinnedRules(
+  rules: string[] | undefined,
+  relayId: string,
+  createdAtMs: number
+): AgentRelayInterventionDTO[] {
+  if (!Array.isArray(rules)) return [];
+
+  return rules
+    .map((rule) => rule.trim())
+    .filter(Boolean)
+    .slice(0, 8)
+    .map((content, index) => ({
+      id: randomUUID(),
+      relayId,
+      content,
+      createdAtMs: createdAtMs + index,
+      pinned: true,
+      sortOrder: index + 1,
+    }));
+}
+
+function getNextInterventionSortOrder(interventions: AgentRelayInterventionDTO[]) {
+  return interventions.reduce(
+    (max, entry) => Math.max(max, entry.sortOrder ?? entry.createdAtMs),
+    0
+  ) + 1;
+}
+
+function getNextPinnedInterventionSortOrder(interventions: AgentRelayInterventionDTO[]) {
+  return interventions
+    .filter((entry) => entry.pinned)
+    .reduce((max, entry) => Math.max(max, entry.sortOrder ?? entry.createdAtMs), 0) + 1;
+}
+
+function comparePinnedInterventions(
+  left: AgentRelayInterventionDTO,
+  right: AgentRelayInterventionDTO
+) {
+  return (
+    (left.sortOrder ?? left.createdAtMs) - (right.sortOrder ?? right.createdAtMs) ||
+    left.createdAtMs - right.createdAtMs
+  );
 }
 
 function normalizeParticipants(
