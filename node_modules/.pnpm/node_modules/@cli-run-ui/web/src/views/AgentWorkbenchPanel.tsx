@@ -427,6 +427,56 @@ export function AgentWorkbenchPanel({
     () => buildPresets(activeSession, provider, isChinese),
     [activeSession, isChinese, provider]
   );
+  const relayPromptIdeas = relayTemplate.promptIdeas ?? [];
+  const surfaceMeta = useMemo(() => {
+    if (surface === 'task') {
+      return {
+        title: isChinese ? '任务闭环' : 'Task loop',
+        description: isChinese
+          ? '从任务、分支、测试到 PR 的交付回路。'
+          : 'A delivery loop from branch creation to tests and PR.',
+        count: tasks.length,
+        focus: liveTask?.title ?? (isChinese ? '选择一个任务或新建一个 task loop。' : 'Pick a task or start a new task loop.'),
+      };
+    }
+
+    if (surface === 'run') {
+      return {
+        title: isChinese ? '无头运行' : 'Headless run',
+        description: isChinese
+          ? '适合一次性后台执行，持续回流日志。'
+          : 'Best for one-shot background execution with streamed logs.',
+        count: runs.length,
+        focus:
+          liveRun?.command.join(' ') ??
+          (isChinese ? '选择一个 run 查看执行输出。' : 'Pick a run to inspect the execution output.'),
+      };
+    }
+
+    if (surface === 'terminal') {
+      return {
+        title: isChinese ? '交互终端' : 'Interactive terminal',
+        description: isChinese
+          ? '保留上下文并支持继续输入。'
+          : 'Keeps context alive and accepts follow-up input.',
+        count: terminals.length,
+        focus:
+          liveTerminal?.command.join(' ') ??
+          (isChinese ? '选择一个 terminal 或直接从浏览器对话拉起。' : 'Pick a terminal or auto-start one from browser chat.'),
+      };
+    }
+
+    return {
+      title: isChinese ? 'Agent 房间' : 'Agent room',
+      description: isChinese
+        ? '多智能体讨论、人工介入和房间总结。'
+        : 'Multi-agent discussion with steering, summaries, and controls.',
+      count: relays.length,
+      focus:
+        liveRelay?.title ??
+        (isChinese ? '选择一个 relay 房间或从右侧模板发起。' : 'Pick a relay room or launch one from the right rail.'),
+    };
+  }, [isChinese, liveRelay?.title, liveRun?.command, liveTask?.title, liveTerminal?.command, relays.length, runs.length, surface, tasks.length, terminals.length]);
 
   useEffect(() => {
     if (isBuiltinRelayTemplateId(relayTemplateId)) return;
