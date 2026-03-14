@@ -5,11 +5,11 @@
 
 [7m[1m[36m RUN [39m[22m[27m [36mv1.6.1[39m [90mD:/code/cli-run-ui/packages/core[39m
 
- [32m✓[39m src/providers/claude/ClaudeProvider.test.ts [2m ([22m[2m3 tests[22m[2m)[22m[90m 24[2mms[22m[39m
- [32m✓[39m src/providers/codex/CodexProvider.test.ts [2m ([22m[2m3 tests[22m[2m)[22m[90m 30[2mms[22m[39m
+ [32m✓[39m src/providers/claude/ClaudeProvider.test.ts [2m ([22m[2m3 tests[22m[2m)[22m[90m 19[2mms[22m[39m
+ [32m✓[39m src/providers/codex/CodexProvider.test.ts [2m ([22m[2m3 tests[22m[2m)[22m[90m 20[2mms[22m[39m
 
 [2m Test Files [22m [1m[32m2 passed[39m[22m[90m (2)[39m
 [2m      Tests [22m [1m[32m6 passed[39m[22m[90m (6)[39m
-[2m   Start at [22m 11:46:32
-[2m   Duration [22m 1.24s[2m (transform 243ms, setup 0ms, collect 786ms, tests 54ms, environment 1ms, prepare 724ms)[22m
+[2m   Start at [22m 21:03:52
+[2m   Duration [22m 906ms[2m (transform 172ms, setup 1ms, collect 617ms, tests 39ms, environment 1ms, prepare 511ms)[22m
 

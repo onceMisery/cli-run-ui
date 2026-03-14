@@ -1711,6 +1711,24 @@ function TaskLoopPane({
 }) {
   const { isChinese, language } = useI18n();
   const logViewportRef = useRef<HTMLDivElement | null>(null);
+  const recentReviews = task
+    ? [...task.pullRequestReviews]
+        .sort((left, right) => (right.submittedAtMs ?? 0) - (left.submittedAtMs ?? 0))
+        .slice(0, 6)
+    : [];
+  const recentComments = task
+    ? [...task.pullRequestComments]
+        .sort(
+          (left, right) =>
+            (right.updatedAtMs ?? right.createdAtMs) - (left.updatedAtMs ?? left.createdAtMs)
+        )
+        .slice(0, 6)
+    : [];
+  const recentChecks = task
+    ? [...task.checks]
+        .sort((left, right) => githubCheckSortOrder(left) - githubCheckSortOrder(right))
+        .slice(0, 8)
+    : [];
 
   useEffect(() => {
     const el = logViewportRef.current;
@@ -1781,6 +1799,40 @@ function TaskLoopPane({
                   </a>
                 </div>
               ) : null}
+              {task.pullRequest ? (
+                <div className="mt-3 rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-sm text-slate-300">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="text-xs uppercase tracking-[0.18em] text-slate-500">
+                      {isChinese ? 'Merge readiness' : 'Merge readiness'}
+                    </div>
+                    <Badge
+                      className={
+                        task.mergeReadiness?.ready
+                          ? 'border-emerald-400/30 bg-emerald-400/10 text-emerald-100'
+                          : 'border-amber-400/30 bg-amber-400/10 text-amber-100'
+                      }
+                    >
+                      {task.mergeReadiness?.ready ? 'ready' : 'needs attention'}
+                    </Badge>
+                  </div>
+                  {task.pullRequest.mergeStateStatus ? (
+                    <div className="mt-2 text-xs text-slate-400">
+                      merge state: {task.pullRequest.mergeStateStatus}
+                    </div>
+                  ) : null}
+                  {task.mergeReadiness?.reasons.length ? (
+                    <div className="mt-2 space-y-1 text-xs text-slate-300">
+                      {task.mergeReadiness.reasons.map((reason, index) => (
+                        <div key={`${task.id}-reason-${index + 1}`}>- {reason}</div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="mt-2 text-xs text-slate-400">
+                      {isChinese ? '当前没有检测到明显的 merge 阻塞。' : 'No obvious merge blockers detected right now.'}
+                    </div>
+                  )}
+                </div>
+              ) : null}
               {task.github.connected ? (
                 <div className="mt-3 rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-sm text-slate-300">
                   <div className="flex items-center justify-between gap-2">
@@ -1832,6 +1884,16 @@ function TaskLoopPane({
                     : 'This repository does not expose a GitHub origin remote.'}
                 </InlineNotice>
               )}
+              {task.branchCleanup ? (
+                <div className="mt-3 rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-sm text-slate-300">
+                  <div className="text-xs uppercase tracking-[0.18em] text-slate-500">
+                    {isChinese ? 'Post-merge cleanup' : 'Post-merge cleanup'}
+                  </div>
+                  <div className="mt-2 text-xs text-slate-300">
+                    {task.branchCleanup.message}
+                  </div>
+                </div>
+              ) : null}
             </div>
 
             <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-3">
@@ -1910,7 +1972,7 @@ function TaskLoopPane({
                       size="sm"
                       className="bg-[var(--theme-secondary-solid)] text-[var(--theme-secondary-foreground)] hover:bg-[var(--theme-secondary-solid-hover)]"
                       onClick={onMerge}
-                      disabled={isMergingPullRequest}
+                      disabled={isMergingPullRequest || Boolean(task.mergeReadiness && !task.mergeReadiness.ready)}
                     >
                       {isMergingPullRequest ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <GitPullRequestArrow className="h-4 w-4" />}
                       {isChinese ? 'Merge PR' : 'Merge PR'}
@@ -1960,6 +2022,272 @@ function TaskLoopPane({
               <pre className="mt-2 max-h-56 overflow-auto whitespace-pre-wrap rounded-xl border border-white/10 bg-black/20 p-3 text-xs text-slate-200">
                 {task.testResult.output || (isChinese ? '没有测试输出。' : 'No test output yet.')}
               </pre>
+            </div>
+          </div>
+
+          <div className="mt-3 grid gap-3 lg:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)]">
+            <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-3">
+              <div className="flex items-center justify-between gap-3">
+                <div className="text-xs uppercase tracking-[0.18em] text-slate-500">
+                  {isChinese ? '检查与保护规则' : 'Checks & protection'}
+                </div>
+                {task.pullRequest ? (
+                  <Badge className="border-white/15 bg-white/[0.06] text-slate-200">
+                    {task.checks.length} {isChinese ? '项检查' : 'checks'}
+                  </Badge>
+                ) : null}
+              </div>
+
+              {!task.pullRequest ? (
+                <div className="mt-3 rounded-xl border border-dashed border-white/10 bg-black/20 px-3 py-5 text-sm text-slate-400">
+                  {isChinese
+                    ? '先创建 PR，这里才会同步 GitHub checks 和 branch protection。'
+                    : 'Open a PR first, then this panel will sync GitHub checks and branch protection.'}
+                </div>
+              ) : (
+                <>
+                  <div className="mt-3 rounded-xl border border-white/10 bg-black/20 px-3 py-3">
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="text-[11px] uppercase tracking-[0.16em] text-slate-500">
+                        {isChinese ? '分支保护' : 'Branch protection'}
+                      </div>
+                      <Badge
+                        className={
+                          task.branchProtection?.enabled
+                            ? 'border-emerald-400/30 bg-emerald-400/10 text-emerald-100'
+                            : 'border-white/15 bg-white/[0.06] text-slate-200'
+                        }
+                      >
+                        {task.branchProtection?.enabled
+                          ? isChinese
+                            ? '已启用'
+                            : 'enabled'
+                          : isChinese
+                            ? '未启用'
+                            : 'not enforced'}
+                      </Badge>
+                    </div>
+                    <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                      <InfoPair
+                        label={isChinese ? '需要审批' : 'Approvals'}
+                        value={
+                          task.branchProtection?.requiredApprovingReviewCount
+                            ? String(task.branchProtection.requiredApprovingReviewCount)
+                            : isChinese
+                              ? '无要求'
+                              : 'Not required'
+                        }
+                      />
+                      <InfoPair
+                        label={isChinese ? '严格检查' : 'Strict checks'}
+                        value={
+                          task.branchProtection?.strictStatusChecks
+                            ? isChinese
+                              ? '是'
+                              : 'Yes'
+                            : isChinese
+                              ? '否'
+                              : 'No'
+                        }
+                      />
+                      <InfoPair
+                        label={isChinese ? '过期评审失效' : 'Stale review reset'}
+                        value={
+                          task.branchProtection?.dismissesStaleReviews
+                            ? isChinese
+                              ? '是'
+                              : 'Yes'
+                            : isChinese
+                              ? '否'
+                              : 'No'
+                        }
+                      />
+                      <InfoPair
+                        label={isChinese ? '需解决对话' : 'Conversation resolution'}
+                        value={
+                          task.branchProtection?.requiresConversationResolution
+                            ? isChinese
+                              ? '是'
+                              : 'Yes'
+                            : isChinese
+                              ? '否'
+                              : 'No'
+                        }
+                      />
+                    </div>
+                    {task.branchProtection?.requiredCheckContexts.length ? (
+                      <div className="mt-3">
+                        <div className="text-[11px] uppercase tracking-[0.16em] text-slate-500">
+                          {isChinese ? '必需检查' : 'Required checks'}
+                        </div>
+                        <div className="mt-2 flex flex-wrap gap-2">
+                          {task.branchProtection.requiredCheckContexts.map((context) => (
+                            <Badge
+                              key={`${task.id}-required-check-${context}`}
+                              variant="muted"
+                              className="bg-white/5 text-slate-300"
+                            >
+                              {context}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                    ) : null}
+                    {task.branchProtection?.lastError ? (
+                      <div className="mt-3 rounded-xl border border-amber-400/20 bg-amber-400/10 px-3 py-2 text-xs text-amber-100">
+                        {task.branchProtection.lastError}
+                      </div>
+                    ) : null}
+                  </div>
+
+                  <div className="mt-3 space-y-2">
+                    {recentChecks.map((check) => (
+                      <div
+                        key={check.id}
+                        className="rounded-xl border border-white/10 bg-black/20 px-3 py-3 text-sm text-slate-200"
+                      >
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <div className="font-medium text-slate-100">{check.name}</div>
+                          <Badge className={githubCheckBadgeClass(check.status, check.conclusion)}>
+                            {check.status}
+                            {check.conclusion ? ` / ${check.conclusion}` : ''}
+                          </Badge>
+                        </div>
+                        {check.details ? (
+                          <div className="mt-2 whitespace-pre-wrap break-words text-xs text-slate-400">
+                            {check.details}
+                          </div>
+                        ) : null}
+                        {check.url ? (
+                          <a
+                            href={check.url}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="mt-2 inline-flex items-center gap-1 text-xs text-[var(--theme-accent-text)] underline-offset-4 hover:underline"
+                          >
+                            <GitPullRequestArrow className="h-3.5 w-3.5" />
+                            {isChinese ? '在 GitHub 中查看' : 'Open on GitHub'}
+                          </a>
+                        ) : null}
+                      </div>
+                    ))}
+                    {recentChecks.length === 0 ? (
+                      <div className="rounded-xl border border-dashed border-white/10 bg-black/20 px-3 py-5 text-sm text-slate-400">
+                        {isChinese ? 'GitHub 还没有返回任何 check run。' : 'GitHub has not reported any check runs yet.'}
+                      </div>
+                    ) : null}
+                  </div>
+                </>
+              )}
+            </div>
+
+            <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-3">
+              <div className="flex items-center justify-between gap-3">
+                <div className="text-xs uppercase tracking-[0.18em] text-slate-500">
+                  {isChinese ? 'PR 活动' : 'PR activity'}
+                </div>
+                {task.pullRequest ? (
+                  <Badge className="border-white/15 bg-white/[0.06] text-slate-200">
+                    {task.pullRequestReviews.length + task.pullRequestComments.length}{' '}
+                    {isChinese ? '条记录' : 'entries'}
+                  </Badge>
+                ) : null}
+              </div>
+
+              {!task.pullRequest ? (
+                <div className="mt-3 rounded-xl border border-dashed border-white/10 bg-black/20 px-3 py-5 text-sm text-slate-400">
+                  {isChinese
+                    ? '先创建 PR，这里才会同步 review 和 comment 时间线。'
+                    : 'Open a PR first, then this panel will sync review and comment activity.'}
+                </div>
+              ) : (
+                <div className="mt-3 grid gap-3">
+                  <div className="rounded-xl border border-white/10 bg-black/20 px-3 py-3">
+                    <div className="text-[11px] uppercase tracking-[0.16em] text-slate-500">
+                      {isChinese ? '评审' : 'Reviews'}
+                    </div>
+                    <div className="mt-3 space-y-2">
+                      {recentReviews.map((review) => (
+                        <div
+                          key={review.id}
+                          className="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-3 text-sm text-slate-200"
+                        >
+                          <div className="flex flex-wrap items-center justify-between gap-2">
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium text-slate-100">{review.author}</span>
+                              <Badge className={githubReviewBadgeClass(review.state)}>{review.state}</Badge>
+                            </div>
+                            <span className="text-[11px] text-slate-500">
+                              {formatTaskTimestamp(review.submittedAtMs, language, isChinese)}
+                            </span>
+                          </div>
+                          {review.body ? (
+                            <div className="mt-2 whitespace-pre-wrap break-words text-xs text-slate-300">
+                              {review.body}
+                            </div>
+                          ) : null}
+                          {review.url ? (
+                            <a
+                              href={review.url}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="mt-2 inline-flex items-center gap-1 text-xs text-[var(--theme-accent-text)] underline-offset-4 hover:underline"
+                            >
+                              <GitPullRequestArrow className="h-3.5 w-3.5" />
+                              {isChinese ? '在 GitHub 中查看' : 'Open on GitHub'}
+                            </a>
+                          ) : null}
+                        </div>
+                      ))}
+                      {recentReviews.length === 0 ? (
+                        <div className="rounded-xl border border-dashed border-white/10 bg-white/[0.03] px-3 py-4 text-sm text-slate-400">
+                          {isChinese ? '还没有 review 活动。' : 'No review activity yet.'}
+                        </div>
+                      ) : null}
+                    </div>
+                  </div>
+
+                  <div className="rounded-xl border border-white/10 bg-black/20 px-3 py-3">
+                    <div className="text-[11px] uppercase tracking-[0.16em] text-slate-500">
+                      {isChinese ? '评论' : 'Comments'}
+                    </div>
+                    <div className="mt-3 space-y-2">
+                      {recentComments.map((comment) => (
+                        <div
+                          key={comment.id}
+                          className="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-3 text-sm text-slate-200"
+                        >
+                          <div className="flex flex-wrap items-center justify-between gap-2">
+                            <span className="font-medium text-slate-100">{comment.author}</span>
+                            <span className="text-[11px] text-slate-500">
+                              {formatTaskTimestamp(comment.updatedAtMs ?? comment.createdAtMs, language, isChinese)}
+                            </span>
+                          </div>
+                          <div className="mt-2 whitespace-pre-wrap break-words text-xs text-slate-300">
+                            {comment.body}
+                          </div>
+                          {comment.url ? (
+                            <a
+                              href={comment.url}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="mt-2 inline-flex items-center gap-1 text-xs text-[var(--theme-accent-text)] underline-offset-4 hover:underline"
+                            >
+                              <MessageSquare className="h-3.5 w-3.5" />
+                              {isChinese ? '在 GitHub 中查看' : 'Open on GitHub'}
+                            </a>
+                          ) : null}
+                        </div>
+                      ))}
+                      {recentComments.length === 0 ? (
+                        <div className="rounded-xl border border-dashed border-white/10 bg-white/[0.03] px-3 py-4 text-sm text-slate-400">
+                          {isChinese ? '还没有 comment 活动。' : 'No comment activity yet.'}
+                        </div>
+                      ) : null}
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
@@ -3863,6 +4191,22 @@ function formatRelayTime(createdAtMs: number, language: string) {
   }).format(createdAtMs);
 }
 
+function formatTaskTimestamp(
+  createdAtMs: number | undefined,
+  language: string,
+  isChinese: boolean
+) {
+  if (!createdAtMs) {
+    return isChinese ? '时间未知' : 'Unknown time';
+  }
+  return new Intl.DateTimeFormat(language, {
+    month: 'short',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(createdAtMs);
+}
+
 function comparePinnedRules(
   left: AgentRelayInterventionDTO,
   right: AgentRelayInterventionDTO
@@ -3995,6 +4339,37 @@ function taskTestBadgeClass(status: AgentTaskDTO['testResult']['status']) {
     return 'border-white/15 bg-white/[0.06] text-slate-200';
   }
   return 'border-rose-400/30 bg-rose-400/10 text-rose-100';
+}
+
+function githubReviewBadgeClass(state: string) {
+  const normalized = state.toUpperCase();
+  if (normalized === 'APPROVED') return 'border-emerald-400/30 bg-emerald-400/10 text-emerald-100';
+  if (normalized === 'CHANGES_REQUESTED') return 'border-rose-400/30 bg-rose-400/10 text-rose-100';
+  if (normalized === 'COMMENTED') return 'border-cyan-300/30 bg-cyan-300/10 text-cyan-100';
+  return 'border-white/15 bg-white/[0.06] text-slate-200';
+}
+
+function githubCheckBadgeClass(status: string, conclusion?: string) {
+  if (status !== 'completed' || conclusion === 'pending') {
+    return 'border-amber-400/30 bg-amber-400/10 text-amber-100';
+  }
+  if (conclusion && ['success', 'neutral', 'skipped'].includes(conclusion)) {
+    return 'border-emerald-400/30 bg-emerald-400/10 text-emerald-100';
+  }
+  if (conclusion) {
+    return 'border-rose-400/30 bg-rose-400/10 text-rose-100';
+  }
+  return 'border-white/15 bg-white/[0.06] text-slate-200';
+}
+
+function githubCheckSortOrder(check: AgentTaskDTO['checks'][number]) {
+  if (check.status === 'completed' && check.conclusion && !['success', 'neutral', 'skipped'].includes(check.conclusion)) {
+    return 0;
+  }
+  if (check.status !== 'completed' || check.conclusion === 'pending') {
+    return 1;
+  }
+  return 2;
 }
 
 function taskEventToneClass(tone: AgentTaskEventDTO['tone']) {

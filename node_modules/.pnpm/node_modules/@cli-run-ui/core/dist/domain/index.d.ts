@@ -226,6 +226,10 @@ export interface GitHubPullRequestDTO {
     state: 'open' | 'closed' | 'merged' | 'draft';
     headBranch: string;
     baseBranch: string;
+    headSha?: string;
+    draft?: boolean;
+    mergeable?: boolean | null;
+    mergeStateStatus?: string;
     createdAtMs: number;
     mergedAtMs?: number;
 }
@@ -237,6 +241,51 @@ export interface GitHubIssueDTO {
     body?: string;
     createdAtMs: number;
     updatedAtMs?: number;
+}
+export interface GitHubPullRequestReviewDTO {
+    id: number;
+    author: string;
+    state: string;
+    body?: string;
+    submittedAtMs?: number;
+    url?: string;
+}
+export interface GitHubPullRequestCommentDTO {
+    id: number;
+    author: string;
+    body: string;
+    createdAtMs: number;
+    updatedAtMs?: number;
+    url?: string;
+}
+export interface GitHubCheckRunDTO {
+    id: number;
+    name: string;
+    status: string;
+    conclusion?: string;
+    url?: string;
+    details?: string;
+}
+export interface GitHubBranchProtectionDTO {
+    enabled: boolean;
+    requiredApprovingReviewCount?: number;
+    requiresConversationResolution?: boolean;
+    dismissesStaleReviews?: boolean;
+    strictStatusChecks?: boolean;
+    requiredCheckContexts: string[];
+    lastError?: string;
+}
+export interface GitHubMergeReadinessDTO {
+    ready: boolean;
+    reasons: string[];
+    mergeable?: boolean | null;
+    mergeStateStatus?: string;
+}
+export interface TaskBranchCleanupDTO {
+    baseBranchCheckedOut: boolean;
+    localBranchDeleted: boolean;
+    remoteBranchDeleted: boolean;
+    message?: string;
 }
 export interface AgentTaskTestResultDTO {
     command?: string;
@@ -281,6 +330,13 @@ export interface AgentTaskDTO {
     github: GitHubRepoRefDTO;
     sourceIssue?: GitHubIssueDTO;
     pullRequest?: GitHubPullRequestDTO;
+    pullRequestReviews: GitHubPullRequestReviewDTO[];
+    pullRequestComments: GitHubPullRequestCommentDTO[];
+    checks: GitHubCheckRunDTO[];
+    branchProtection?: GitHubBranchProtectionDTO;
+    mergeReadiness?: GitHubMergeReadinessDTO;
+    branchCleanup?: TaskBranchCleanupDTO;
+    archivedAtMs?: number;
     error?: string;
     lastRefreshedAtMs?: number;
 }
