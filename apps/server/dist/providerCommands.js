@@ -1,4 +1,19 @@
 import path from 'node:path';
+export function resolveProviderCliCommand(provider) {
+    const envVar = provider === 'codex' ? 'CLI_RUN_UI_CODEX_COMMAND' : 'CLI_RUN_UI_CLAUDE_COMMAND';
+    const fromEnv = process.env[envVar]?.trim();
+    if (fromEnv) {
+        return {
+            command: fromEnv,
+            envVar,
+        };
+    }
+    const base = provider === 'codex' ? 'codex' : 'claude';
+    return {
+        command: base,
+        envVar,
+    };
+}
 export function buildProviderCommand(request) {
     if (!request.prompt.trim()) {
         throw new Error('Prompt is required.');
@@ -7,7 +22,7 @@ export function buildProviderCommand(request) {
         throw new Error('A valid absolute working directory is required.');
     }
     if (request.provider === 'codex') {
-        const command = process.env.CLI_RUN_UI_CODEX_COMMAND ?? 'codex';
+        const command = resolveProviderCliCommand(request.provider).command;
         if (request.mode === 'resume') {
             const sessionId = extractSessionId(request.provider, request.sessionUid);
             return {
@@ -21,7 +36,7 @@ export function buildProviderCommand(request) {
         };
     }
     if (request.provider === 'claude') {
-        const command = process.env.CLI_RUN_UI_CLAUDE_COMMAND ?? 'claude';
+        const command = resolveProviderCliCommand(request.provider).command;
         if (request.mode === 'resume') {
             const sessionId = extractSessionId(request.provider, request.sessionUid);
             return {

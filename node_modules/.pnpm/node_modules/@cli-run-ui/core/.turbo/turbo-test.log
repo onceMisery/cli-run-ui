@@ -2,14 +2,25 @@
 > @cli-run-ui/core@0.0.1 test D:\code\cli-run-ui\packages\core
 > vitest run
 
+[31mfailed to load config from D:\code\cli-run-ui\packages\core\vitest.config.ts[39m
 
-[7m[1m[36m RUN [39m[22m[27m [36mv1.6.1[39m [90mD:/code/cli-run-ui/packages/core[39m
+[31m⎯⎯⎯⎯⎯⎯[1m[7m Unhandled Error [27m[22m⎯⎯⎯⎯⎯⎯⎯[39m
+Error: spawn EPERM
+    at ChildProcess.spawn (node:internal/child_process:420:11)
+    at Object.spawn (node:child_process:753:9)
+    at ensureServiceIsRunning (D:\code\cli-run-ui\node_modules\.pnpm\esbuild@0.21.5\node_modules\esbuild\lib\main.js:1975:29)
+    at build (D:\code\cli-run-ui\node_modules\.pnpm\esbuild@0.21.5\node_modules\esbuild\lib\main.js:1873:26)
+    at bundleConfigFile (file:///D:/code/cli-run-ui/node_modules/.pnpm/vite@5.4.21_@types+node@20.19.37_lightningcss@1.31.1/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:66845:24)
+    at loadConfigFromFile (file:///D:/code/cli-run-ui/node_modules/.pnpm/vite@5.4.21_@types+node@20.19.37_lightningcss@1.31.1/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:66815:27)
+    at resolveConfig (file:///D:/code/cli-run-ui/node_modules/.pnpm/vite@5.4.21_@types+node@20.19.37_lightningcss@1.31.1/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:66416:30)
+    at _createServer (file:///D:/code/cli-run-ui/node_modules/.pnpm/vite@5.4.21_@types+node@20.19.37_lightningcss@1.31.1/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:63015:24)
+    at createServer (file:///D:/code/cli-run-ui/node_modules/.pnpm/vite@5.4.21_@types+node@20.19.37_lightningcss@1.31.1/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:63012:10)
+    at createViteServer (file:///D:/code/cli-run-ui/node_modules/.pnpm/vitest@1.6.1_@types+node@20.19.37_lightningcss@1.31.1/node_modules/vitest/dist/vendor/cli-api.OdDWuB7Y.js:10407:24) {
+  errno: -4048,
+  code: 'EPERM',
+  syscall: 'spawn'
+}
 
- [32m✓[39m src/providers/claude/ClaudeProvider.test.ts [2m ([22m[2m3 tests[22m[2m)[22m[90m 10[2mms[22m[39m
- [32m✓[39m src/providers/codex/CodexProvider.test.ts [2m ([22m[2m3 tests[22m[2m)[22m[90m 13[2mms[22m[39m
 
-[2m Test Files [22m [1m[32m2 passed[39m[22m[90m (2)[39m
-[2m      Tests [22m [1m[32m6 passed[39m[22m[90m (6)[39m
-[2m   Start at [22m 22:47:44
-[2m   Duration [22m 680ms[2m (transform 127ms, setup 1ms, collect 340ms, tests 23ms, environment 0ms, prepare 420ms)[22m
 
+ ELIFECYCLE  Test failed. See above for more details.

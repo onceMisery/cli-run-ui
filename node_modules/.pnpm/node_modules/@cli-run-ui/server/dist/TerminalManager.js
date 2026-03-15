@@ -2,6 +2,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { randomUUID } from 'node:crypto';
 import * as pty from 'node-pty';
+import { resolveProviderCliCommand } from './providerCommands.js';
 export class TerminalManager {
     terminals = new Map();
     sessionListeners = new Set();
@@ -191,7 +192,7 @@ function buildTerminalSpec(request) {
     }
     const cols = clampDimension(request.cols, 120);
     const rows = clampDimension(request.rows, 32);
-    const displayCommand = buildProviderCommand(request.provider, request.mode, request.sessionUid);
+    const displayCommand = buildTerminalProviderCommand(request.provider, request.mode, request.sessionUid);
     if (os.platform() === 'win32') {
         return {
             shell: process.env.COMSPEC ?? 'powershell.exe',
@@ -211,9 +212,9 @@ function buildTerminalSpec(request) {
         rows,
     };
 }
-function buildProviderCommand(provider, mode, sessionUid) {
+function buildTerminalProviderCommand(provider, mode, sessionUid) {
     if (provider === 'codex') {
-        const command = process.env.CLI_RUN_UI_CODEX_COMMAND ?? 'codex';
+        const command = resolveProviderCliCommand(provider).command;
         if (mode === 'resume') {
             const sessionId = extractSessionId(provider, sessionUid);
             return [command, '--resume', sessionId];
@@ -221,7 +222,7 @@ function buildProviderCommand(provider, mode, sessionUid) {
         return [command];
     }
     if (provider === 'claude') {
-        const command = process.env.CLI_RUN_UI_CLAUDE_COMMAND ?? 'claude';
+        const command = resolveProviderCliCommand(provider).command;
         if (mode === 'resume') {
             const sessionId = extractSessionId(provider, sessionUid);
             return [command, '--resume', sessionId];

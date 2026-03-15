@@ -2,12 +2,35 @@ import path from 'node:path';
 
 import type { ProviderId, RunMode } from '@cli-run-ui/core';
 
+type ProviderCliEnvVar = 'CLI_RUN_UI_CODEX_COMMAND' | 'CLI_RUN_UI_CLAUDE_COMMAND';
+
 interface ProviderCommandRequest {
   provider: ProviderId;
   mode: RunMode;
   cwd: string;
   prompt: string;
   sessionUid?: string;
+}
+
+export function resolveProviderCliCommand(provider: ProviderId): {
+  command: string;
+  envVar: ProviderCliEnvVar;
+} {
+  const envVar: ProviderCliEnvVar =
+    provider === 'codex' ? 'CLI_RUN_UI_CODEX_COMMAND' : 'CLI_RUN_UI_CLAUDE_COMMAND';
+  const fromEnv = process.env[envVar]?.trim();
+  if (fromEnv) {
+    return {
+      command: fromEnv,
+      envVar,
+    };
+  }
+
+  const base = provider === 'codex' ? 'codex' : 'claude';
+  return {
+    command: base,
+    envVar,
+  };
 }
 
 export function buildProviderCommand(request: ProviderCommandRequest): {
@@ -23,7 +46,7 @@ export function buildProviderCommand(request: ProviderCommandRequest): {
   }
 
   if (request.provider === 'codex') {
-    const command = process.env.CLI_RUN_UI_CODEX_COMMAND ?? 'codex';
+    const command = resolveProviderCliCommand(request.provider).command;
     if (request.mode === 'resume') {
       const sessionId = extractSessionId(request.provider, request.sessionUid);
       return {
@@ -38,7 +61,7 @@ export function buildProviderCommand(request: ProviderCommandRequest): {
   }
 
   if (request.provider === 'claude') {
-    const command = process.env.CLI_RUN_UI_CLAUDE_COMMAND ?? 'claude';
+    const command = resolveProviderCliCommand(request.provider).command;
     if (request.mode === 'resume') {
       const sessionId = extractSessionId(request.provider, request.sessionUid);
       return {

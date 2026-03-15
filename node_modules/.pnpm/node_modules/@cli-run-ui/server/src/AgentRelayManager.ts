@@ -504,16 +504,29 @@ export class AgentRelayManager {
     return new Promise((resolve, reject) => {
       const stdout: string[] = [];
       const stderr: string[] = [];
-      const child = spawn(spec.command, spec.args, {
-        cwd: relay.summary.cwd,
-        env: {
-          ...process.env,
-          FORCE_COLOR: '0',
-          NO_COLOR: '1',
-        },
-        stdio: 'pipe',
-        shell: false,
-      });
+      const useShell = process.platform === 'win32';
+      const child = useShell
+        ? spawn(toWindowsShellCommand(spec.command, spec.args), {
+            cwd: relay.summary.cwd,
+            env: {
+              ...process.env,
+              FORCE_COLOR: '0',
+              NO_COLOR: '1',
+            },
+            stdio: 'pipe',
+            shell: true,
+            windowsHide: true,
+          })
+        : spawn(spec.command, spec.args, {
+            cwd: relay.summary.cwd,
+            env: {
+              ...process.env,
+              FORCE_COLOR: '0',
+              NO_COLOR: '1',
+            },
+            stdio: 'pipe',
+            shell: false,
+          });
 
       relay.activeChild = child;
 
@@ -862,4 +875,14 @@ function buildRelaySummary(relay: AgentRelaySessionDTO, turns: AgentRelayTurnDTO
 function truncateLine(value: string, maxLength: number) {
   if (value.length <= maxLength) return value;
   return `${value.slice(0, maxLength - 1)}…`;
+}
+
+function toWindowsShellCommand(command: string, args: string[]): string {
+  return [quoteForCmd(command), ...args.map(quoteForCmd)].join(' ');
+}
+
+function quoteForCmd(value: string): string {
+  const normalized = value.replace(/\r?\n/g, ' ').trim();
+  if (!normalized) return '""';
+  return `"${normalized.replace(/"/g, '""').replace(/%/g, '%%')}"`;
 }

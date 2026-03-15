@@ -1,5 +1,19 @@
 export type ProviderId = 'claude' | 'codex';
 export type Role = 'user' | 'assistant' | 'system' | 'tool' | 'developer';
+export type AgentCliCheckStatus = 'ready' | 'missing' | 'error';
+export interface AgentCliCheckDTO {
+    provider: ProviderId;
+    command: string;
+    envVar: string;
+    status: AgentCliCheckStatus;
+    checkedAtMs: number;
+    version?: string;
+    message?: string;
+}
+export interface AgentCliHealthDTO {
+    checkedAtMs: number;
+    checks: AgentCliCheckDTO[];
+}
 export type ContentPart = {
     kind: 'text';
     text: string;

@@ -1,7 +1,692 @@
 {
   "version": 3,
-  "savedAtMs": 1773499244993,
+  "savedAtMs": 1773538467019,
   "runs": [
+    {
+      "summary": {
+        "id": "eea4d8e8-4720-4a28-b186-d2358aaf2d93",
+        "provider": "codex",
+        "mode": "task",
+        "cwd": "D:\\code\\cli-run-ui",
+        "prompt": "say hello in one line",
+        "command": [
+          "codex",
+          "exec",
+          "--skip-git-repo-check",
+          "say hello in one line"
+        ],
+        "createdAtMs": 1773538114968,
+        "startedAtMs": 1773538114968,
+        "status": "stopped",
+        "endedAtMs": 1773538424396,
+        "exitCode": null
+      },
+      "logs": [
+        {
+          "id": "3ea50283-2905-48e7-b264-c7d56695559d",
+          "runId": "eea4d8e8-4720-4a28-b186-d2358aaf2d93",
+          "stream": "system",
+          "text": "Started codex exec --skip-git-repo-check say hello in one line",
+          "timestampMs": 1773538114979
+        },
+        {
+          "id": "0c4dd7a5-c6ef-43df-8362-777d6504e6c0",
+          "runId": "eea4d8e8-4720-4a28-b186-d2358aaf2d93",
+          "stream": "stderr",
+          "text": "OpenAI Codex v0.114.0 (research preview)\n--------\n",
+          "timestampMs": 1773538116422
+        },
+        {
+          "id": "f348f89d-e6eb-4803-9021-d9c2bae2fdd8",
+          "runId": "eea4d8e8-4720-4a28-b186-d2358aaf2d93",
+          "stream": "stderr",
+          "text": "workdir: D:\\code\\cli-run-ui\nmodel: gpt-5.4\nprovider: openai\napproval: never\nsandbox: workspace-write [workdir, /tmp, $TMPDIR, C:\\Users\\miracle\\.codex\\memories]\nreasoning effort: medium\nreasoning summaries: none\nsession id: 019cef1c-031b-7042-bffe-d3b7ffc0e1a5\n--------\nuser\nsay hello in one line\n",
+          "timestampMs": 1773538116422
+        },
+        {
+          "id": "39b124d5-b954-41c1-994d-445e22870ee3",
+          "runId": "eea4d8e8-4720-4a28-b186-d2358aaf2d93",
+          "stream": "stderr",
+          "text": "mcp: sequential-thinking starting\nmcp:",
+          "timestampMs": 1773538116427
+        },
+        {
+          "id": "a1d2aede-ab0d-4871-86aa-c3dcff0a2d56",
+          "runId": "eea4d8e8-4720-4a28-b186-d2358aaf2d93",
+          "stream": "stderr",
+          "text": " fetch starting\nmcp: fetch failed: MCP client for `fetch` failed to start: MCP startup failed: program not found\n",
+          "timestampMs": 1773538116427
+        },
+        {
+          "id": "348621f4-7531-4c40-a3b9-ab6ff4fb28fc",
+          "runId": "eea4d8e8-4720-4a28-b186-d2358aaf2d93",
+          "stream": "stderr",
+          "text": "mcp: sequential-thinking ready\n",
+          "timestampMs": 1773538117791
+        },
+        {
+          "id": "e507b0a9-6c80-449e-a56c-fc5598cd185b",
+          "runId": "eea4d8e8-4720-4a28-b186-d2358aaf2d93",
+          "stream": "stderr",
+          "text": "mcp startup: ready: sequential-thinking; failed: fetch\n",
+          "timestampMs": 1773538117791
+        },
+        {
+          "id": "fbb61897-9f3e-41eb-9d54-81ffd8628ca4",
+          "runId": "eea4d8e8-4720-4a28-b186-d2358aaf2d93",
+          "stream": "system",
+          "text": "Stop requested by cli-run-ui.",
+          "timestampMs": 1773538145595
+        },
+        {
+          "id": "d20ed55c-046e-4a8d-a997-d02249871a98",
+          "runId": "eea4d8e8-4720-4a28-b186-d2358aaf2d93",
+          "stream": "stderr",
+          "text": "2026-03-15T01:29:19.888047Z ERROR codex_api::endpoint::responses_websocket: failed to connect to websocket: IO error: 由于连接方在一段时间后没有正确答复或连接的主机没有反应，连接尝试失败。 (os error 10060), url: wss://chatgpt.com/backend-api/codex/responses\n",
+          "timestampMs": 1773538159888
+        },
+        {
+          "id": "9270720e-04c7-4451-ad6b-c364f6061897",
+          "runId": "eea4d8e8-4720-4a28-b186-d2358aaf2d93",
+          "stream": "stderr",
+          "text": "2026-03-15T01:30:01.996475Z ERROR codex_api::endpoint::responses_websocket: failed to connect to websocket: IO error: 由于连接方在一段时间后没有正确答复或连接的主机没有反应，连接尝试失败。 (os error 10060), url: wss://chatgpt.com/backend-api/codex/responses\n",
+          "timestampMs": 1773538201996
+        },
+        {
+          "id": "67af9d3d-9da7-4fb8-9568-75eebbe8f053",
+          "runId": "eea4d8e8-4720-4a28-b186-d2358aaf2d93",
+          "stream": "stderr",
+          "text": "2026-03-15T01:30:44.269416Z ERROR codex_api::endpoint::responses_websocket: failed to connect to websocket: IO error: 由于连接方在一段时间后没有正确答复或连接的主机没有反应，连接尝试失败。 (os error 10060), url: wss://chatgpt.com/backend-api/codex/responses\n",
+          "timestampMs": 1773538244269
+        },
+        {
+          "id": "fb4948a6-cdca-411b-a955-9f7764d01b57",
+          "runId": "eea4d8e8-4720-4a28-b186-d2358aaf2d93",
+          "stream": "stderr",
+          "text": "Reconnecting... 2/5 (stream disconnected before completion: 由于连接方在一段时间后没有正确答复或连接的主机没有反应，连接尝试失败。 (os error 10060))\n",
+          "timestampMs": 1773538244269
+        },
+        {
+          "id": "3466b133-2336-490c-9240-44268b8c1c9e",
+          "runId": "eea4d8e8-4720-4a28-b186-d2358aaf2d93",
+          "stream": "stderr",
+          "text": "2026-03-15T01:31:26.746050Z ERROR codex_api::endpoint::responses_websocket: failed to connect to websocket: IO error: 由于连接方在一段时间后没有正确答复或连接的主机没有反应，连接尝试失败。 (os error 10060), url: wss://chatgpt.com/backend-api/codex/responses\n",
+          "timestampMs": 1773538286745
+        },
+        {
+          "id": "05344ae3-bf59-455e-a001-c9bbd50d68d9",
+          "runId": "eea4d8e8-4720-4a28-b186-d2358aaf2d93",
+          "stream": "stderr",
+          "text": "Reconnecting... 3/5 (stream disconnected before completion: 由于连接方在一段时间后没有正确答复或连接的主机没有反应，连接尝试失败。 (os error 10060))\n",
+          "timestampMs": 1773538286745
+        },
+        {
+          "id": "20c2f9aa-65f4-48c3-b401-897e1c52e799",
+          "runId": "eea4d8e8-4720-4a28-b186-d2358aaf2d93",
+          "stream": "stderr",
+          "text": "2026-03-15T01:32:09.652857Z ERROR codex_api::endpoint::responses_websocket: failed to connect to websocket: IO error: 由于连接方在一段时间后没有正确答复或连接的主机没有反应，连接尝试失败。 (os error 10060), url: wss://chatgpt.com/backend-api/codex/responses\n",
+          "timestampMs": 1773538329652
+        },
+        {
+          "id": "aaf9029f-5029-4be8-82cc-a1241df17ccf",
+          "runId": "eea4d8e8-4720-4a28-b186-d2358aaf2d93",
+          "stream": "stderr",
+          "text": "Reconnecting... 4/5 (stream disconnected before completion: 由于连接方在一段时间后没有正确答复或连接的主机没有反应，连接尝试失败。 (os error 10060))\n",
+          "timestampMs": 1773538329652
+        },
+        {
+          "id": "1b9e0d8f-a896-4a93-b155-aa40bdc12be7",
+          "runId": "eea4d8e8-4720-4a28-b186-d2358aaf2d93",
+          "stream": "stderr",
+          "text": "2026-03-15T01:32:53.414139Z ERROR codex_api::endpoint::responses_websocket: failed to connect to websocket: IO error: 由于连接方在一段时间后没有正确答复或连接的主机没有反应，连接尝试失败。 (os error 10060), url: wss://chatgpt.com/backend-api/codex/responses\n",
+          "timestampMs": 1773538373413
+        },
+        {
+          "id": "433ff5f3-3a82-47bb-8c96-b96a22b7830e",
+          "runId": "eea4d8e8-4720-4a28-b186-d2358aaf2d93",
+          "stream": "stderr",
+          "text": "Reconnecting... 5/5 (stream disconnected before completion: 由于连接方在一段时间后没有正确答复或连接的主机没有反应，连接尝试失败。 (os error 10060))\n",
+          "timestampMs": 1773538373414
+        },
+        {
+          "id": "607ed8ce-e5b7-48cc-a4c8-48cfee6e910c",
+          "runId": "eea4d8e8-4720-4a28-b186-d2358aaf2d93",
+          "stream": "stderr",
+          "text": "2026-03-15T01:33:38.615179Z ERROR codex_api::endpoint::responses_websocket: failed to connect to websocket: IO error: 由于连接方在一段时间后没有正确答复或连接的主机没有反应，连接尝试失败。 (os error 10060), url: wss://chatgpt.com/backend-api/codex/responses\n",
+          "timestampMs": 1773538418614
+        },
+        {
+          "id": "7d521237-9bb2-42fd-af3f-eaba8d4e003d",
+          "runId": "eea4d8e8-4720-4a28-b186-d2358aaf2d93",
+          "stream": "stderr",
+          "text": "warning: Falling back from WebSockets to HTTPS transport. stream disconnected before completion: 由于连接方在一段时间后没有正确答复或连接的主机没有反应，连接尝试失败。 (os error 10060)\n",
+          "timestampMs": 1773538418622
+        },
+        {
+          "id": "7ed246e1-556f-47a4-907c-909963965531",
+          "runId": "eea4d8e8-4720-4a28-b186-d2358aaf2d93",
+          "stream": "stderr",
+          "text": "codex\nHello.\n",
+          "timestampMs": 1773538423100
+        },
+        {
+          "id": "4d79a2b4-73fb-4d30-97ba-f502df2ec20d",
+          "runId": "eea4d8e8-4720-4a28-b186-d2358aaf2d93",
+          "stream": "stderr",
+          "text": "tokens used\n5,857\n",
+          "timestampMs": 1773538423252
+        },
+        {
+          "id": "a541cb02-0d15-4fbc-a2e9-d132d261e1e2",
+          "runId": "eea4d8e8-4720-4a28-b186-d2358aaf2d93",
+          "stream": "stdout",
+          "text": "Hello.\n",
+          "timestampMs": 1773538423252
+        },
+        {
+          "id": "fed09b63-72b9-4caf-bd59-a37df1f95dd7",
+          "runId": "eea4d8e8-4720-4a28-b186-d2358aaf2d93",
+          "stream": "system",
+          "text": "Process stopped by signal SIGTERM",
+          "timestampMs": 1773538424396
+        }
+      ]
+    },
+    {
+      "summary": {
+        "id": "185b8531-16c6-4672-97fc-15cb03ffac8f",
+        "provider": "codex",
+        "mode": "task",
+        "cwd": "D:\\code\\cli-run-ui",
+        "prompt": "say hello in one line",
+        "command": [
+          "codex",
+          "exec",
+          "--skip-git-repo-check",
+          "say hello in one line"
+        ],
+        "createdAtMs": 1773537954004,
+        "startedAtMs": 1773537954004,
+        "status": "failed",
+        "exitCode": 2,
+        "endedAtMs": 1773537954083
+      },
+      "logs": [
+        {
+          "id": "176f3717-26a8-465c-b576-6492c1ce336b",
+          "runId": "185b8531-16c6-4672-97fc-15cb03ffac8f",
+          "stream": "system",
+          "text": "Started codex exec --skip-git-repo-check say hello in one line",
+          "timestampMs": 1773537954014
+        },
+        {
+          "id": "bda2fcb8-d790-4845-aec3-91a747dd4e19",
+          "runId": "185b8531-16c6-4672-97fc-15cb03ffac8f",
+          "stream": "stderr",
+          "text": "error: unrecognized subcommand 'hello'\n\n  tip: a similar subcommand exists: 'help'\n\nUsage: codex exec [OPTIONS] [PROMPT] [COMMAND]\n\nFor more information, try '--help'.\n",
+          "timestampMs": 1773537954073
+        },
+        {
+          "id": "7492ce56-2079-4f57-9f7f-c1ee1e563e06",
+          "runId": "185b8531-16c6-4672-97fc-15cb03ffac8f",
+          "stream": "system",
+          "text": "Process exited with code 2",
+          "timestampMs": 1773537954084
+        }
+      ]
+    },
+    {
+      "summary": {
+        "id": "9d88f007-7c9b-4337-8101-f2fcb5ad9167",
+        "provider": "codex",
+        "mode": "task",
+        "cwd": "D:\\code\\cli-run-ui",
+        "prompt": "hello",
+        "command": [
+          "codex.cmd",
+          "exec",
+          "--skip-git-repo-check",
+          "hello"
+        ],
+        "createdAtMs": 1773537864343,
+        "startedAtMs": 1773537864343,
+        "status": "failed",
+        "error": "spawn EINVAL",
+        "endedAtMs": 1773537864344
+      },
+      "logs": [
+        {
+          "id": "3945035d-9f00-4d0b-b23b-771472b1b162",
+          "runId": "9d88f007-7c9b-4337-8101-f2fcb5ad9167",
+          "stream": "system",
+          "text": "Failed to start: spawn EINVAL",
+          "timestampMs": 1773537864344
+        }
+      ]
+    },
+    {
+      "summary": {
+        "id": "d7258283-856d-44c9-a765-e12150b07c9d",
+        "provider": "codex",
+        "mode": "task",
+        "cwd": "D:\\code\\cli-run-ui",
+        "prompt": "hello",
+        "command": [
+          "codex",
+          "exec",
+          "--skip-git-repo-check",
+          "hello"
+        ],
+        "createdAtMs": 1773537557779,
+        "startedAtMs": 1773537557779,
+        "status": "failed",
+        "error": "spawn codex ENOENT",
+        "endedAtMs": 1773537557783,
+        "exitCode": -4058
+      },
+      "logs": [
+        {
+          "id": "53defb2f-cce5-4cf6-9e30-a31a1940c703",
+          "runId": "d7258283-856d-44c9-a765-e12150b07c9d",
+          "stream": "system",
+          "text": "Started codex exec --skip-git-repo-check hello",
+          "timestampMs": 1773537557781
+        },
+        {
+          "id": "ccb9db16-f875-4cf7-92c4-d79f16898b73",
+          "runId": "d7258283-856d-44c9-a765-e12150b07c9d",
+          "stream": "system",
+          "text": "Failed to start: spawn codex ENOENT",
+          "timestampMs": 1773537557783
+        },
+        {
+          "id": "908b95a8-493a-4f90-9fcc-c51792bc0608",
+          "runId": "d7258283-856d-44c9-a765-e12150b07c9d",
+          "stream": "system",
+          "text": "Process exited with code -4058",
+          "timestampMs": 1773537557783
+        }
+      ]
+    },
+    {
+      "summary": {
+        "id": "3ff74c92-76b3-45c4-af5e-3e83c394a1de",
+        "provider": "codex",
+        "mode": "task",
+        "cwd": "D:\\code\\cli-run-ui",
+        "prompt": "hello",
+        "command": [
+          "codex",
+          "exec",
+          "--skip-git-repo-check",
+          "hello"
+        ],
+        "createdAtMs": 1773537541345,
+        "startedAtMs": 1773537541345,
+        "status": "failed",
+        "error": "spawn codex ENOENT",
+        "endedAtMs": 1773537541350,
+        "exitCode": -4058
+      },
+      "logs": [
+        {
+          "id": "898583f3-4097-4d7a-a467-fa5f8daf4313",
+          "runId": "3ff74c92-76b3-45c4-af5e-3e83c394a1de",
+          "stream": "system",
+          "text": "Started codex exec --skip-git-repo-check hello",
+          "timestampMs": 1773537541349
+        },
+        {
+          "id": "cd12894b-c2cf-4009-bff7-52de8ca09a00",
+          "runId": "3ff74c92-76b3-45c4-af5e-3e83c394a1de",
+          "stream": "system",
+          "text": "Failed to start: spawn codex ENOENT",
+          "timestampMs": 1773537541350
+        },
+        {
+          "id": "7bbb884f-7907-480b-9a93-d62054c380fc",
+          "runId": "3ff74c92-76b3-45c4-af5e-3e83c394a1de",
+          "stream": "system",
+          "text": "Process exited with code -4058",
+          "timestampMs": 1773537541351
+        }
+      ]
+    },
+    {
+      "summary": {
+        "id": "48ab4ffd-20c5-441d-b9df-84dfa2fe79e3",
+        "provider": "codex",
+        "mode": "task",
+        "cwd": "D:\\code\\cli-run-ui\\.tmp-real-cli-repo-57e7b6ad",
+        "prompt": "print one line for smoke test",
+        "command": [
+          "D:\\\\dev-env\\\\node\\\\node_global\\\\codex.cmd",
+          "exec",
+          "--skip-git-repo-check",
+          "print one line for smoke test"
+        ],
+        "createdAtMs": 1773504538764,
+        "startedAtMs": 1773504538764,
+        "status": "failed",
+        "error": "spawn EINVAL",
+        "endedAtMs": 1773504538768
+      },
+      "logs": [
+        {
+          "id": "9897c581-3705-4ccc-a4ed-96da1501b0db",
+          "runId": "48ab4ffd-20c5-441d-b9df-84dfa2fe79e3",
+          "stream": "system",
+          "text": "Failed to start: spawn EINVAL",
+          "timestampMs": 1773504538768
+        }
+      ]
+    },
+    {
+      "summary": {
+        "id": "b5366277-2bd3-4e9d-a12f-f3918f31057c",
+        "provider": "codex",
+        "mode": "task",
+        "cwd": "D:\\code\\cli-run-ui\\.tmp-real-cli-repo",
+        "prompt": "print one line for smoke test",
+        "command": [
+          "codex",
+          "exec",
+          "--skip-git-repo-check",
+          "print one line for smoke test"
+        ],
+        "createdAtMs": 1773504261816,
+        "startedAtMs": 1773504261816,
+        "status": "failed",
+        "error": "spawn codex ENOENT",
+        "endedAtMs": 1773504261827,
+        "exitCode": -4058
+      },
+      "logs": [
+        {
+          "id": "1e733e98-9deb-41e4-8a31-347580ced351",
+          "runId": "b5366277-2bd3-4e9d-a12f-f3918f31057c",
+          "stream": "system",
+          "text": "Started codex exec --skip-git-repo-check print one line for smoke test",
+          "timestampMs": 1773504261824
+        },
+        {
+          "id": "6c26e565-1d5c-4c06-904e-cffbb7e3f861",
+          "runId": "b5366277-2bd3-4e9d-a12f-f3918f31057c",
+          "stream": "system",
+          "text": "Failed to start: spawn codex ENOENT",
+          "timestampMs": 1773504261826
+        },
+        {
+          "id": "7e22c0ac-128d-478b-8240-2172d097a047",
+          "runId": "b5366277-2bd3-4e9d-a12f-f3918f31057c",
+          "stream": "system",
+          "text": "Process exited with code -4058",
+          "timestampMs": 1773504261828
+        }
+      ]
+    },
+    {
+      "summary": {
+        "id": "b3cb6ac2-31ba-4420-bc8f-f7b907ed2788",
+        "provider": "codex",
+        "mode": "task",
+        "cwd": "D:\\code\\cli-run-ui\\.tmp-smoke-repo-sse",
+        "prompt": "sse run",
+        "command": [
+          "codex",
+          "exec",
+          "--skip-git-repo-check",
+          "sse run"
+        ],
+        "createdAtMs": 1773504124794,
+        "startedAtMs": 1773504124794,
+        "status": "failed",
+        "error": "spawn codex ENOENT",
+        "endedAtMs": 1773504124797,
+        "exitCode": -4058
+      },
+      "logs": [
+        {
+          "id": "c98916e4-4761-4407-a4dc-64452e46167a",
+          "runId": "b3cb6ac2-31ba-4420-bc8f-f7b907ed2788",
+          "stream": "system",
+          "text": "Started codex exec --skip-git-repo-check sse run",
+          "timestampMs": 1773504124796
+        },
+        {
+          "id": "1b04da0c-e167-4265-9f53-176621014fd8",
+          "runId": "b3cb6ac2-31ba-4420-bc8f-f7b907ed2788",
+          "stream": "system",
+          "text": "Failed to start: spawn codex ENOENT",
+          "timestampMs": 1773504124797
+        },
+        {
+          "id": "689517cc-0eac-4ca2-aca4-655a8893fba0",
+          "runId": "b3cb6ac2-31ba-4420-bc8f-f7b907ed2788",
+          "stream": "system",
+          "text": "Process exited with code -4058",
+          "timestampMs": 1773504124798
+        }
+      ]
+    },
+    {
+      "summary": {
+        "id": "ba66efdc-e220-45e0-bab3-89d6cd65c367",
+        "provider": "codex",
+        "cwd": "D:\\code\\cli-run-ui\\.tmp-smoke-repo-ops",
+        "prompt": "ops task",
+        "command": [
+          "codex",
+          "exec",
+          "--skip-git-repo-check",
+          "ops task"
+        ],
+        "createdAtMs": 1773504036233,
+        "startedAtMs": 1773504036233,
+        "status": "failed",
+        "error": "spawn codex ENOENT",
+        "endedAtMs": 1773504036249,
+        "exitCode": -4058
+      },
+      "logs": [
+        {
+          "id": "2a6b32eb-c70b-45b7-a4e1-114c003c447a",
+          "runId": "ba66efdc-e220-45e0-bab3-89d6cd65c367",
+          "stream": "system",
+          "text": "Started codex exec --skip-git-repo-check ops task",
+          "timestampMs": 1773504036237
+        },
+        {
+          "id": "857d906c-e07b-4089-b75e-3ec31f820706",
+          "runId": "ba66efdc-e220-45e0-bab3-89d6cd65c367",
+          "stream": "system",
+          "text": "Failed to start: spawn codex ENOENT",
+          "timestampMs": 1773504036248
+        },
+        {
+          "id": "9801cecf-7ffd-47c3-b21f-a2bb3ea38a71",
+          "runId": "ba66efdc-e220-45e0-bab3-89d6cd65c367",
+          "stream": "system",
+          "text": "Process exited with code -4058",
+          "timestampMs": 1773504036249
+        }
+      ]
+    },
+    {
+      "summary": {
+        "id": "a097a0a5-1583-4dfb-a5ce-fc09913969a0",
+        "provider": "codex",
+        "mode": "task",
+        "cwd": "D:\\code\\cli-run-ui\\.tmp-smoke-repo-ops",
+        "prompt": "ops run",
+        "command": [
+          "codex",
+          "exec",
+          "--skip-git-repo-check",
+          "ops run"
+        ],
+        "createdAtMs": 1773504034709,
+        "startedAtMs": 1773504034709,
+        "status": "failed",
+        "error": "spawn codex ENOENT",
+        "endedAtMs": 1773504034716,
+        "exitCode": -4058
+      },
+      "logs": [
+        {
+          "id": "3e515c4f-f9cd-4f3a-a177-2b29819ce1a1",
+          "runId": "a097a0a5-1583-4dfb-a5ce-fc09913969a0",
+          "stream": "system",
+          "text": "Started codex exec --skip-git-repo-check ops run",
+          "timestampMs": 1773504034714
+        },
+        {
+          "id": "3a46d1e8-ffc0-4d05-8414-50d6d188d12a",
+          "runId": "a097a0a5-1583-4dfb-a5ce-fc09913969a0",
+          "stream": "system",
+          "text": "Failed to start: spawn codex ENOENT",
+          "timestampMs": 1773504034715
+        },
+        {
+          "id": "95b000e6-b43a-4d13-a972-0a4825562131",
+          "runId": "a097a0a5-1583-4dfb-a5ce-fc09913969a0",
+          "stream": "system",
+          "text": "Process exited with code -4058",
+          "timestampMs": 1773504034716
+        }
+      ]
+    },
+    {
+      "summary": {
+        "id": "c10d24cd-9c3c-4895-ae17-0f3b8d4e7035",
+        "provider": "codex",
+        "mode": "task",
+        "cwd": "D:\\code\\cli-run-ui\\.tmp-smoke-repo-ops",
+        "prompt": "ops run",
+        "command": [
+          "codex",
+          "exec",
+          "--skip-git-repo-check",
+          "ops run"
+        ],
+        "createdAtMs": 1773503964800,
+        "startedAtMs": 1773503964800,
+        "status": "failed",
+        "error": "spawn codex ENOENT",
+        "endedAtMs": 1773503964805,
+        "exitCode": -4058
+      },
+      "logs": [
+        {
+          "id": "54d8cb62-c937-43da-8073-ca256ee20fa4",
+          "runId": "c10d24cd-9c3c-4895-ae17-0f3b8d4e7035",
+          "stream": "system",
+          "text": "Started codex exec --skip-git-repo-check ops run",
+          "timestampMs": 1773503964804
+        },
+        {
+          "id": "fea52c50-1bab-41dc-b6f2-c7f16c0ff194",
+          "runId": "c10d24cd-9c3c-4895-ae17-0f3b8d4e7035",
+          "stream": "system",
+          "text": "Failed to start: spawn codex ENOENT",
+          "timestampMs": 1773503964805
+        },
+        {
+          "id": "6e314752-5746-4fe0-896f-3e33ee48c48b",
+          "runId": "c10d24cd-9c3c-4895-ae17-0f3b8d4e7035",
+          "stream": "system",
+          "text": "Process exited with code -4058",
+          "timestampMs": 1773503964805
+        }
+      ]
+    },
+    {
+      "summary": {
+        "id": "4660894d-7fa6-4573-8eb7-3b7da5c52cb3",
+        "provider": "codex",
+        "cwd": "D:\\code\\cli-run-ui\\.tmp-smoke-repo",
+        "prompt": "add a tiny change",
+        "command": [
+          "codex",
+          "exec",
+          "--skip-git-repo-check",
+          "add a tiny change"
+        ],
+        "createdAtMs": 1773503892988,
+        "startedAtMs": 1773503892988,
+        "status": "failed",
+        "error": "spawn codex ENOENT",
+        "endedAtMs": 1773503893026,
+        "exitCode": -4058
+      },
+      "logs": [
+        {
+          "id": "2b162919-8e3c-4e63-b1ad-4b9a0c05b50d",
+          "runId": "4660894d-7fa6-4573-8eb7-3b7da5c52cb3",
+          "stream": "system",
+          "text": "Started codex exec --skip-git-repo-check add a tiny change",
+          "timestampMs": 1773503892998
+        },
+        {
+          "id": "786e7705-48a1-4f59-b53b-1bca26afddbc",
+          "runId": "4660894d-7fa6-4573-8eb7-3b7da5c52cb3",
+          "stream": "system",
+          "text": "Failed to start: spawn codex ENOENT",
+          "timestampMs": 1773503893024
+        },
+        {
+          "id": "f5c25217-c462-4640-8160-3adf88e5a15d",
+          "runId": "4660894d-7fa6-4573-8eb7-3b7da5c52cb3",
+          "stream": "system",
+          "text": "Process exited with code -4058",
+          "timestampMs": 1773503893027
+        }
+      ]
+    },
+    {
+      "summary": {
+        "id": "cdd8546c-68c0-4881-975e-017f10ef59eb",
+        "provider": "codex",
+        "mode": "task",
+        "cwd": "D:\\code\\cli-run-ui\\.tmp-smoke-repo",
+        "prompt": "hello from smoke run",
+        "command": [
+          "codex",
+          "exec",
+          "--skip-git-repo-check",
+          "hello from smoke run"
+        ],
+        "createdAtMs": 1773503891784,
+        "startedAtMs": 1773503891784,
+        "status": "failed",
+        "error": "spawn codex ENOENT",
+        "endedAtMs": 1773503892148,
+        "exitCode": -4058
+      },
+      "logs": [
+        {
+          "id": "5fa861d1-24b6-485f-be16-fcd1f027893f",
+          "runId": "cdd8546c-68c0-4881-975e-017f10ef59eb",
+          "stream": "system",
+          "text": "Started codex exec --skip-git-repo-check hello from smoke run",
+          "timestampMs": 1773503891790
+        },
+        {
+          "id": "633e88fd-77e4-4f5e-8471-c56978ab25d9",
+          "runId": "cdd8546c-68c0-4881-975e-017f10ef59eb",
+          "stream": "system",
+          "text": "Failed to start: spawn codex ENOENT",
+          "timestampMs": 1773503891792
+        },
+        {
+          "id": "eaf6bed2-0b99-4fec-a80a-3c353794969c",
+          "runId": "cdd8546c-68c0-4881-975e-017f10ef59eb",
+          "stream": "system",
+          "text": "Process exited with code -4058",
+          "timestampMs": 1773503892148
+        }
+      ]
+    },
     {
       "summary": {
         "id": "a5a659ad-e003-4bc2-a377-1be9a924309b",
@@ -50,6 +735,1783 @@
   "terminals": [
     {
       "summary": {
+        "id": "0f0a1eb2-ec48-4d94-b16d-1975341957d5",
+        "provider": "codex",
+        "mode": "new",
+        "cwd": "D:\\code\\cli-run-ui",
+        "command": [
+          "codex"
+        ],
+        "createdAtMs": 1773538191906,
+        "startedAtMs": 1773538191906,
+        "cols": 80,
+        "rows": 24,
+        "status": "failed",
+        "endedAtMs": 1773538192118,
+        "exitCode": -1073741510
+      },
+      "outputs": [
+        {
+          "id": "4e0875c6-f200-49ac-98b1-5f4a0463e39b",
+          "terminalId": "0f0a1eb2-ec48-4d94-b16d-1975341957d5",
+          "data": "\r\n[cli-run-ui] Starting codex\r\n",
+          "timestampMs": 1773538192031
+        },
+        {
+          "id": "154ce74c-91c8-42dc-b316-841492abe53f",
+          "terminalId": "0f0a1eb2-ec48-4d94-b16d-1975341957d5",
+          "data": "\u001b[?9001h\u001b[?1004h",
+          "timestampMs": 1773538192045
+        },
+        {
+          "id": "c71813f9-f42f-4817-935f-ec4e8f95548d",
+          "terminalId": "0f0a1eb2-ec48-4d94-b16d-1975341957d5",
+          "data": "\u001b[?25l\u001b[2J\u001b[m\u001b[HMicrosoft Windows [版本 10.0.26200.8037]\u001b]0;C:\\WINDOWS\\system32\\cmd.exe\u0007\u001b[?25h",
+          "timestampMs": 1773538192048
+        },
+        {
+          "id": "dea41696-e870-4ab5-83d2-7d2a8469d0e4",
+          "terminalId": "0f0a1eb2-ec48-4d94-b16d-1975341957d5",
+          "data": "\u001b[?25l\u001b[?9001l\u001b[?1004l\r\n(c) Microsoft Corporation。保留所有权利。\u001b[4;1HD:\\code\\cli-run-ui>\u001b[?25h",
+          "timestampMs": 1773538192061
+        }
+      ]
+    },
+    {
+      "summary": {
+        "id": "b346c240-0fb7-4d23-a440-b1f9dd8ba9b6",
+        "provider": "codex",
+        "mode": "new",
+        "cwd": "D:\\code\\cli-run-ui",
+        "command": [
+          "codex"
+        ],
+        "createdAtMs": 1773537581916,
+        "startedAtMs": 1773537581916,
+        "cols": 100,
+        "rows": 28,
+        "status": "failed",
+        "endedAtMs": 1773537603809,
+        "exitCode": -1073741510
+      },
+      "outputs": [
+        {
+          "id": "9206e558-a82c-4b2b-8698-fe90cf3d98ca",
+          "terminalId": "b346c240-0fb7-4d23-a440-b1f9dd8ba9b6",
+          "data": "\r\n[cli-run-ui] Starting codex\r\n",
+          "timestampMs": 1773537582021
+        },
+        {
+          "id": "27db79cf-b550-4a3c-a64a-660e3d75d6f3",
+          "terminalId": "b346c240-0fb7-4d23-a440-b1f9dd8ba9b6",
+          "data": "\u001b[?9001h\u001b[?1004h",
+          "timestampMs": 1773537582033
+        },
+        {
+          "id": "7c1eae98-725f-4a8d-9f49-224cf78bd7fe",
+          "terminalId": "b346c240-0fb7-4d23-a440-b1f9dd8ba9b6",
+          "data": "\u001b[?25l\u001b[2J\u001b[m\u001b[HMicrosoft Windows [版本 10.0.26200.8037]\u001b]0;C:\\WINDOWS\\system32\\cmd.exe\u0007\u001b[?25h",
+          "timestampMs": 1773537582037
+        },
+        {
+          "id": "43185496-9ce4-46d5-bb63-a3aca95005de",
+          "terminalId": "b346c240-0fb7-4d23-a440-b1f9dd8ba9b6",
+          "data": "\u001b[?25l\r\n(c) Microsoft Corporation。保留所有权利。\u001b[4;1HD:\\code\\cli-run-ui>\u001b[?25h",
+          "timestampMs": 1773537582056
+        },
+        {
+          "id": "8eca5ac0-a18f-4aee-bb1c-ff783e620fc3",
+          "terminalId": "b346c240-0fb7-4d23-a440-b1f9dd8ba9b6",
+          "data": "codex\r\n",
+          "timestampMs": 1773537582104
+        },
+        {
+          "id": "e18144cb-2c5d-451a-b2ab-66268d230716",
+          "terminalId": "b346c240-0fb7-4d23-a440-b1f9dd8ba9b6",
+          "data": "\u001b]0;C:\\WINDOWS\\system32\\cmd.exe  - \"node\"   \"D:\\dev-env\\node\\node_global\\\\node_modules\\@openai\\codex\\bin\\codex.js\" \u0007",
+          "timestampMs": 1773537582119
+        },
+        {
+          "id": "0f4fc89a-afe2-4542-bce1-639fb720b1d0",
+          "terminalId": "b346c240-0fb7-4d23-a440-b1f9dd8ba9b6",
+          "data": "\u001b[?2004h",
+          "timestampMs": 1773537582181
+        },
+        {
+          "id": "c2f822bf-afd8-41cc-8bf0-8747ebe39b96",
+          "terminalId": "b346c240-0fb7-4d23-a440-b1f9dd8ba9b6",
+          "data": "\u001b[?2026h",
+          "timestampMs": 1773537582198
+        },
+        {
+          "id": "ea1c0275-57ae-4fef-85c5-b76d5751a5c5",
+          "terminalId": "b346c240-0fb7-4d23-a440-b1f9dd8ba9b6",
+          "data": "\u001b[?25l\u001b[1C\u001b[K\u001b[2m\r\n╭───────────────────────────────────────╮\u001b[22m\u001b[K\u001b[2m\r\n│ >_ \u001b[22m\u001b[1mOpenAI Codex\u001b[22m\u001b[2m (v0.114.0)            │\u001b[22m\u001b[K\u001b[2m\r\n│                                       │\u001b[22m\u001b[K\u001b[2m\r\n│ model:     \u001b[3mloading\u001b[23m   \u001b[38;5;6m\u001b[22m/model\u001b[m\u001b[2m to change │\u001b[22m\u001b[K\u001b[2m\r\n│ directory: \u001b[22mD:\\code\\cli-run-ui\u001b[2m         │\u001b[22m\u001b[K\u001b[2m\r\n╰───────────────────────────────────────╯\u001b[22m\u001b[K\u001b[12;2H\u001b[K\n\u001b[K\u001b[1m\r\n›\u001b[22m\u001b[2m\u001b[1CRun /review on my current changes\u001b[22m\u001b[K\u001b[15;2H\u001b[K\u001b[2m\u001b[16;3H? for shortcuts\u001b[44C100% context left\u001b[22m  \u001b[16;79H\u001b[?25h",
+          "timestampMs": 1773537582198
+        },
+        {
+          "id": "d909fbe1-21b4-44fd-8cc3-6c927772560b",
+          "terminalId": "b346c240-0fb7-4d23-a440-b1f9dd8ba9b6",
+          "data": "\u001b[?2026l",
+          "timestampMs": 1773537582199
+        },
+        {
+          "id": "a800f83e-9244-4ce2-bf90-b57731d2b8f2",
+          "terminalId": "b346c240-0fb7-4d23-a440-b1f9dd8ba9b6",
+          "data": "\u001b[?25l\u001b[14;3H\u001b[?25h",
+          "timestampMs": 1773537582213
+        },
+        {
+          "id": "73db0997-b18c-45bf-a123-7a9ffe2a30c7",
+          "terminalId": "b346c240-0fb7-4d23-a440-b1f9dd8ba9b6",
+          "data": "\u001b[?2026h\u001b[?25l\u001b[5;2H\u001b[K\u001b[6;42H\u001b[K\n\u001b[K\n\u001b[K\n\u001b[K\n\u001b[K\n\u001b[K\u001b[12;2H\u001b[K\n\u001b[K\u001b[14;36H\u001b[K\u001b[15;2H\u001b[K\u001b[2m\r\n  gpt-5.4 defa\u001b[1Clt · 100% left · D:\\code\\cli-run-ui\u001b[22m\u001b[K\u001b[?25h",
+          "timestampMs": 1773537583146
+        },
+        {
+          "id": "5635a845-8913-4a10-8910-361c539eddd4",
+          "terminalId": "b346c240-0fb7-4d23-a440-b1f9dd8ba9b6",
+          "data": "\u001b[?2026l",
+          "timestampMs": 1773537583146
+        },
+        {
+          "id": "5d52e1c3-9c17-4ca5-b1e6-f9ee9e08422f",
+          "terminalId": "b346c240-0fb7-4d23-a440-b1f9dd8ba9b6",
+          "data": "\u001b[?25l\u001b[14;3H\u001b[?25h",
+          "timestampMs": 1773537583165
+        },
+        {
+          "id": "7cbb92cc-3e2a-4ac4-8e4e-7eb0d4adecf3",
+          "terminalId": "b346c240-0fb7-4d23-a440-b1f9dd8ba9b6",
+          "data": "\u001b[?2026h\u001b[?25l\u001b[5;1H\u001b[?25h",
+          "timestampMs": 1773537583578
+        },
+        {
+          "id": "7b7f1ce9-7b39-40ca-be5b-e138110bbb32",
+          "terminalId": "b346c240-0fb7-4d23-a440-b1f9dd8ba9b6",
+          "data": "\u001b[?2026l",
+          "timestampMs": 1773537583579
+        },
+        {
+          "id": "615121c4-7e7e-44de-b40e-13a88a091b99",
+          "terminalId": "b346c240-0fb7-4d23-a440-b1f9dd8ba9b6",
+          "data": "\u001b[?25l\u001b[2m╭──────────────────────────────────────────────╮\u001b[22m\u001b[K\u001b[2m\r\n│ >_ \u001b[22m\u001b[1mOpenAI Codex\u001b[22m\u001b[2m (v0.114.0)                   │\u001b[22m\u001b[K\u001b[2m\r\n│                                              │\u001b[22m\u001b[K\u001b[2m\r\n│ model:     \u001b[22mgpt-5.4 medium\u001b[2m   \u001b[38;5;6m\u001b[22m/model\u001b[m\u001b[2m to change │\u001b[22m\u001b[K\u001b[2m\r\n│ directory: \u001b[22mD:\\code\\cli-run-ui\u001b[2m                │\u001b[22m\u001b[K\u001b[2m\r\n╰──────────────────────────────────────────────╯\u001b[22m\u001b[K\r\n\u001b[K\r\n  \u001b[1mTip:\u001b[22m Use /rename to rename your threads for easier thread resuming.\u001b[K\r\n\u001b[K\u001b[38;5;3m\r\n⚠ MCP client for `fetch` failed to start: MCP startup failed: program not found \u001b[m\r\n\u001b[K\r\n• \u001b[2mStarting MCP servers (1/2): sequential-thinking\u001b[22m \u001b[2m(0s • esc to interrupt)\u001b[22m       \r\n\u001b[K\r\n\u001b[K\u001b[1m\r\n›\u001b[22m \u001b[2mRun /review on my current changes\u001b[22m\u001b[K\r\n\u001b[K\u001b[2m\r\n  gpt-5.4 medium · 100% left · D:\\code\\cli-run-ui\u001b[22m\u001b[K\r\n\u001b[K\r\n\u001b[K\r\n\u001b[K\u001b[19;3H\u001b[?25h",
+          "timestampMs": 1773537583600
+        },
+        {
+          "id": "961b5831-042e-41ab-a9ec-cc3c764a8589",
+          "terminalId": "b346c240-0fb7-4d23-a440-b1f9dd8ba9b6",
+          "data": "\u001b[?2026h",
+          "timestampMs": 1773537583601
+        },
+        {
+          "id": "655f9cb0-4dbc-4486-8c80-2af66e7529f3",
+          "terminalId": "b346c240-0fb7-4d23-a440-b1f9dd8ba9b6",
+          "data": "\u001b[?2026l",
+          "timestampMs": 1773537583601
+        },
+        {
+          "id": "26ae13be-ea7b-4f69-9675-44054e30785a",
+          "terminalId": "b346c240-0fb7-4d23-a440-b1f9dd8ba9b6",
+          "data": "\u001b[?25l\u001b[15;2H\u001b[K\u001b[16;74H       \u001b[17;2H\u001b[K\n\u001b[K\u001b[19;36H\u001b[K\u001b[20;2H\u001b[K\u001b[21;50H\u001b[K\u001b[19;3H\u001b[?25h",
+          "timestampMs": 1773537583616
+        },
+        {
+          "id": "0b8c8a82-eb2a-4eee-a18a-d3e87a9d848b",
+          "terminalId": "b346c240-0fb7-4d23-a440-b1f9dd8ba9b6",
+          "data": "\u001b[?2026h",
+          "timestampMs": 1773537583648
+        },
+        {
+          "id": "d4647e98-e838-419c-bac7-4d1100195382",
+          "terminalId": "b346c240-0fb7-4d23-a440-b1f9dd8ba9b6",
+          "data": "\u001b[?25l\u001b[15;2H\u001b[K\u001b[16;74H       \u001b[17;2H\u001b[K\n\u001b[K\u001b[19;36H\u001b[K\u001b[20;2H\u001b[K\u001b[21;50H\u001b[K\u001b[?25h\u001b[?2026l",
+          "timestampMs": 1773537583648
+        },
+        {
+          "id": "837faa94-0ff4-4487-af39-fcd6bb7c8d0d",
+          "terminalId": "b346c240-0fb7-4d23-a440-b1f9dd8ba9b6",
+          "data": "\u001b[?25l\u001b[19;3H\u001b[?25h",
+          "timestampMs": 1773537583662
+        },
+        {
+          "id": "fae1ff0f-e7c4-42cf-923d-e2d9d59bab88",
+          "terminalId": "b346c240-0fb7-4d23-a440-b1f9dd8ba9b6",
+          "data": "\u001b[?2026h\u001b[?25l\u001b[15;2H\u001b[K\u001b[16;74H       \u001b[17;2H\u001b[K\n\u001b[K\u001b[19;36H\u001b[K\u001b[20;2H\u001b[K\u001b[21;50H\u001b[K\u001b[?25h",
+          "timestampMs": 1773537583688
+        },
+        {
+          "id": "6ec431f6-6770-4d9c-9bf9-223678ddb80b",
+          "terminalId": "b346c240-0fb7-4d23-a440-b1f9dd8ba9b6",
+          "data": "\u001b[?2026l",
+          "timestampMs": 1773537583688
+        },
+        {
+          "id": "a8e96000-738a-4fb5-bc4b-fa64840697a9",
+          "terminalId": "b346c240-0fb7-4d23-a440-b1f9dd8ba9b6",
+          "data": "\u001b[?25l\u001b[19;3H\u001b[?25h",
+          "timestampMs": 1773537583709
+        },
+        {
+          "id": "467ba61c-3020-4238-8e84-ebfb5f662de7",
+          "terminalId": "b346c240-0fb7-4d23-a440-b1f9dd8ba9b6",
+          "data": "\u001b[?2026h",
+          "timestampMs": 1773537583725
+        },
+        {
+          "id": "a9d8f2a8-8ef6-4390-be37-e64c35059529",
+          "terminalId": "b346c240-0fb7-4d23-a440-b1f9dd8ba9b6",
+          "data": "\u001b[?25l\u001b[15;2H\u001b[K\u001b[16;74H       \u001b[17;2H\u001b[K\n\u001b[K\u001b[19;36H\u001b[K\u001b[20;2H\u001b[K\u001b[21;50H\u001b[K\u001b[?25h\u001b[?2026l",
+          "timestampMs": 1773537583725
+        },
+        {
+          "id": "e2fe9577-f8af-4b9d-a967-93202ad55022",
+          "terminalId": "b346c240-0fb7-4d23-a440-b1f9dd8ba9b6",
+          "data": "\u001b[?25l\u001b[19;3H\u001b]0;npm\u0007\u001b[?25h",
+          "timestampMs": 1773537583740
+        },
+        {
+          "id": "0d97284d-1877-45eb-81e3-5a6baef9c629",
+          "terminalId": "b346c240-0fb7-4d23-a440-b1f9dd8ba9b6",
+          "data": "\u001b]0;npm exec @modelcontextprotocol/server-sequential-thinking\u0007",
+          "timestampMs": 1773537583771
+        },
+        {
+          "id": "876efe36-6ce9-4259-aa38-49e61d5c1b80",
+          "terminalId": "b346c240-0fb7-4d23-a440-b1f9dd8ba9b6",
+          "data": "\u001b[?2026h",
+          "timestampMs": 1773537583772
+        },
+        {
+          "id": "8ef8893c-ebf3-439e-8510-0b42a1531256",
+          "terminalId": "b346c240-0fb7-4d23-a440-b1f9dd8ba9b6",
+          "data": "\u001b[?2026l",
+          "timestampMs": 1773537583772
+        },
+        {
+          "id": "58c837ed-f3d2-428e-9a4c-1dc8e168d012",
+          "terminalId": "b346c240-0fb7-4d23-a440-b1f9dd8ba9b6",
+          "data": "\u001b[?25l\u001b[15;2H\u001b[K\u001b[16;74H       \u001b[17;2H\u001b[K\n\u001b[K\u001b[19;36H\u001b[K\u001b[20;2H\u001b[K\u001b[21;50H\u001b[K\u001b[19;3H\u001b[?25h",
+          "timestampMs": 1773537583786
+        },
+        {
+          "id": "e277d138-4817-4ef1-8ecb-d9c8e1ff96fb",
+          "terminalId": "b346c240-0fb7-4d23-a440-b1f9dd8ba9b6",
+          "data": "\u001b[?2026h",
+          "timestampMs": 1773537583819
+        },
+        {
+          "id": "1ffcd137-3bad-4179-8bae-15eae6fe515c",
+          "terminalId": "b346c240-0fb7-4d23-a440-b1f9dd8ba9b6",
+          "data": "\u001b[?25l\u001b[15;2H\u001b[K\u001b[1m\u001b[16;3HS\u001b[22mt\u001b[69C       \u001b[17;2H\u001b[K\n\u001b[K\u001b[19;36H\u001b[K\u001b[20;2H\u001b[K\u001b[21;50H\u001b[K\u001b[16;5H\u001b[?25h\u001b[?2026l",
+          "timestampMs": 1773537583819
+        },
+        {
+          "id": "a48f712b-954f-405f-993c-5bdf22f192e1",
+          "terminalId": "b346c240-0fb7-4d23-a440-b1f9dd8ba9b6",
+          "data": "\u001b[?25l\u001b[19;3H\u001b[?25h",
+          "timestampMs": 1773537583834
+        },
+        {
+          "id": "a1de2f46-f8c5-4e7c-8783-e09a5cfa41e0",
+          "terminalId": "b346c240-0fb7-4d23-a440-b1f9dd8ba9b6",
+          "data": "\u001b[?2026h",
+          "timestampMs": 1773537583866
+        },
+        {
+          "id": "d1144f86-8a13-461c-9ef1-0b426d820e1d",
+          "terminalId": "b346c240-0fb7-4d23-a440-b1f9dd8ba9b6",
+          "data": "\u001b[?25l\u001b[15;2H\u001b[K\u001b[1m\u001b[16;4Ht\u001b[22ma\u001b[68C       \u001b[17;2H\u001b[K\n\u001b[K\u001b[19;36H\u001b[K\u001b[20;2H\u001b[K\u001b[21;50H\u001b[K\u001b[16;6H\u001b[?25h\u001b[?2026l",
+          "timestampMs": 1773537583866
+        },
+        {
+          "id": "01651df7-b3f4-4c3f-a1d5-265d31444e8e",
+          "terminalId": "b346c240-0fb7-4d23-a440-b1f9dd8ba9b6",
+          "data": "\u001b[?25l\u001b[19;3H\u001b[?25h",
+          "timestampMs": 1773537583881
+        },
+        {
+          "id": "0fc68112-a747-41c8-8803-44023fe57936",
+          "terminalId": "b346c240-0fb7-4d23-a440-b1f9dd8ba9b6",
+          "data": "\u001b[?2026h\u001b[?25l\u001b[15;2H\u001b[K\u001b[1m\u001b[16;5Har\u001b[22mt\u001b[66C       \u001b[17;2H\u001b[K\n\u001b[K\u001b[19;36H\u001b[K\u001b[20;2H\u001b[K\u001b[21;50H\u001b[K\u001b[16;8H\u001b[?25h",
+          "timestampMs": 1773537583913
+        },
+        {
+          "id": "cf2f81ed-1d0f-4eb7-a625-5bfc1c8bf9f2",
+          "terminalId": "b346c240-0fb7-4d23-a440-b1f9dd8ba9b6",
+          "data": "\u001b[?2026l",
+          "timestampMs": 1773537583913
+        },
+        {
+          "id": "80c98de1-ef9a-41cf-badb-043a9d07733f",
+          "terminalId": "b346c240-0fb7-4d23-a440-b1f9dd8ba9b6",
+          "data": "\u001b[?25l\u001b[19;3H\u001b[?25h",
+          "timestampMs": 1773537583927
+        },
+        {
+          "id": "c2ba80db-5e47-4e74-a6b6-0b49dc96bf99",
+          "terminalId": "b346c240-0fb7-4d23-a440-b1f9dd8ba9b6",
+          "data": "\u001b[?2026h\u001b[?25l\u001b[15;2H\u001b[K\u001b[1m\u001b[16;7Ht\u001b[22mi\u001b[65C       \u001b[17;2H\u001b[K\n\u001b[K\u001b[19;36H\u001b[K\u001b[20;2H\u001b[K\u001b[21;50H\u001b[K\u001b[16;9H\u001b[?25h",
+          "timestampMs": 1773537583959
+        },
+        {
+          "id": "1a54eeb8-0b34-4277-9c8f-55cc83a9ff90",
+          "terminalId": "b346c240-0fb7-4d23-a440-b1f9dd8ba9b6",
+          "data": "\u001b[?2026l",
+          "timestampMs": 1773537583959
+        },
+        {
+          "id": "677ab394-fd84-419b-b6c8-64aeec946e10",
+          "terminalId": "b346c240-0fb7-4d23-a440-b1f9dd8ba9b6",
+          "data": "\u001b[?25l\u001b[19;3H\u001b[?25h",
+          "timestampMs": 1773537583974
+        },
+        {
+          "id": "789f3720-e038-4104-9a8b-457d08666c26",
+          "terminalId": "b346c240-0fb7-4d23-a440-b1f9dd8ba9b6",
+          "data": "\u001b[?2026h",
+          "timestampMs": 1773537584006
+        },
+        {
+          "id": "6a01fb4f-50b8-422d-a8cb-930bec595a8e",
+          "terminalId": "b346c240-0fb7-4d23-a440-b1f9dd8ba9b6",
+          "data": "\u001b[?25l\u001b[15;2H\u001b[K\u001b[2m\u001b[16;3HS\u001b[22mt\u001b[1m\u001b[3Cin\u001b[22mg\u001b[63C       \u001b[17;2H\u001b[K\n\u001b[K\u001b[19;36H\u001b[K\u001b[20;2H\u001b[K\u001b[21;50H\u001b[K\u001b[16;11H\u001b[?25h\u001b[?2026l",
+          "timestampMs": 1773537584006
+        },
+        {
+          "id": "55d9fc02-3efd-4ac9-8f17-f0cec8c90fb3",
+          "terminalId": "b346c240-0fb7-4d23-a440-b1f9dd8ba9b6",
+          "data": "\u001b[?25l\u001b[19;3H\u001b[?25h",
+          "timestampMs": 1773537584020
+        },
+        {
+          "id": "76024894-c981-43d4-a778-3590988f1e68",
+          "terminalId": "b346c240-0fb7-4d23-a440-b1f9dd8ba9b6",
+          "data": "\u001b[?2026h\u001b[?25l\u001b[15;2H\u001b[K\u001b[2m\u001b[16;4Ht\u001b[22ma\u001b[1m\u001b[4Cg\u001b[22m \u001b[62C       \u001b[17;2H\u001b[K\n\u001b[K\u001b[19;36H\u001b[K\u001b[20;2H\u001b[K\u001b[21;50H\u001b[K\u001b[16;12H\u001b[?25h",
+          "timestampMs": 1773537584052
+        },
+        {
+          "id": "dd727461-3309-43fa-b59e-abeb70d06978",
+          "terminalId": "b346c240-0fb7-4d23-a440-b1f9dd8ba9b6",
+          "data": "\u001b[?2026l",
+          "timestampMs": 1773537584052
+        },
+        {
+          "id": "6cddad70-ef17-48ce-babe-c3ed65eddf90",
+          "terminalId": "b346c240-0fb7-4d23-a440-b1f9dd8ba9b6",
+          "data": "\u001b[?25l\u001b[19;3H\u001b[?25h",
+          "timestampMs": 1773537584067
+        },
+        {
+          "id": "9991271c-cad7-4b6b-b199-0a304b01ec45",
+          "terminalId": "b346c240-0fb7-4d23-a440-b1f9dd8ba9b6",
+          "data": "\u001b[?2026h",
+          "timestampMs": 1773537584100
+        },
+        {
+          "id": "4e4e2d74-a9f4-457b-aee1-daf96def3977",
+          "terminalId": "b346c240-0fb7-4d23-a440-b1f9dd8ba9b6",
+          "data": "\u001b[?25l\u001b[15;2H\u001b[K\u001b[2m\u001b[16;5Har\u001b[22mt\u001b[1m\u001b[3C M\u001b[22mC\u001b[60C       \u001b[17;2H\u001b[K\n\u001b[K\u001b[19;36H\u001b[K\u001b[20;2H\u001b[K\u001b[21;50H\u001b[K\u001b[16;14H\u001b[?25h\u001b[?2026l",
+          "timestampMs": 1773537584100
+        },
+        {
+          "id": "d3e43f94-bcef-4097-8964-6ae325d53fd5",
+          "terminalId": "b346c240-0fb7-4d23-a440-b1f9dd8ba9b6",
+          "data": "\u001b[?25l\u001b[19;3H\u001b[?25h",
+          "timestampMs": 1773537584115
+        },
+        {
+          "id": "47f1626f-12cd-4cb4-afe2-0855c3bd8228",
+          "terminalId": "b346c240-0fb7-4d23-a440-b1f9dd8ba9b6",
+          "data": "\u001b[?2026h",
+          "timestampMs": 1773537584148
+        },
+        {
+          "id": "41c8c8cf-0b79-4abe-8b0d-1535e21e5bc1",
+          "terminalId": "b346c240-0fb7-4d23-a440-b1f9dd8ba9b6",
+          "data": "\u001b[?25l\u001b[15;2H\u001b[K\u001b[2m\u001b[16;7Hti\u001b[22mn\u001b[1m\u001b[3CCP\u001b[22m \u001b[58C       \u001b[17;2H\u001b[K\n\u001b[K\u001b[19;36H\u001b[K\u001b[20;2H\u001b[K\u001b[21;50H\u001b[K\u001b[16;16H\u001b[?25h\u001b[?2026l",
+          "timestampMs": 1773537584148
+        },
+        {
+          "id": "ba8096dc-824a-4852-924e-027f61921501",
+          "terminalId": "b346c240-0fb7-4d23-a440-b1f9dd8ba9b6",
+          "data": "\u001b[?25l\u001b[19;3H\u001b[?25h",
+          "timestampMs": 1773537584163
+        },
+        {
+          "id": "088fb9e1-4716-46b0-bbe1-52331c65184c",
+          "terminalId": "b346c240-0fb7-4d23-a440-b1f9dd8ba9b6",
+          "data": "\u001b[?2026h\u001b[?25l\u001b[15;2H\u001b[K\u001b[2m\r\n◦\u001b[7Cn\u001b[22mg\u001b[1m\u001b[4C \u001b[22ms\u001b[57C       \u001b[17;2H\u001b[K\n\u001b[K\u001b[19;36H\u001b[K\u001b[20;2H\u001b[K\u001b[21;50H\u001b[K\u001b[16;17H\u001b[?25h",
+          "timestampMs": 1773537584195
+        },
+        {
+          "id": "754cad6b-83f5-4c36-b56b-83a8f160769e",
+          "terminalId": "b346c240-0fb7-4d23-a440-b1f9dd8ba9b6",
+          "data": "\u001b[?2026l",
+          "timestampMs": 1773537584195
+        },
+        {
+          "id": "e3f3f86f-af1e-4641-b1e4-cdaed9567208",
+          "terminalId": "b346c240-0fb7-4d23-a440-b1f9dd8ba9b6",
+          "data": "\u001b[?25l\u001b[19;3H\u001b[?25h",
+          "timestampMs": 1773537584210
+        },
+        {
+          "id": "39ec09da-0794-4fa5-ab93-a27bd18bdd4e",
+          "terminalId": "b346c240-0fb7-4d23-a440-b1f9dd8ba9b6",
+          "data": "\u001b[?2026h",
+          "timestampMs": 1773537584242
+        },
+        {
+          "id": "7244aa37-af67-4687-a273-d472be1af913",
+          "terminalId": "b346c240-0fb7-4d23-a440-b1f9dd8ba9b6",
+          "data": "\u001b[?25l\u001b[15;2H\u001b[K\u001b[2m\u001b[16;10Hg \u001b[22mM\u001b[1m\u001b[3Cse\u001b[22mr\u001b[55C       \u001b[17;2H\u001b[K\n\u001b[K\u001b[19;36H\u001b[K\u001b[20;2H\u001b[K\u001b[21;50H\u001b[K\u001b[16;19H\u001b[?25h\u001b[?2026l",
+          "timestampMs": 1773537584242
+        },
+        {
+          "id": "c2d49348-a28d-4fb1-9b0f-772d60af0ad8",
+          "terminalId": "b346c240-0fb7-4d23-a440-b1f9dd8ba9b6",
+          "data": "\u001b[?25l\u001b[19;3H\u001b[?25h",
+          "timestampMs": 1773537584257
+        },
+        {
+          "id": "2959f118-ece8-4bd9-b32e-4729dc117962",
+          "terminalId": "b346c240-0fb7-4d23-a440-b1f9dd8ba9b6",
+          "data": "\u001b[?2026h\u001b[?25l\u001b[15;2H\u001b[K\u001b[2m\u001b[16;12HM\u001b[22mC\u001b[1m\u001b[4Cr\u001b[22mv\u001b[54C       \u001b[17;2H\u001b[K\n\u001b[K\u001b[19;36H\u001b[K\u001b[20;2H\u001b[K\u001b[21;50H\u001b[K\u001b[16;20H\u001b[?25h",
+          "timestampMs": 1773537584289
+        },
+        {
+          "id": "38414c38-9723-4a54-80d0-6fe72dc28d07",
+          "terminalId": "b346c240-0fb7-4d23-a440-b1f9dd8ba9b6",
+          "data": "\u001b[?2026l",
+          "timestampMs": 1773537584289
+        },
+        {
+          "id": "f3240d72-ff32-4743-b293-0af3947b626c",
+          "terminalId": "b346c240-0fb7-4d23-a440-b1f9dd8ba9b6",
+          "data": "\u001b[?25l\u001b[19;3H\u001b[?25h",
+          "timestampMs": 1773537584304
+        },
+        {
+          "id": "8cc968a0-5208-45f0-9e94-1d144541d42c",
+          "terminalId": "b346c240-0fb7-4d23-a440-b1f9dd8ba9b6",
+          "data": "\u001b[?2026h",
+          "timestampMs": 1773537584336
+        },
+        {
+          "id": "32b32a0f-8aeb-401a-be0f-41df1a26bd93",
+          "terminalId": "b346c240-0fb7-4d23-a440-b1f9dd8ba9b6",
+          "data": "\u001b[?25l\u001b[15;2H\u001b[K\u001b[2m\u001b[16;13HCP\u001b[22m \u001b[1m\u001b[3Cve\u001b[22mr\u001b[52C       \u001b[17;2H\u001b[K\n\u001b[K\u001b[19;36H\u001b[K\u001b[20;2H\u001b[K\u001b[21;50H\u001b[K\u001b[16;22H\u001b[?25h\u001b[?2026l",
+          "timestampMs": 1773537584336
+        },
+        {
+          "id": "ebad9d80-9ce6-48f0-87b4-7faab425c7ce",
+          "terminalId": "b346c240-0fb7-4d23-a440-b1f9dd8ba9b6",
+          "data": "\u001b[?25l\u001b[19;3H\u001b[?25h",
+          "timestampMs": 1773537584352
+        },
+        {
+          "id": "6f536c8e-ce38-4bfb-bc66-65ae6eed0fd5",
+          "terminalId": "b346c240-0fb7-4d23-a440-b1f9dd8ba9b6",
+          "data": "\u001b[?2026h",
+          "timestampMs": 1773537584383
+        },
+        {
+          "id": "9c490aa2-6739-49d7-900b-e09fe1eeb9c4",
+          "terminalId": "b346c240-0fb7-4d23-a440-b1f9dd8ba9b6",
+          "data": "\u001b[?25l\u001b[15;2H\u001b[K\u001b[2m\u001b[16;15H \u001b[22ms\u001b[1m\u001b[4Cr\u001b[22ms\u001b[51C       \u001b[17;2H\u001b[K\n\u001b[K\u001b[19;36H\u001b[K\u001b[20;2H\u001b[K\u001b[21;50H\u001b[K\u001b[16;23H\u001b[?25h",
+          "timestampMs": 1773537584383
+        },
+        {
+          "id": "58125042-9ed4-4239-8710-38076204c9b8",
+          "terminalId": "b346c240-0fb7-4d23-a440-b1f9dd8ba9b6",
+          "data": "\u001b[?2026l",
+          "timestampMs": 1773537584383
+        },
+        {
+          "id": "5eb6a947-75b0-4db7-8b94-ee727fcc13f5",
+          "terminalId": "b346c240-0fb7-4d23-a440-b1f9dd8ba9b6",
+          "data": "\u001b[?25l\u001b[19;3H\u001b[?25h",
+          "timestampMs": 1773537584397
+        },
+        {
+          "id": "53033685-c102-43e7-8f8d-743b9ff755d6",
+          "terminalId": "b346c240-0fb7-4d23-a440-b1f9dd8ba9b6",
+          "data": "\u001b[?2026h",
+          "timestampMs": 1773537584429
+        },
+        {
+          "id": "718d4a21-b342-4c89-a71f-a9c5b1360b7d",
+          "terminalId": "b346c240-0fb7-4d23-a440-b1f9dd8ba9b6",
+          "data": "\u001b[?25l\u001b[15;2H\u001b[K\u001b[2m\u001b[16;16Hse\u001b[22mr\u001b[1m\u001b[3Cs \u001b[22m(\u001b[49C       \u001b[17;2H\u001b[K\n\u001b[K\u001b[19;36H\u001b[K\u001b[20;2H\u001b[K\u001b[21;50H\u001b[K\u001b[16;25H\u001b[?25h\u001b[?2026l",
+          "timestampMs": 1773537584429
+        },
+        {
+          "id": "0e048106-7e5b-4630-a4ec-8d79597d935e",
+          "terminalId": "b346c240-0fb7-4d23-a440-b1f9dd8ba9b6",
+          "data": "\u001b[?25l\u001b[19;3H\u001b[?25h",
+          "timestampMs": 1773537584445
+        },
+        {
+          "id": "e70b5030-ac80-4f23-9935-6a2b535e1048",
+          "terminalId": "b346c240-0fb7-4d23-a440-b1f9dd8ba9b6",
+          "data": "\u001b[?2026h",
+          "timestampMs": 1773537584477
+        },
+        {
+          "id": "78efc149-db9a-464b-9fce-735625a28cd7",
+          "terminalId": "b346c240-0fb7-4d23-a440-b1f9dd8ba9b6",
+          "data": "\u001b[?25l\u001b[15;2H\u001b[K\u001b[2m\u001b[16;18Hrv\u001b[22me\u001b[1m\u001b[3C(1\u001b[22m/\u001b[47C       \u001b[17;2H\u001b[K\n\u001b[K\u001b[19;36H\u001b[K\u001b[20;2H\u001b[K\u001b[21;50H\u001b[K\u001b[16;27H\u001b[?25h\u001b[?2026l",
+          "timestampMs": 1773537584477
+        },
+        {
+          "id": "c47c0e8c-7dbf-428b-8b56-abaea57e82c2",
+          "terminalId": "b346c240-0fb7-4d23-a440-b1f9dd8ba9b6",
+          "data": "\u001b[?25l\u001b[19;3H\u001b[?25h",
+          "timestampMs": 1773537584492
+        },
+        {
+          "id": "59d19197-9611-4e1f-9ce5-b0c71c9520a0",
+          "terminalId": "b346c240-0fb7-4d23-a440-b1f9dd8ba9b6",
+          "data": "\u001b[?2026h",
+          "timestampMs": 1773537584524
+        },
+        {
+          "id": "0b962a37-014a-4171-a73e-a3abced7cbc4",
+          "terminalId": "b346c240-0fb7-4d23-a440-b1f9dd8ba9b6",
+          "data": "\u001b[?25l\u001b[15;2H\u001b[K\u001b[2m\u001b[16;20He\u001b[22mr\u001b[1m\u001b[4C/\u001b[22m2\u001b[46C       \u001b[17;2H\u001b[K\n\u001b[K\u001b[19;36H\u001b[K\u001b[20;2H\u001b[K\u001b[21;50H\u001b[K\u001b[16;28H\u001b[?25h",
+          "timestampMs": 1773537584524
+        },
+        {
+          "id": "ee7eb235-2790-48d9-a594-cae04fbb4a35",
+          "terminalId": "b346c240-0fb7-4d23-a440-b1f9dd8ba9b6",
+          "data": "\u001b[?2026l",
+          "timestampMs": 1773537584524
+        },
+        {
+          "id": "3686502f-a90f-48e6-bb54-182beaa9b218",
+          "terminalId": "b346c240-0fb7-4d23-a440-b1f9dd8ba9b6",
+          "data": "\u001b[?25l\u001b[19;3H\u001b[?25h",
+          "timestampMs": 1773537584539
+        },
+        {
+          "id": "4a3d4f43-91b8-4d9a-a6f5-5209b58b06fd",
+          "terminalId": "b346c240-0fb7-4d23-a440-b1f9dd8ba9b6",
+          "data": "\u001b[?2026h",
+          "timestampMs": 1773537584571
+        },
+        {
+          "id": "562ca63c-4381-4976-b693-3283df2faca7",
+          "terminalId": "b346c240-0fb7-4d23-a440-b1f9dd8ba9b6",
+          "data": "\u001b[?25l\u001b[15;2H\u001b[K\u001b[2m\u001b[16;21Hrs\u001b[22m \u001b[1m\u001b[3C2)\u001b[22m:\u001b[44C       \u001b[17;2H\u001b[K\n\u001b[K\u001b[19;36H\u001b[K\u001b[20;2H\u001b[K\u001b[21;50H\u001b[K\u001b[16;30H\u001b[?25h\u001b[?2026l",
+          "timestampMs": 1773537584571
+        },
+        {
+          "id": "a323b2bf-05de-4c23-81b1-3103025ed01f",
+          "terminalId": "b346c240-0fb7-4d23-a440-b1f9dd8ba9b6",
+          "data": "\u001b[?25l\u001b[19;3H\u001b[?25h",
+          "timestampMs": 1773537584586
+        },
+        {
+          "id": "1d618598-3c27-450b-992e-e2e415349fc3",
+          "terminalId": "b346c240-0fb7-4d23-a440-b1f9dd8ba9b6",
+          "data": "\u001b[?2026h\u001b[?25l\u001b[15;2H\u001b[K\u001b[2m\u001b[16;23H \u001b[22m(\u001b[1m\u001b[4C:\u001b[22m \u001b[2m\u001b[21C1\u001b[22m\u001b[21C       \u001b[17;2H\u001b[K\n\u001b[K\u001b[19;36H\u001b[K\u001b[20;2H\u001b[K\u001b[21;50H\u001b[K\u001b[16;53H\u001b[?25h\u001b[?2026l",
+          "timestampMs": 1773537584619
+        },
+        {
+          "id": "d14624f6-8c8f-4647-986a-e06d01ef3f02",
+          "terminalId": "b346c240-0fb7-4d23-a440-b1f9dd8ba9b6",
+          "data": "\u001b[?25l\u001b[19;3H\u001b]0;C:\\WINDOWS\\system32\\cmd.exe \u0007\u001b[?25h",
+          "timestampMs": 1773537584634
+        },
+        {
+          "id": "4dd2a603-3529-4763-bfe3-bf820c21ce12",
+          "terminalId": "b346c240-0fb7-4d23-a440-b1f9dd8ba9b6",
+          "data": "\u001b[?2026h",
+          "timestampMs": 1773537584666
+        },
+        {
+          "id": "81d80ce9-b011-49f1-ba36-aad3162e91e3",
+          "terminalId": "b346c240-0fb7-4d23-a440-b1f9dd8ba9b6",
+          "data": "\u001b[?25l\u001b[15;2H\u001b[K\u001b[2m\u001b[16;24H(1\u001b[22m/\u001b[1m\u001b[3C s\u001b[22me\u001b[41C       \u001b[17;2H\u001b[K\n\u001b[K\u001b[19;36H\u001b[K\u001b[20;2H\u001b[K\u001b[21;50H\u001b[K\u001b[16;33H\u001b[?25h\u001b[?2026l",
+          "timestampMs": 1773537584666
+        },
+        {
+          "id": "6ba3e861-05c8-4685-ab06-4fc02282f7c9",
+          "terminalId": "b346c240-0fb7-4d23-a440-b1f9dd8ba9b6",
+          "data": "\u001b[?25l\u001b[19;3H\u001b[?25h",
+          "timestampMs": 1773537584682
+        },
+        {
+          "id": "735625e6-c2d9-4a6c-9b5b-7b3341ea9a70",
+          "terminalId": "b346c240-0fb7-4d23-a440-b1f9dd8ba9b6",
+          "data": "\u001b[?2026h",
+          "timestampMs": 1773537584713
+        },
+        {
+          "id": "1840f78b-d7e0-4266-a63a-e0c34a37e28f",
+          "terminalId": "b346c240-0fb7-4d23-a440-b1f9dd8ba9b6",
+          "data": "\u001b[?25l\u001b[15;2H\u001b[K\u001b[2m\u001b[16;26H/\u001b[22m2\u001b[1m\u001b[4Ce\u001b[22mq\u001b[40C       \u001b[17;2H\u001b[K\n\u001b[K\u001b[19;36H\u001b[K\u001b[20;2H\u001b[K\u001b[21;50H\u001b[K\u001b[16;34H\u001b[?25h\u001b[?2026l",
+          "timestampMs": 1773537584713
+        },
+        {
+          "id": "7005c412-bd7b-4cff-b0ed-4e2b310fa464",
+          "terminalId": "b346c240-0fb7-4d23-a440-b1f9dd8ba9b6",
+          "data": "\u001b[?25l\u001b[19;3H\u001b[?25h",
+          "timestampMs": 1773537584729
+        },
+        {
+          "id": "9be0d80e-4a6a-458c-8963-bf1178db313e",
+          "terminalId": "b346c240-0fb7-4d23-a440-b1f9dd8ba9b6",
+          "data": "\u001b[?2026h",
+          "timestampMs": 1773537584759
+        },
+        {
+          "id": "47afe4c8-9336-46f2-bf98-613f2400d412",
+          "terminalId": "b346c240-0fb7-4d23-a440-b1f9dd8ba9b6",
+          "data": "\u001b[?25l\u001b[15;2H\u001b[K\u001b[2m\u001b[16;27H2)\u001b[22m:\u001b[1m\u001b[3Cqu\u001b[22me\u001b[38C       \u001b[17;2H\u001b[K\n\u001b[K\u001b[19;36H\u001b[K\u001b[20;2H\u001b[K\u001b[21;50H\u001b[K\u001b[16;36H\u001b[?25h",
+          "timestampMs": 1773537584759
+        },
+        {
+          "id": "b3b9cf15-076c-4d2f-a4fd-7ffb6fcf02f1",
+          "terminalId": "b346c240-0fb7-4d23-a440-b1f9dd8ba9b6",
+          "data": "\u001b[?2026l",
+          "timestampMs": 1773537584760
+        },
+        {
+          "id": "c4e4e069-c991-40c4-b9c3-5c8fedab21f8",
+          "terminalId": "b346c240-0fb7-4d23-a440-b1f9dd8ba9b6",
+          "data": "\u001b[?25l\u001b[19;3H\u001b[?25h",
+          "timestampMs": 1773537584774
+        },
+        {
+          "id": "372c9394-2af5-414f-9438-4a4f5c6b4195",
+          "terminalId": "b346c240-0fb7-4d23-a440-b1f9dd8ba9b6",
+          "data": "\u001b[?2026h\u001b[?25l\u001b[15;1H\u001b[?25h",
+          "timestampMs": 1773537584791
+        },
+        {
+          "id": "b26acdf5-f649-468c-a422-f675cd7463ae",
+          "terminalId": "b346c240-0fb7-4d23-a440-b1f9dd8ba9b6",
+          "data": "\u001b[?2026l",
+          "timestampMs": 1773537584791
+        },
+        {
+          "id": "29a3088f-ec3f-4110-a7b5-ec358cf7f297",
+          "terminalId": "b346c240-0fb7-4d23-a440-b1f9dd8ba9b6",
+          "data": "\u001b[?25l\u001b[K\u001b[38;5;3m\r\n⚠ MCP startup incomplete (failed: fetch)\u001b[K\u001b[m\r\n\u001b[K\r\n\u001b[K\u001b[1m\r\n›\u001b[22m \u001b[2mRun /review on my current changes\u001b[22m\u001b[K\r\n\u001b[K\u001b[2m\r\n  gpt-5.4 medium · 100% left · D:\\code\\cli-run-ui\u001b[22m\u001b[K\r\n\u001b[K\r\n\u001b[K\r\n\u001b[K\u001b[19;3H\u001b[?25h",
+          "timestampMs": 1773537584805
+        },
+        {
+          "id": "73bbedf0-e265-410d-9665-77c99e8c1943",
+          "terminalId": "b346c240-0fb7-4d23-a440-b1f9dd8ba9b6",
+          "data": "\u001b[?25l\u001b[8;28;100t\u001b[HMicrosoft Windows [版本 10.0.26200.8037]\u001b[K\r\n(c) Microsoft Corporation。保留所有权利。\u001b[K\r\n\u001b[K\r\nD:\\code\\cli-run-ui>codex\u001b[K\u001b[2m\r\n╭──────────────────────────────────────────────╮\u001b[22m\u001b[K\u001b[2m\r\n│ >_ \u001b[22m\u001b[1mOpenAI Codex\u001b[22m\u001b[2m (v0.114.0)                   │\u001b[22m\u001b[K\u001b[2m\r\n│                                              │\u001b[22m\u001b[K\u001b[2m\r\n│ model:     \u001b[22mgpt-5.4 medium\u001b[2m   \u001b[38;5;6m\u001b[22m/model\u001b[m\u001b[2m to change │\u001b[22m\u001b[K\u001b[2m\r\n│ directory: \u001b[22mD:\\code\\cli-run-ui\u001b[2m                │\u001b[22m\u001b[K\u001b[2m\r\n╰──────────────────────────────────────────────╯\u001b[22m\u001b[K\r\n\u001b[K\r\n  \u001b[1mTip:\u001b[22m Use /rename to rename your threads for easier thread resuming.\u001b[K\r\n\u001b[K\u001b[38;5;3m\r\n⚠ MCP client for `fetch` failed to start: MCP startup failed: program not found\u001b[K\u001b[m\r\n\u001b[K\u001b[38;5;3m\r\n⚠ MCP startup incomplete (failed: fetch)\u001b[K\u001b[m\r\n\u001b[K\r\n\u001b[K\u001b[1m\r\n›\u001b[22m \u001b[2mRun /review on my current changes\u001b[22m\u001b[K\r\n\u001b[K\u001b[2m\r\n  gpt-5.4 medium · 100% left · D:\\code\\cli-run-ui\u001b[22m\u001b[K\r\n\u001b[K\r\n\u001b[K\r\n\u001b[K\r\n\u001b[K\r\n\u001b[K\r\n\u001b[K\r\n\u001b[K\u001b[19;3H\u001b[?25h",
+          "timestampMs": 1773537603683
+        },
+        {
+          "id": "080e9704-1e6e-42dc-a32f-1ac3a0ad3845",
+          "terminalId": "b346c240-0fb7-4d23-a440-b1f9dd8ba9b6",
+          "data": "\u001b[?9001l\u001b[?1004l",
+          "timestampMs": 1773537603743
+        }
+      ]
+    },
+    {
+      "summary": {
+        "id": "a0b29288-ecdb-46b8-8e0d-da56a1f73be6",
+        "provider": "codex",
+        "mode": "new",
+        "cwd": "D:\\code\\cli-run-ui",
+        "command": [
+          "codex"
+        ],
+        "createdAtMs": 1773537541431,
+        "startedAtMs": 1773537541431,
+        "cols": 80,
+        "rows": 24,
+        "status": "closed",
+        "endedAtMs": 1773537749410
+      },
+      "outputs": [
+        {
+          "id": "3504192d-d5b8-41e7-b0e8-29e3c60257eb",
+          "terminalId": "a0b29288-ecdb-46b8-8e0d-da56a1f73be6",
+          "data": "\r\n[cli-run-ui] Starting codex\r\n",
+          "timestampMs": 1773537541551
+        },
+        {
+          "id": "67b6f1b1-b88d-4294-8ad3-32adfe21086a",
+          "terminalId": "a0b29288-ecdb-46b8-8e0d-da56a1f73be6",
+          "data": "\u001b[?9001h\u001b[?1004h",
+          "timestampMs": 1773537541566
+        },
+        {
+          "id": "c0ca754e-775b-4be5-a7f8-029159a45d1a",
+          "terminalId": "a0b29288-ecdb-46b8-8e0d-da56a1f73be6",
+          "data": "\u001b[?25l\u001b[2J\u001b[m\u001b[HMicrosoft Windows [版本 10.0.26200.8037]\u001b]0;C:\\WINDOWS\\system32\\cmd.exe\u0007\u001b[?25h",
+          "timestampMs": 1773537541570
+        },
+        {
+          "id": "5dbafa5d-a059-4bc4-9718-a9f3c74af48a",
+          "terminalId": "a0b29288-ecdb-46b8-8e0d-da56a1f73be6",
+          "data": "\u001b[?25l\r\n(c) Microsoft Corporation。保留所有权利。\u001b[4;1HD:\\code\\cli-run-ui>\u001b[?25h",
+          "timestampMs": 1773537541587
+        },
+        {
+          "id": "95328587-6cdf-41a0-bf12-6cbc04022c9e",
+          "terminalId": "a0b29288-ecdb-46b8-8e0d-da56a1f73be6",
+          "data": "codex\r\n",
+          "timestampMs": 1773537541634
+        },
+        {
+          "id": "956d945f-c2d7-4d5b-a35b-dd502817a2c3",
+          "terminalId": "a0b29288-ecdb-46b8-8e0d-da56a1f73be6",
+          "data": "\u001b]0;C:\\WINDOWS\\system32\\cmd.exe  - \"node\"   \"D:\\dev-env\\node\\node_global\\\\node_modules\\@openai\\codex\\bin\\codex.js\" \u0007",
+          "timestampMs": 1773537541651
+        },
+        {
+          "id": "f1d849ba-3df2-4b7e-b28c-422935a5f2fa",
+          "terminalId": "a0b29288-ecdb-46b8-8e0d-da56a1f73be6",
+          "data": "\u001b[?2004h",
+          "timestampMs": 1773537542173
+        },
+        {
+          "id": "c2b654b0-53d6-4b92-91a3-d5938dc73c4d",
+          "terminalId": "a0b29288-ecdb-46b8-8e0d-da56a1f73be6",
+          "data": "\u001b[?2026h",
+          "timestampMs": 1773537542242
+        },
+        {
+          "id": "03f96c93-bc4f-41d2-8c56-da615a891ab4",
+          "terminalId": "a0b29288-ecdb-46b8-8e0d-da56a1f73be6",
+          "data": "\u001b[?25l\u001b[1C\u001b[K\u001b[2m\r\n╭───────────────────────────────────────╮\u001b[22m\u001b[K\u001b[2m\r\n│ >_ \u001b[22m\u001b[1mOpenAI Codex\u001b[22m\u001b[2m (v0.114.0)            │\u001b[22m\u001b[K\u001b[2m\r\n│                                       │\u001b[22m\u001b[K\u001b[2m\r\n│ model:     \u001b[3mloading\u001b[23m   \u001b[38;5;6m\u001b[22m/model\u001b[m\u001b[2m to change │\u001b[22m\u001b[K\u001b[2m\r\n│ directory: \u001b[22mD:\\code\\cli-run-ui\u001b[2m         │\u001b[22m\u001b[K\u001b[2m\r\n╰───────────────────────────────────────╯\u001b[22m\u001b[K\u001b[12;2H\u001b[K\n\u001b[K\u001b[1m\r\n›\u001b[22m\u001b[2m\u001b[1CFind and fix a bug in @filename\u001b[22m\u001b[K\u001b[15;2H\u001b[K\u001b[2m\u001b[16;3H? for shortcuts\u001b[44C100% context left\u001b[22m  \u001b[16;79H\u001b[?25h\u001b[?2026l",
+          "timestampMs": 1773537542242
+        },
+        {
+          "id": "017f8d39-8e00-4655-833c-936ab36ffde2",
+          "terminalId": "a0b29288-ecdb-46b8-8e0d-da56a1f73be6",
+          "data": "\u001b[?25l\u001b[14;3H\u001b[?25h",
+          "timestampMs": 1773537542250
+        },
+        {
+          "id": "b520da5e-7516-4fe9-bdad-2af65a65eda9",
+          "terminalId": "a0b29288-ecdb-46b8-8e0d-da56a1f73be6",
+          "data": "\u001b[?2026h\u001b[?25l\u001b[5;1H\u001b[?25h",
+          "timestampMs": 1773537547352
+        },
+        {
+          "id": "f0e5d4a5-1c45-4736-9b63-e740a2320ae7",
+          "terminalId": "a0b29288-ecdb-46b8-8e0d-da56a1f73be6",
+          "data": "\u001b[?2026l",
+          "timestampMs": 1773537547352
+        },
+        {
+          "id": "198326b6-6850-4962-89c5-967b62ba9771",
+          "terminalId": "a0b29288-ecdb-46b8-8e0d-da56a1f73be6",
+          "data": "\u001b[?25l\u001b[K\r\n\u001b[K\u001b[1m\r\n›\u001b[22m \u001b[2mFind and fix a bug in @filename\u001b[22m\u001b[K\r\n\u001b[K\u001b[2m\r\n  gpt-5.4 medium · 100% left · D:\\code\\cli-run-ui\u001b[22m\u001b[K\r\n\u001b[K\r\n\u001b[K\r\n\u001b[K\r\n\u001b[K\r\n\u001b[K\r\n\u001b[K\r\n\u001b[K\r\n\u001b[K\r\n\u001b[K\r\n\u001b[K\r\n\u001b[K\r\n\u001b[K\r\n\u001b[K\r\n\u001b[K\r\n\u001b[K\u001b[7;3H\u001b[?25h",
+          "timestampMs": 1773537547369
+        },
+        {
+          "id": "51540ed6-50b1-4489-ad9a-1451dc537b29",
+          "terminalId": "a0b29288-ecdb-46b8-8e0d-da56a1f73be6",
+          "data": "\u001b[?2026h",
+          "timestampMs": 1773537547370
+        },
+        {
+          "id": "cb603925-fbc5-4b9a-8c5f-5841be309d5b",
+          "terminalId": "a0b29288-ecdb-46b8-8e0d-da56a1f73be6",
+          "data": "\u001b[?2026l",
+          "timestampMs": 1773537547373
+        },
+        {
+          "id": "2619c879-53de-4eb8-9da8-56b049f163d0",
+          "terminalId": "a0b29288-ecdb-46b8-8e0d-da56a1f73be6",
+          "data": "\u001b[?25l\u001b[2m\u001b[5;1H╭──────────────────────────────────────────────╮\u001b[22m\u001b[K\u001b[2m\r\n│ >_ \u001b[22m\u001b[1mOpenAI Codex\u001b[22m\u001b[2m (v0.114.0)                   │\u001b[22m\u001b[K\u001b[2m\r\n│                                              │\u001b[22m\u001b[K\u001b[2m\r\n│ model:     \u001b[22mgpt-5.4 medium\u001b[2m   \u001b[38;5;6m\u001b[22m/model\u001b[m\u001b[2m to change │\u001b[22m\u001b[K\u001b[2m\r\n│ directory: \u001b[22mD:\\code\\cli-run-ui\u001b[2m                │\u001b[22m\u001b[K\u001b[2m\r\n╰──────────────────────────────────────────────╯\u001b[22m\u001b[K\r\n\u001b[K\r\n  \u001b[1mTip:\u001b[22m You can run any shell command from Codex using \u001b[38;5;6m! \u001b[m(e.g. \u001b[38;5;6m!ls\u001b[m)\u001b[K\r\n\u001b[K\u001b[38;5;3m\r\n⚠ MCP client for `fetch` failed to start: MCP startup failed: program not found \u001b[m\r\n\u001b[K\r\n• \u001b[2mStarting MCP servers (1/2): sequential-thinking\u001b[22m \u001b[2m(0s • esc to interrupt)\u001b[22m       \r\n\u001b[K\r\n\u001b[K\u001b[1m\r\n›\u001b[22m \u001b[2mFind and fix a bug in @filename\u001b[22m\u001b[K\r\n\u001b[K\u001b[2m\r\n  gpt-5.4 medium · 100% left · D:\\code\\cli-run-ui\u001b[22m\u001b[K\r\n\u001b[K\r\n\u001b[K\r\n\u001b[K\u001b[19;3H\u001b[?25h",
+          "timestampMs": 1773537547385
+        },
+        {
+          "id": "8d9135af-7a09-459c-b8b0-b0647553f370",
+          "terminalId": "a0b29288-ecdb-46b8-8e0d-da56a1f73be6",
+          "data": "\u001b[?2026h",
+          "timestampMs": 1773537547416
+        },
+        {
+          "id": "3e08b10b-3f21-4fc0-b310-1b98015da914",
+          "terminalId": "a0b29288-ecdb-46b8-8e0d-da56a1f73be6",
+          "data": "\u001b[?25l\u001b[15;2H\u001b[K\u001b[16;74H       \u001b[17;2H\u001b[K\n\u001b[K\u001b[19;34H\u001b[K\u001b[20;2H\u001b[K\u001b[21;50H\u001b[K\u001b[?25h\u001b[?2026l",
+          "timestampMs": 1773537547417
+        },
+        {
+          "id": "e7c81672-9826-4844-af2c-307e923685c1",
+          "terminalId": "a0b29288-ecdb-46b8-8e0d-da56a1f73be6",
+          "data": "\u001b[?25l\u001b[19;3H\u001b[?25h",
+          "timestampMs": 1773537547432
+        },
+        {
+          "id": "cb084a8d-2567-473d-959c-98c730144f71",
+          "terminalId": "a0b29288-ecdb-46b8-8e0d-da56a1f73be6",
+          "data": "\u001b[?2026h\u001b[?25l\u001b[15;2H\u001b[K\u001b[16;74H       \u001b[17;2H\u001b[K\n\u001b[K\u001b[19;34H\u001b[K\u001b[20;2H\u001b[K\u001b[21;50H\u001b[K\u001b[?25h",
+          "timestampMs": 1773537547464
+        },
+        {
+          "id": "2d9e0d8d-d878-410e-8142-73c5033489f0",
+          "terminalId": "a0b29288-ecdb-46b8-8e0d-da56a1f73be6",
+          "data": "\u001b[?2026l",
+          "timestampMs": 1773537547464
+        },
+        {
+          "id": "974fd1e1-0732-4955-a4da-32a890459ad6",
+          "terminalId": "a0b29288-ecdb-46b8-8e0d-da56a1f73be6",
+          "data": "\u001b[?25l\u001b[19;3H\u001b[?25h",
+          "timestampMs": 1773537547479
+        },
+        {
+          "id": "99695062-be67-4217-9dec-f40d72ee8578",
+          "terminalId": "a0b29288-ecdb-46b8-8e0d-da56a1f73be6",
+          "data": "\u001b]0;npm\u0007",
+          "timestampMs": 1773537547495
+        },
+        {
+          "id": "086d0d1d-309a-4f34-8534-12394c05d022",
+          "terminalId": "a0b29288-ecdb-46b8-8e0d-da56a1f73be6",
+          "data": "\u001b[?2026h",
+          "timestampMs": 1773537547511
+        },
+        {
+          "id": "fb1ad7f1-3210-4cbe-9133-bc28c9b9d36a",
+          "terminalId": "a0b29288-ecdb-46b8-8e0d-da56a1f73be6",
+          "data": "\u001b[?25l\u001b[15;2H\u001b[K\u001b[16;74H       \u001b[17;2H\u001b[K\n\u001b[K\u001b[19;34H\u001b[K\u001b[20;2H\u001b[K\u001b[21;50H\u001b[K\u001b[?25h\u001b[?2026l",
+          "timestampMs": 1773537547512
+        },
+        {
+          "id": "8489e183-de83-4aa9-a2b1-58c3816bdbe9",
+          "terminalId": "a0b29288-ecdb-46b8-8e0d-da56a1f73be6",
+          "data": "\u001b[?25l\u001b[19;3H\u001b[?25h",
+          "timestampMs": 1773537547526
+        },
+        {
+          "id": "6da2c4a5-a20f-41dd-90df-d1e7b9a0dbd2",
+          "terminalId": "a0b29288-ecdb-46b8-8e0d-da56a1f73be6",
+          "data": "\u001b]0;npm exec @modelcontextprotocol/server-sequential-thinking\u0007",
+          "timestampMs": 1773537547542
+        },
+        {
+          "id": "4ca8b1c9-65e2-4b31-b231-61af9b6ad47e",
+          "terminalId": "a0b29288-ecdb-46b8-8e0d-da56a1f73be6",
+          "data": "\u001b[?2026h",
+          "timestampMs": 1773537547559
+        },
+        {
+          "id": "d16d5032-2ef5-4637-9e1c-513e5b79af48",
+          "terminalId": "a0b29288-ecdb-46b8-8e0d-da56a1f73be6",
+          "data": "\u001b[?25l\u001b[15;2H\u001b[K\u001b[16;74H       \u001b[17;2H\u001b[K\n\u001b[K\u001b[19;34H\u001b[K\u001b[20;2H\u001b[K\u001b[21;50H\u001b[K\u001b[?25h\u001b[?2026l",
+          "timestampMs": 1773537547559
+        },
+        {
+          "id": "18ceae17-068c-4a54-8e38-4a9c9a53b1e0",
+          "terminalId": "a0b29288-ecdb-46b8-8e0d-da56a1f73be6",
+          "data": "\u001b[?25l\u001b[19;3H\u001b[?25h",
+          "timestampMs": 1773537547574
+        },
+        {
+          "id": "1f34e767-530e-4e03-8632-189066f8d0c4",
+          "terminalId": "a0b29288-ecdb-46b8-8e0d-da56a1f73be6",
+          "data": "\u001b[?2026h",
+          "timestampMs": 1773537547603
+        },
+        {
+          "id": "4d7b10b7-4372-48b2-839b-939c7963f77f",
+          "terminalId": "a0b29288-ecdb-46b8-8e0d-da56a1f73be6",
+          "data": "\u001b[?25l\u001b[15;2H\u001b[K\u001b[16;3HS\u001b[70C       \u001b[17;2H\u001b[K\n\u001b[K\u001b[19;34H\u001b[K\u001b[20;2H\u001b[K\u001b[21;50H\u001b[K\u001b[16;4H\u001b[?25h",
+          "timestampMs": 1773537547603
+        },
+        {
+          "id": "cf816b5b-dfc4-41ee-b051-5974ef8dff33",
+          "terminalId": "a0b29288-ecdb-46b8-8e0d-da56a1f73be6",
+          "data": "\u001b[?2026l",
+          "timestampMs": 1773537547603
+        },
+        {
+          "id": "59221373-76a7-4383-8e54-862a7a483d34",
+          "terminalId": "a0b29288-ecdb-46b8-8e0d-da56a1f73be6",
+          "data": "\u001b[?25l\u001b[19;3H\u001b[?25h",
+          "timestampMs": 1773537547621
+        },
+        {
+          "id": "9d6102cc-9040-4121-9913-fd3d703e3608",
+          "terminalId": "a0b29288-ecdb-46b8-8e0d-da56a1f73be6",
+          "data": "\u001b[?2026h",
+          "timestampMs": 1773537547638
+        },
+        {
+          "id": "e0c6da32-260a-46bf-9580-6a42329f5c85",
+          "terminalId": "a0b29288-ecdb-46b8-8e0d-da56a1f73be6",
+          "data": "\u001b[?25l\u001b[15;2H\u001b[K\u001b[1m\u001b[16;3HS\u001b[22mt\u001b[69C       \u001b[17;2H\u001b[K\n\u001b[K\u001b[19;34H\u001b[K\u001b[20;2H\u001b[K\u001b[21;50H\u001b[K\u001b[16;5H\u001b[?25h\u001b[?2026l",
+          "timestampMs": 1773537547638
+        },
+        {
+          "id": "5549f17d-5954-419b-a4f5-02a32a27563b",
+          "terminalId": "a0b29288-ecdb-46b8-8e0d-da56a1f73be6",
+          "data": "\u001b[?25l\u001b[19;3H\u001b[?25h",
+          "timestampMs": 1773537547652
+        },
+        {
+          "id": "42c0bb5c-00e5-4aba-a9b3-8dacfdc2aaa9",
+          "terminalId": "a0b29288-ecdb-46b8-8e0d-da56a1f73be6",
+          "data": "\u001b[?2026h",
+          "timestampMs": 1773537547684
+        },
+        {
+          "id": "da4f5b17-2020-446a-a652-aaa810282cbf",
+          "terminalId": "a0b29288-ecdb-46b8-8e0d-da56a1f73be6",
+          "data": "\u001b[?25l\u001b[15;2H\u001b[K\u001b[1m\u001b[16;4Hta\u001b[22mr\u001b[67C       \u001b[17;2H\u001b[K\n\u001b[K\u001b[19;34H\u001b[K\u001b[20;2H\u001b[K\u001b[21;50H\u001b[K\u001b[16;7H\u001b[?25h\u001b[?2026l",
+          "timestampMs": 1773537547685
+        },
+        {
+          "id": "c9085403-fd7c-4194-8aa0-26a13ac91745",
+          "terminalId": "a0b29288-ecdb-46b8-8e0d-da56a1f73be6",
+          "data": "\u001b[?25l\u001b[19;3H\u001b[?25h",
+          "timestampMs": 1773537547699
+        },
+        {
+          "id": "f7248448-863c-46a2-8ffb-39c2c77460d7",
+          "terminalId": "a0b29288-ecdb-46b8-8e0d-da56a1f73be6",
+          "data": "\u001b[?2026h",
+          "timestampMs": 1773537547732
+        },
+        {
+          "id": "45dd5187-8bf0-4263-873c-1a942d1561b2",
+          "terminalId": "a0b29288-ecdb-46b8-8e0d-da56a1f73be6",
+          "data": "\u001b[?25l\u001b[15;2H\u001b[K\u001b[1m\u001b[16;6Hrt\u001b[22mi\u001b[65C       \u001b[17;2H\u001b[K\n\u001b[K\u001b[19;34H\u001b[K\u001b[20;2H\u001b[K\u001b[21;50H\u001b[K\u001b[16;9H\u001b[?25h",
+          "timestampMs": 1773537547732
+        },
+        {
+          "id": "1204310d-6c15-4375-b41e-ae3233d417ea",
+          "terminalId": "a0b29288-ecdb-46b8-8e0d-da56a1f73be6",
+          "data": "\u001b[?2026l",
+          "timestampMs": 1773537547732
+        },
+        {
+          "id": "e1864415-9bf4-4708-acb8-d06e9fe33623",
+          "terminalId": "a0b29288-ecdb-46b8-8e0d-da56a1f73be6",
+          "data": "\u001b[?25l\u001b[19;3H\u001b[?25h",
+          "timestampMs": 1773537547746
+        },
+        {
+          "id": "0aab8a89-9771-4d83-8882-4e907097e3b0",
+          "terminalId": "a0b29288-ecdb-46b8-8e0d-da56a1f73be6",
+          "data": "\u001b[?2026h",
+          "timestampMs": 1773537547778
+        },
+        {
+          "id": "2b784eb1-b14b-4173-876b-c2e11b7eb29e",
+          "terminalId": "a0b29288-ecdb-46b8-8e0d-da56a1f73be6",
+          "data": "\u001b[?25l\u001b[15;2H\u001b[K\u001b[16;3HS\u001b[1m\u001b[4Ci\u001b[22mn\u001b[64C       \u001b[17;2H\u001b[K\n\u001b[K\u001b[19;34H\u001b[K\u001b[20;2H\u001b[K\u001b[21;50H\u001b[K\u001b[16;10H\u001b[?25h\u001b[?2026l",
+          "timestampMs": 1773537547778
+        },
+        {
+          "id": "f925fb3b-2565-4f95-96f5-359c9da422ac",
+          "terminalId": "a0b29288-ecdb-46b8-8e0d-da56a1f73be6",
+          "data": "\u001b[?25l\u001b[19;3H\u001b[?25h",
+          "timestampMs": 1773537547793
+        },
+        {
+          "id": "5f707a4e-dd68-4d2e-b4ea-f795200bae00",
+          "terminalId": "a0b29288-ecdb-46b8-8e0d-da56a1f73be6",
+          "data": "\u001b[?2026h",
+          "timestampMs": 1773537547825
+        },
+        {
+          "id": "5eb16c59-849d-4a8d-8935-bbac25b89fc9",
+          "terminalId": "a0b29288-ecdb-46b8-8e0d-da56a1f73be6",
+          "data": "\u001b[?25l\u001b[15;2H\u001b[K\u001b[2m\u001b[16;3HSt\u001b[22ma\u001b[1m\u001b[3Cng\u001b[22m \u001b[62C       \u001b[17;2H\u001b[K\n\u001b[K\u001b[19;34H\u001b[K\u001b[20;2H\u001b[K\u001b[21;50H\u001b[K\u001b[16;12H\u001b[?25h\u001b[?2026l",
+          "timestampMs": 1773537547825
+        },
+        {
+          "id": "01a9b105-14f9-48f4-b813-4777ffb2c9d8",
+          "terminalId": "a0b29288-ecdb-46b8-8e0d-da56a1f73be6",
+          "data": "\u001b[?25l\u001b[19;3H\u001b[?25h",
+          "timestampMs": 1773537547840
+        },
+        {
+          "id": "494d7bed-ad97-49c8-a84d-c74f4b0fc501",
+          "terminalId": "a0b29288-ecdb-46b8-8e0d-da56a1f73be6",
+          "data": "\u001b[?2026h",
+          "timestampMs": 1773537547871
+        },
+        {
+          "id": "76a2ba98-5527-4127-9def-f0218d6dc56e",
+          "terminalId": "a0b29288-ecdb-46b8-8e0d-da56a1f73be6",
+          "data": "\u001b[?25l\u001b[15;2H\u001b[K\u001b[2m\u001b[16;5Ha\u001b[22mr\u001b[1m\u001b[4C \u001b[22mM\u001b[61C       \u001b[17;2H\u001b[K\n\u001b[K\u001b[19;34H\u001b[K\u001b[20;2H\u001b[K\u001b[21;50H\u001b[K\u001b[16;13H\u001b[?25h",
+          "timestampMs": 1773537547871
+        },
+        {
+          "id": "c527f33b-a187-4a90-9c95-d02d7f24b0b0",
+          "terminalId": "a0b29288-ecdb-46b8-8e0d-da56a1f73be6",
+          "data": "\u001b[?2026l",
+          "timestampMs": 1773537547872
+        },
+        {
+          "id": "3b764374-9f49-432f-8380-b65c7f0c9a10",
+          "terminalId": "a0b29288-ecdb-46b8-8e0d-da56a1f73be6",
+          "data": "\u001b[?25l\u001b[19;3H\u001b[?25h",
+          "timestampMs": 1773537547886
+        },
+        {
+          "id": "da8a83b9-5e85-41ce-8a2d-d29d2beb8ed1",
+          "terminalId": "a0b29288-ecdb-46b8-8e0d-da56a1f73be6",
+          "data": "\u001b[?2026h",
+          "timestampMs": 1773537547918
+        },
+        {
+          "id": "ba5ea5f2-7453-4616-8b6a-b1d3ec5eca7d",
+          "terminalId": "a0b29288-ecdb-46b8-8e0d-da56a1f73be6",
+          "data": "\u001b[?25l\u001b[15;2H\u001b[K\u001b[2m\u001b[16;6Hrt\u001b[22mi\u001b[1m\u001b[3CMC\u001b[22mP\u001b[59C       \u001b[17;2H\u001b[K\n\u001b[K\u001b[19;34H\u001b[K\u001b[20;2H\u001b[K\u001b[21;50H\u001b[K\u001b[16;15H\u001b[?25h",
+          "timestampMs": 1773537547918
+        },
+        {
+          "id": "ed8c6f2d-9050-41be-a517-dec287f78f25",
+          "terminalId": "a0b29288-ecdb-46b8-8e0d-da56a1f73be6",
+          "data": "\u001b[?2026l",
+          "timestampMs": 1773537547918
+        },
+        {
+          "id": "0e7e2887-ee7a-43a0-a8b9-07268e070c81",
+          "terminalId": "a0b29288-ecdb-46b8-8e0d-da56a1f73be6",
+          "data": "\u001b[?25l\u001b[19;3H\u001b[?25h",
+          "timestampMs": 1773537547933
+        },
+        {
+          "id": "4dcd797a-c1ae-42fe-9f87-7d3c3fa93d5f",
+          "terminalId": "a0b29288-ecdb-46b8-8e0d-da56a1f73be6",
+          "data": "\u001b[?2026h",
+          "timestampMs": 1773537547963
+        },
+        {
+          "id": "be1c4c31-9339-4882-894c-9a89ff4273ed",
+          "terminalId": "a0b29288-ecdb-46b8-8e0d-da56a1f73be6",
+          "data": "\u001b[?25l\u001b[15;2H\u001b[K\u001b[2m\r\n◦\u001b[6Ci\u001b[22mn\u001b[1m\u001b[4CP\u001b[22m \u001b[58C       \u001b[17;2H\u001b[K\n\u001b[K\u001b[19;34H\u001b[K\u001b[20;2H\u001b[K\u001b[21;50H\u001b[K\u001b[16;16H\u001b[?25h\u001b[?2026l",
+          "timestampMs": 1773537547963
+        },
+        {
+          "id": "a19ed0e4-083d-47a6-85a1-6763c70dc2f1",
+          "terminalId": "a0b29288-ecdb-46b8-8e0d-da56a1f73be6",
+          "data": "\u001b[?25l\u001b[19;3H\u001b[?25h",
+          "timestampMs": 1773537547979
+        },
+        {
+          "id": "5a62c7b4-3d4c-408f-afce-19ce501baedc",
+          "terminalId": "a0b29288-ecdb-46b8-8e0d-da56a1f73be6",
+          "data": "\u001b[?2026h",
+          "timestampMs": 1773537548010
+        },
+        {
+          "id": "3b7d534e-2181-4fec-82f4-bfeb7bd5047f",
+          "terminalId": "a0b29288-ecdb-46b8-8e0d-da56a1f73be6",
+          "data": "\u001b[?25l\u001b[15;2H\u001b[K\u001b[2m\u001b[16;9Hng\u001b[22m \u001b[1m\u001b[3C s\u001b[22me\u001b[56C       \u001b[17;2H\u001b[K\n\u001b[K\u001b[19;34H\u001b[K\u001b[20;2H\u001b[K\u001b[21;50H\u001b[K\u001b[16;18H\u001b[?25h\u001b[?2026l",
+          "timestampMs": 1773537548010
+        },
+        {
+          "id": "685016e0-f855-4544-a5c2-663f469c3b81",
+          "terminalId": "a0b29288-ecdb-46b8-8e0d-da56a1f73be6",
+          "data": "\u001b[?25l\u001b[19;3H\u001b[?25h",
+          "timestampMs": 1773537548026
+        },
+        {
+          "id": "46957838-b8d6-42d7-99a8-1f583b339e63",
+          "terminalId": "a0b29288-ecdb-46b8-8e0d-da56a1f73be6",
+          "data": "\u001b[?2026h",
+          "timestampMs": 1773537548059
+        },
+        {
+          "id": "4000305f-6793-4572-8e4c-2d9d6e7fe1f5",
+          "terminalId": "a0b29288-ecdb-46b8-8e0d-da56a1f73be6",
+          "data": "\u001b[?25l\u001b[15;2H\u001b[K\u001b[2m\u001b[16;11H \u001b[22mM\u001b[1m\u001b[4Ce\u001b[22mr\u001b[55C       \u001b[17;2H\u001b[K\n\u001b[K\u001b[19;34H\u001b[K\u001b[20;2H\u001b[K\u001b[21;50H\u001b[K\u001b[16;19H\u001b[?25h",
+          "timestampMs": 1773537548059
+        },
+        {
+          "id": "825aec91-9813-4e94-a70a-9781c348524a",
+          "terminalId": "a0b29288-ecdb-46b8-8e0d-da56a1f73be6",
+          "data": "\u001b[?2026l",
+          "timestampMs": 1773537548059
+        },
+        {
+          "id": "84677254-bcaa-4c46-9896-fc898fd6f77b",
+          "terminalId": "a0b29288-ecdb-46b8-8e0d-da56a1f73be6",
+          "data": "\u001b[?25l\u001b[19;3H\u001b[?25h",
+          "timestampMs": 1773537548074
+        },
+        {
+          "id": "e3ec7d40-c766-4a9f-9ab7-805b599ffef6",
+          "terminalId": "a0b29288-ecdb-46b8-8e0d-da56a1f73be6",
+          "data": "\u001b[?2026h",
+          "timestampMs": 1773537548106
+        },
+        {
+          "id": "3f69591c-09c1-4205-b3fe-ef9b673125c3",
+          "terminalId": "a0b29288-ecdb-46b8-8e0d-da56a1f73be6",
+          "data": "\u001b[?25l\u001b[15;2H\u001b[K\u001b[2m\u001b[16;12HMC\u001b[22mP\u001b[1m\u001b[3Crv\u001b[22me\u001b[53C       \u001b[17;2H\u001b[K\n\u001b[K\u001b[19;34H\u001b[K\u001b[20;2H\u001b[K\u001b[21;50H\u001b[K\u001b[16;21H\u001b[?25h\u001b[?2026l",
+          "timestampMs": 1773537548106
+        },
+        {
+          "id": "0a77e7c5-9155-44b3-95a8-24d42c794a0f",
+          "terminalId": "a0b29288-ecdb-46b8-8e0d-da56a1f73be6",
+          "data": "\u001b[?25l\u001b[19;3H\u001b[?25h",
+          "timestampMs": 1773537548121
+        },
+        {
+          "id": "3761e738-b5ed-4f44-8eda-285bdd127e3e",
+          "terminalId": "a0b29288-ecdb-46b8-8e0d-da56a1f73be6",
+          "data": "\u001b[?2026h",
+          "timestampMs": 1773537548154
+        },
+        {
+          "id": "56f0961c-74bc-49f7-a991-7c47c4d05a1a",
+          "terminalId": "a0b29288-ecdb-46b8-8e0d-da56a1f73be6",
+          "data": "\u001b[?25l\u001b[15;2H\u001b[K\u001b[2m\u001b[16;14HP \u001b[22ms\u001b[1m\u001b[3Cer\u001b[22ms\u001b[51C       \u001b[17;2H\u001b[K\n\u001b[K\u001b[19;34H\u001b[K\u001b[20;2H\u001b[K\u001b[21;50H\u001b[K\u001b[16;23H\u001b[?25h",
+          "timestampMs": 1773537548154
+        },
+        {
+          "id": "134c22a8-f733-4638-85eb-30743d684ff1",
+          "terminalId": "a0b29288-ecdb-46b8-8e0d-da56a1f73be6",
+          "data": "\u001b[?2026l",
+          "timestampMs": 1773537548154
+        },
+        {
+          "id": "589c13e2-995b-4dc4-b88f-efa1ffc14ab1",
+          "terminalId": "a0b29288-ecdb-46b8-8e0d-da56a1f73be6",
+          "data": "\u001b[?25l\u001b[19;3H\u001b[?25h",
+          "timestampMs": 1773537548169
+        },
+        {
+          "id": "0d0d31a3-e74e-45bb-b05a-eb1e54238855",
+          "terminalId": "a0b29288-ecdb-46b8-8e0d-da56a1f73be6",
+          "data": "\u001b[?2026h",
+          "timestampMs": 1773537548201
+        },
+        {
+          "id": "3d1ef6d2-04e7-4f7b-ab2f-7b966a41ef00",
+          "terminalId": "a0b29288-ecdb-46b8-8e0d-da56a1f73be6",
+          "data": "\u001b[?25l\u001b[15;2H\u001b[K\u001b[2m\u001b[16;16Hs\u001b[22me\u001b[1m\u001b[4Cs\u001b[22m \u001b[50C       \u001b[17;2H\u001b[K\n\u001b[K\u001b[19;34H\u001b[K\u001b[20;2H\u001b[K\u001b[21;50H\u001b[K\u001b[16;24H\u001b[?25h\u001b[?2026l",
+          "timestampMs": 1773537548201
+        },
+        {
+          "id": "c4d93501-7253-4660-a221-cdb6bd50edee",
+          "terminalId": "a0b29288-ecdb-46b8-8e0d-da56a1f73be6",
+          "data": "\u001b[?25l\u001b[19;3H\u001b[?25h",
+          "timestampMs": 1773537548216
+        },
+        {
+          "id": "5474d7df-6bfe-46f0-a6f4-070c826b332d",
+          "terminalId": "a0b29288-ecdb-46b8-8e0d-da56a1f73be6",
+          "data": "\u001b[?2026h",
+          "timestampMs": 1773537548248
+        },
+        {
+          "id": "02df5cb7-d938-42ad-80b6-223154a0c7e7",
+          "terminalId": "a0b29288-ecdb-46b8-8e0d-da56a1f73be6",
+          "data": "\u001b[?25l\u001b[15;2H\u001b[K\u001b[2m\u001b[16;17Her\u001b[22mv\u001b[1m\u001b[3C (\u001b[22m1\u001b[48C       \u001b[17;2H\u001b[K\n\u001b[K\u001b[19;34H\u001b[K\u001b[20;2H\u001b[K\u001b[21;50H\u001b[K\u001b[16;26H\u001b[?25h\u001b[?2026l",
+          "timestampMs": 1773537548248
+        },
+        {
+          "id": "3f087bb1-4959-4a98-bcc6-2baa5f6fd959",
+          "terminalId": "a0b29288-ecdb-46b8-8e0d-da56a1f73be6",
+          "data": "\u001b[?25l\u001b[19;3H\u001b[?25h",
+          "timestampMs": 1773537548263
+        },
+        {
+          "id": "8bab520a-a684-4bda-b482-d871508204d8",
+          "terminalId": "a0b29288-ecdb-46b8-8e0d-da56a1f73be6",
+          "data": "\u001b[?2026h",
+          "timestampMs": 1773537548294
+        },
+        {
+          "id": "55b0d7c6-1dcf-491f-a39b-af48d7c940ab",
+          "terminalId": "a0b29288-ecdb-46b8-8e0d-da56a1f73be6",
+          "data": "\u001b[?25l\u001b[15;2H\u001b[K\u001b[2m\u001b[16;19Hv\u001b[22me\u001b[1m\u001b[4C1\u001b[22m/\u001b[47C       \u001b[17;2H\u001b[K\n\u001b[K\u001b[19;34H\u001b[K\u001b[20;2H\u001b[K\u001b[21;50H\u001b[K\u001b[16;27H\u001b[?25h\u001b[?2026l",
+          "timestampMs": 1773537548295
+        },
+        {
+          "id": "8dd00ccb-2cbc-4bdb-8a75-f630a8b6427e",
+          "terminalId": "a0b29288-ecdb-46b8-8e0d-da56a1f73be6",
+          "data": "\u001b[?25l\u001b[19;3H\u001b[?25h",
+          "timestampMs": 1773537548309
+        },
+        {
+          "id": "0ff0b18e-e204-4a30-bcef-ca51ba7b1771",
+          "terminalId": "a0b29288-ecdb-46b8-8e0d-da56a1f73be6",
+          "data": "\u001b[?2026h",
+          "timestampMs": 1773537548342
+        },
+        {
+          "id": "d2d3da7c-2a21-40f2-87da-a85958bf8bc2",
+          "terminalId": "a0b29288-ecdb-46b8-8e0d-da56a1f73be6",
+          "data": "\u001b[?25l\u001b[15;2H\u001b[K\u001b[2m\u001b[16;20Her\u001b[22ms\u001b[1m\u001b[3C/2\u001b[22m)\u001b[45C       \u001b[17;2H\u001b[K\n\u001b[K\u001b[19;34H\u001b[K\u001b[20;2H\u001b[K\u001b[21;50H\u001b[K\u001b[16;29H\u001b[?25h\u001b[?2026l",
+          "timestampMs": 1773537548342
+        },
+        {
+          "id": "3ef5fd3f-47b6-470a-8204-3f05f7d17d72",
+          "terminalId": "a0b29288-ecdb-46b8-8e0d-da56a1f73be6",
+          "data": "\u001b[?25l\u001b[19;3H\u001b[?25h",
+          "timestampMs": 1773537548356
+        },
+        {
+          "id": "18c36e03-88a0-4707-9868-da79a01c9977",
+          "terminalId": "a0b29288-ecdb-46b8-8e0d-da56a1f73be6",
+          "data": "\u001b[?2026h\u001b[?25l\u001b[15;2H\u001b[K\u001b[2m\u001b[16;22Hs \u001b[22m(\u001b[1m\u001b[3C):\u001b[22m \u001b[2m\u001b[21C1\u001b[22m\u001b[21C       \u001b[17;2H\u001b[K\n\u001b[K\u001b[19;34H\u001b[K\u001b[20;2H\u001b[K\u001b[21;50H\u001b[K\u001b[16;53H\u001b[?25h",
+          "timestampMs": 1773537548389
+        },
+        {
+          "id": "b1e5c6d1-2efd-479f-afe8-e22ecebcd648",
+          "terminalId": "a0b29288-ecdb-46b8-8e0d-da56a1f73be6",
+          "data": "\u001b[?2026l",
+          "timestampMs": 1773537548389
+        },
+        {
+          "id": "31d3f792-b2c3-4c0c-98c2-a39b595f9a54",
+          "terminalId": "a0b29288-ecdb-46b8-8e0d-da56a1f73be6",
+          "data": "\u001b[?25l\u001b[19;3H\u001b[?25h",
+          "timestampMs": 1773537548404
+        },
+        {
+          "id": "6cd4d798-fd3b-4167-95ad-6197c2a39e59",
+          "terminalId": "a0b29288-ecdb-46b8-8e0d-da56a1f73be6",
+          "data": "\u001b[?2026h",
+          "timestampMs": 1773537548436
+        },
+        {
+          "id": "8416ec8e-1304-4ffb-b1a7-287d69a88e46",
+          "terminalId": "a0b29288-ecdb-46b8-8e0d-da56a1f73be6",
+          "data": "\u001b[?25l\u001b[15;2H\u001b[K\u001b[2m\u001b[16;24H(\u001b[22m1\u001b[1m\u001b[4C \u001b[22ms\u001b[42C       \u001b[17;2H\u001b[K\n\u001b[K\u001b[19;34H\u001b[K\u001b[20;2H\u001b[K\u001b[21;50H\u001b[K\u001b[16;32H\u001b[?25h",
+          "timestampMs": 1773537548436
+        },
+        {
+          "id": "e0f6529e-f318-47d4-be2f-84c550af76eb",
+          "terminalId": "a0b29288-ecdb-46b8-8e0d-da56a1f73be6",
+          "data": "\u001b[?2026l",
+          "timestampMs": 1773537548436
+        },
+        {
+          "id": "9c90079c-7c50-4737-a82a-6a13513fe38f",
+          "terminalId": "a0b29288-ecdb-46b8-8e0d-da56a1f73be6",
+          "data": "\u001b[?25l\u001b[19;3H\u001b[?25h",
+          "timestampMs": 1773537548451
+        },
+        {
+          "id": "53dcc19b-bf9d-4006-8955-582053bc4a2a",
+          "terminalId": "a0b29288-ecdb-46b8-8e0d-da56a1f73be6",
+          "data": "\u001b[?2026h",
+          "timestampMs": 1773537548483
+        },
+        {
+          "id": "ec4e0c1e-0740-49f1-ba2a-0172cfb9bb71",
+          "terminalId": "a0b29288-ecdb-46b8-8e0d-da56a1f73be6",
+          "data": "\u001b[?25l\u001b[15;2H\u001b[K\u001b[2m\u001b[16;25H1/\u001b[22m2\u001b[1m\u001b[3Cse\u001b[22mq\u001b[40C       \u001b[17;2H\u001b[K\n\u001b[K\u001b[19;34H\u001b[K\u001b[20;2H\u001b[K\u001b[21;50H\u001b[K\u001b[16;34H\u001b[?25h\u001b[?2026l",
+          "timestampMs": 1773537548483
+        },
+        {
+          "id": "a9333791-e3c8-4004-b16f-a1f7077f42b8",
+          "terminalId": "a0b29288-ecdb-46b8-8e0d-da56a1f73be6",
+          "data": "\u001b[?25l\u001b[19;3H\u001b[?25h",
+          "timestampMs": 1773537548498
+        },
+        {
+          "id": "40981206-694b-47ef-8548-08592e026304",
+          "terminalId": "a0b29288-ecdb-46b8-8e0d-da56a1f73be6",
+          "data": "\u001b[?2026h",
+          "timestampMs": 1773537548531
+        },
+        {
+          "id": "32eeda26-1713-4520-94b1-72650a2c7f48",
+          "terminalId": "a0b29288-ecdb-46b8-8e0d-da56a1f73be6",
+          "data": "\u001b[?25l\u001b[15;2H\u001b[K\u001b[2m\u001b[16;27H2\u001b[22m)\u001b[1m\u001b[4Cq\u001b[22mu\u001b[39C       \u001b[17;2H\u001b[K\n\u001b[K\u001b[19;34H\u001b[K\u001b[20;2H\u001b[K\u001b[21;50H\u001b[K\u001b[16;35H\u001b[?25h\u001b[?2026l",
+          "timestampMs": 1773537548531
+        },
+        {
+          "id": "86803726-1c18-456a-ac6f-6405c90143c7",
+          "terminalId": "a0b29288-ecdb-46b8-8e0d-da56a1f73be6",
+          "data": "\u001b[?25l\u001b[19;3H\u001b[?25h",
+          "timestampMs": 1773537548546
+        },
+        {
+          "id": "8aeb0524-dc46-47eb-a826-26913dbeb79f",
+          "terminalId": "a0b29288-ecdb-46b8-8e0d-da56a1f73be6",
+          "data": "\u001b[?2026h",
+          "timestampMs": 1773537548579
+        },
+        {
+          "id": "76d94f3a-60a1-482b-8665-c0a7f471d8e1",
+          "terminalId": "a0b29288-ecdb-46b8-8e0d-da56a1f73be6",
+          "data": "\u001b[?25l\u001b[15;2H\u001b[K\r\n•\u001b[2m\u001b[26C):\u001b[22m \u001b[1m\u001b[3Cue\u001b[22mn\u001b[37C       \u001b[17;2H\u001b[K\n\u001b[K\u001b[19;34H\u001b[K\u001b[20;2H\u001b[K\u001b[21;50H\u001b[K\u001b[16;37H\u001b[?25h",
+          "timestampMs": 1773537548579
+        },
+        {
+          "id": "a6a9884e-adbf-4f3c-b660-0e7e5d32bebd",
+          "terminalId": "a0b29288-ecdb-46b8-8e0d-da56a1f73be6",
+          "data": "\u001b[?2026l",
+          "timestampMs": 1773537548579
+        },
+        {
+          "id": "19009dd8-6b35-4c5d-a78e-7aeda6d57ec6",
+          "terminalId": "a0b29288-ecdb-46b8-8e0d-da56a1f73be6",
+          "data": "\u001b[?25l\u001b[19;3H\u001b]0;C:\\WINDOWS\\system32\\cmd.exe \u0007\u001b[?25h",
+          "timestampMs": 1773537548594
+        },
+        {
+          "id": "8bd8695e-e6c3-463e-8d70-b86a4134e75e",
+          "terminalId": "a0b29288-ecdb-46b8-8e0d-da56a1f73be6",
+          "data": "\u001b[?2026h",
+          "timestampMs": 1773537548627
+        },
+        {
+          "id": "fc8cb308-1082-4ecb-b076-3611dd91cd10",
+          "terminalId": "a0b29288-ecdb-46b8-8e0d-da56a1f73be6",
+          "data": "\u001b[?25l\u001b[15;2H\u001b[K\u001b[2m\u001b[16;30H s\u001b[22me\u001b[1m\u001b[3Cnt\u001b[22mi\u001b[35C       \u001b[17;2H\u001b[K\n\u001b[K\u001b[19;34H\u001b[K\u001b[20;2H\u001b[K\u001b[21;50H\u001b[K\u001b[16;39H\u001b[?25h",
+          "timestampMs": 1773537548627
+        },
+        {
+          "id": "aed05bf5-158f-45e0-af09-a2b157bfd078",
+          "terminalId": "a0b29288-ecdb-46b8-8e0d-da56a1f73be6",
+          "data": "\u001b[?2026l",
+          "timestampMs": 1773537548627
+        },
+        {
+          "id": "d303dbbb-fc8f-4ab7-9490-6e038794ed43",
+          "terminalId": "a0b29288-ecdb-46b8-8e0d-da56a1f73be6",
+          "data": "\u001b[?25l\u001b[19;3H\u001b[?25h",
+          "timestampMs": 1773537548641
+        },
+        {
+          "id": "afb62876-fd3e-4ba7-8f42-a0676c879f2a",
+          "terminalId": "a0b29288-ecdb-46b8-8e0d-da56a1f73be6",
+          "data": "\u001b[?2026h\u001b[?25l\u001b[15;2H\u001b[K\u001b[2m\u001b[16;32He\u001b[22mq\u001b[1m\u001b[4Ci\u001b[22ma\u001b[34C       \u001b[17;2H\u001b[K\n\u001b[K\u001b[19;34H\u001b[K\u001b[20;2H\u001b[K\u001b[21;50H\u001b[K\u001b[16;40H\u001b[?25h",
+          "timestampMs": 1773537548674
+        },
+        {
+          "id": "e5d81f5b-0561-4801-b9ba-c5bedf17755d",
+          "terminalId": "a0b29288-ecdb-46b8-8e0d-da56a1f73be6",
+          "data": "\u001b[?2026l",
+          "timestampMs": 1773537548674
+        },
+        {
+          "id": "5ca46835-1fce-4cfc-a6c3-1b1741bda72a",
+          "terminalId": "a0b29288-ecdb-46b8-8e0d-da56a1f73be6",
+          "data": "\u001b[?25l\u001b[19;3H\u001b[?25h",
+          "timestampMs": 1773537548688
+        },
+        {
+          "id": "1316f7d8-d857-4692-8d91-f5e83e4c9b15",
+          "terminalId": "a0b29288-ecdb-46b8-8e0d-da56a1f73be6",
+          "data": "\u001b[?2026h",
+          "timestampMs": 1773537548720
+        },
+        {
+          "id": "56b214f3-226b-4cfa-bbf6-c349d3d9a3bc",
+          "terminalId": "a0b29288-ecdb-46b8-8e0d-da56a1f73be6",
+          "data": "\u001b[?25l\u001b[15;2H\u001b[K\u001b[2m\u001b[16;33Hqu\u001b[22me\u001b[1m\u001b[3Cal\u001b[22m-\u001b[32C       \u001b[17;2H\u001b[K\n\u001b[K\u001b[19;34H\u001b[K\u001b[20;2H\u001b[K\u001b[21;50H\u001b[K\u001b[16;42H\u001b[?25h\u001b[?2026l",
+          "timestampMs": 1773537548720
+        },
+        {
+          "id": "cb97f449-2cef-4371-94d8-b3580b16b7f5",
+          "terminalId": "a0b29288-ecdb-46b8-8e0d-da56a1f73be6",
+          "data": "\u001b[?25l\u001b[19;3H\u001b[?25h",
+          "timestampMs": 1773537548735
+        },
+        {
+          "id": "235c8ae7-fcb0-4fb8-af24-ff7427870106",
+          "terminalId": "a0b29288-ecdb-46b8-8e0d-da56a1f73be6",
+          "data": "\u001b[?2026h\u001b[?25l\u001b[15;1H\u001b[?25h",
+          "timestampMs": 1773537548750
+        },
+        {
+          "id": "3fdcd6dd-1792-4f7c-9a0d-b5f3301926c3",
+          "terminalId": "a0b29288-ecdb-46b8-8e0d-da56a1f73be6",
+          "data": "\u001b[?2026l",
+          "timestampMs": 1773537548751
+        },
+        {
+          "id": "b363ddbd-ef8e-4afc-bc70-08c7fc4403ac",
+          "terminalId": "a0b29288-ecdb-46b8-8e0d-da56a1f73be6",
+          "data": "\u001b[?25l\u001b[K\u001b[38;5;3m\r\n⚠ MCP startup incomplete (failed: fetch)\u001b[K\u001b[m\r\n\u001b[K\r\n\u001b[K\u001b[1m\r\n›\u001b[22m \u001b[2mFind and fix a bug in @filename\u001b[22m\u001b[K\r\n\u001b[K\u001b[2m\r\n  gpt-5.4 medium · 100% left · D:\\code\\cli-run-ui\u001b[22m\u001b[K\r\n\u001b[K\r\n\u001b[K\r\n\u001b[K\u001b[19;3H\u001b[?25h",
+          "timestampMs": 1773537548765
+        },
+        {
+          "id": "22af4f88-cf78-4c8b-8f24-bf4af1c81386",
+          "terminalId": "a0b29288-ecdb-46b8-8e0d-da56a1f73be6",
+          "data": "\u001b[?2026h\u001b[?25l\u001b[17;2H\u001b[K\n\u001b[K\u001b[19;34H\u001b[K\u001b[20;2H\u001b[K\u001b[21;50H\u001b[K\u001b[?25h",
+          "timestampMs": 1773537552256
+        },
+        {
+          "id": "58322306-e37a-4b26-a2b1-7f0eeffd1c33",
+          "terminalId": "a0b29288-ecdb-46b8-8e0d-da56a1f73be6",
+          "data": "\u001b[?2026l",
+          "timestampMs": 1773537552257
+        },
+        {
+          "id": "3d16bb47-01e9-43f1-bd76-0c9ba2848c54",
+          "terminalId": "a0b29288-ecdb-46b8-8e0d-da56a1f73be6",
+          "data": "\u001b[?25l\u001b[19;3H\u001b[?25h",
+          "timestampMs": 1773537552270
+        },
+        {
+          "id": "21de4f50-4a0f-4525-82e7-da6687782461",
+          "terminalId": "a0b29288-ecdb-46b8-8e0d-da56a1f73be6",
+          "data": "\r\n[cli-run-ui] Restored after server restart. The original PTY is no longer attached.\r\n",
+          "timestampMs": 1773537749410
+        }
+      ]
+    },
+    {
+      "summary": {
+        "id": "373e2c86-5fbd-4311-9bad-5078c35df523",
+        "provider": "codex",
+        "mode": "task",
+        "cwd": "D:\\code\\cli-run-ui\\.tmp-real-cli-repo-57e7b6ad",
+        "command": [
+          "D:\\\\dev-env\\\\node\\\\node_global\\\\codex.cmd"
+        ],
+        "createdAtMs": 1773504538826,
+        "startedAtMs": 1773504538826,
+        "cols": 80,
+        "rows": 24,
+        "status": "failed",
+        "exitCode": -1,
+        "endedAtMs": 1773504557708
+      },
+      "outputs": [
+        {
+          "id": "ae765f1f-2e8b-4b83-b212-79b832e5ff50",
+          "terminalId": "373e2c86-5fbd-4311-9bad-5078c35df523",
+          "data": "\r\n[cli-run-ui] Starting D:\\\\dev-env\\\\node\\\\node_global\\\\codex.cmd\r\n",
+          "timestampMs": 1773504539024
+        },
+        {
+          "id": "5b87c891-8159-4cec-9f5c-569df9712673",
+          "terminalId": "373e2c86-5fbd-4311-9bad-5078c35df523",
+          "data": "\u001b[?9001h\u001b[?1004h",
+          "timestampMs": 1773504539042
+        },
+        {
+          "id": "d225af0e-71ec-4ff5-a6d5-e4e2d1bf3c6f",
+          "terminalId": "373e2c86-5fbd-4311-9bad-5078c35df523",
+          "data": "\u001b[?25l\u001b[2J\u001b[m\u001b[HMicrosoft Windows [版本 10.0.26200.8037]\u001b]0;C:\\WINDOWS\\system32\\cmd.exe\u0007\u001b[?25h",
+          "timestampMs": 1773504539052
+        },
+        {
+          "id": "bf990534-0044-425c-be99-6802a58f619f",
+          "terminalId": "373e2c86-5fbd-4311-9bad-5078c35df523",
+          "data": "\u001b[?25l\r\n(c) Microsoft Corporation。保留所有权利。\u001b[4;1HD:\\code\\cli-run-ui\\.tmp-real-cli-repo-57e7b6ad>\u001b[?25h",
+          "timestampMs": 1773504539073
+        },
+        {
+          "id": "667a02fb-f41a-4d16-8400-23af35617b51",
+          "terminalId": "373e2c86-5fbd-4311-9bad-5078c35df523",
+          "data": "D:\\\\dev-env\\\\node\\\\node_global\\\\codex.cmd\r\n",
+          "timestampMs": 1773504539110
+        },
+        {
+          "id": "ff8ccb99-97ba-49b5-b07f-52dc5176c8bd",
+          "terminalId": "373e2c86-5fbd-4311-9bad-5078c35df523",
+          "data": "\u001b]0;C:\\WINDOWS\\system32\\cmd.exe - D:\\\\dev-env\\\\node\\\\node_global\\\\codex.cmd\u0007",
+          "timestampMs": 1773504539121
+        },
+        {
+          "id": "6e1dd0bb-999f-4db9-9a66-dacd6a5ddbe2",
+          "terminalId": "373e2c86-5fbd-4311-9bad-5078c35df523",
+          "data": "\u001b]0;C:\\WINDOWS\\system32\\cmd.exe  - \"node\"   \"D:\\dev-env\\node\\node_global\\\\node_modules\\@openai\\codex\\bin\\codex.js\" \u0007",
+          "timestampMs": 1773504539136
+        },
+        {
+          "id": "a7c8c7b8-53b8-4aa9-8dcd-4b3320c99290",
+          "terminalId": "373e2c86-5fbd-4311-9bad-5078c35df523",
+          "data": "\u001b[?2004h",
+          "timestampMs": 1773504539314
+        },
+        {
+          "id": "ea8f485a-c222-4267-98dd-7844f973200f",
+          "terminalId": "373e2c86-5fbd-4311-9bad-5078c35df523",
+          "data": "\u001b[?2026h",
+          "timestampMs": 1773504539318
+        },
+        {
+          "id": "a6f268ca-5db3-4f92-8ffc-37fb5ac09807",
+          "terminalId": "373e2c86-5fbd-4311-9bad-5078c35df523",
+          "data": "\u001b[?2026l",
+          "timestampMs": 1773504539320
+        },
+        {
+          "id": "52c30817-100e-46bd-88ae-8f2acd9b73a9",
+          "terminalId": "373e2c86-5fbd-4311-9bad-5078c35df523",
+          "data": "\u001b[?25l\u001b[H> \u001b[1mYou are in \u001b[22mD:\\code\\cli-run-ui\\.tmp-real-cli-repo-57e7b6ad\u001b[K\r\n\u001b[K\r\n  Do you trust the contents of this directory? Working with untrusted contents  \r\n  comes with higher risk of prompt injection.                                   \r\n\u001b[K\u001b[38;5;6m\r\n› 1. Yes, continue\u001b[K\u001b[m\u001b[7;3H2.\u001b[1CNo,\u001b[1Cquit\u001b[K\u001b[8;2H\u001b[K\u001b[2m\u001b[9;3HPress enter to continue\u001b[22m\u001b[K\u001b[10;2H\u001b[K\n\u001b[K\n\u001b[K\n\u001b[K\n\u001b[K\n\u001b[K\n\u001b[K\n\u001b[K\n\u001b[K\n\u001b[K\n\u001b[K\n\u001b[K\n\u001b[K\n\u001b[K\n\u001b[K\u001b[79C",
+          "timestampMs": 1773504539324
+        }
+      ]
+    },
+    {
+      "summary": {
+        "id": "cde0fc32-8422-46de-8699-5a4669d5eecf",
+        "provider": "codex",
+        "mode": "task",
+        "cwd": "D:\\code\\cli-run-ui\\.tmp-real-cli-repo",
+        "command": [
+          "codex"
+        ],
+        "createdAtMs": 1773504261924,
+        "startedAtMs": 1773504261924,
+        "cols": 80,
+        "rows": 24,
+        "status": "closed",
+        "endedAtMs": 1773504535166
+      },
+      "outputs": [
+        {
+          "id": "f7e7cf3a-9fc5-4cf0-a6e3-c9df8bfb92db",
+          "terminalId": "cde0fc32-8422-46de-8699-5a4669d5eecf",
+          "data": "\r\n[cli-run-ui] Starting codex\r\n",
+          "timestampMs": 1773504262366
+        },
+        {
+          "id": "a5743007-2e18-4800-b70c-e91351f6bd5e",
+          "terminalId": "cde0fc32-8422-46de-8699-5a4669d5eecf",
+          "data": "\u001b[?9001h\u001b[?1004h",
+          "timestampMs": 1773504262429
+        },
+        {
+          "id": "8646c336-1e95-4823-b7b4-59759e981bde",
+          "terminalId": "cde0fc32-8422-46de-8699-5a4669d5eecf",
+          "data": "\u001b[?25l\u001b[2J\u001b[m\u001b[HMicrosoft Windows [版本 10.0.26200.8037]\u001b]0;C:\\WINDOWS\\system32\\cmd.exe\u0007\u001b[?25h",
+          "timestampMs": 1773504262458
+        },
+        {
+          "id": "b63ff61e-d3ed-4621-8244-f4815ee6f29c",
+          "terminalId": "cde0fc32-8422-46de-8699-5a4669d5eecf",
+          "data": "\u001b[?25l\r\n(c) Microsoft Corporation。保留所有权利。\u001b[4;1HD:\\code\\cli-run-ui\\.tmp-real-cli-repo>codex\r\n\u001b]0;C:\\WINDOWS\\system32\\cmd.exe - codex\u0007\u001b[?25h",
+          "timestampMs": 1773504262469
+        },
+        {
+          "id": "01f8fdf0-00c1-4a6f-abcc-ed2f1ee822e0",
+          "terminalId": "cde0fc32-8422-46de-8699-5a4669d5eecf",
+          "data": "\u001b]0;C:\\WINDOWS\\system32\\cmd.exe  - \"node\"   \"D:\\dev-env\\node\\node_global\\\\node_modules\\@openai\\codex\\bin\\codex.js\" \u0007",
+          "timestampMs": 1773504262516
+        },
+        {
+          "id": "afb0147a-4921-4954-b4c8-abc88591c5ed",
+          "terminalId": "cde0fc32-8422-46de-8699-5a4669d5eecf",
+          "data": "\u001b[?2004h",
+          "timestampMs": 1773504263028
+        },
+        {
+          "id": "4f0d6428-e0c6-4604-a073-604a46b1418d",
+          "terminalId": "cde0fc32-8422-46de-8699-5a4669d5eecf",
+          "data": "\u001b[?2026h",
+          "timestampMs": 1773504263037
+        },
+        {
+          "id": "2afb004b-4463-4a42-92f8-8be8592ae9b4",
+          "terminalId": "cde0fc32-8422-46de-8699-5a4669d5eecf",
+          "data": "\u001b[?2026l",
+          "timestampMs": 1773504263041
+        },
+        {
+          "id": "d70b2c80-0c59-4c57-8b0e-1d4d903bbfbb",
+          "terminalId": "cde0fc32-8422-46de-8699-5a4669d5eecf",
+          "data": "\u001b[?25l\u001b[H> \u001b[1mYou are in \u001b[22mD:\\code\\cli-run-ui\\.tmp-real-cli-repo\u001b[K\r\n\u001b[K\r\n  Do you trust the contents of this directory? Working with untrusted contents  \r\n  comes with higher risk of prompt injection.\u001b[K\u001b[5;2H\u001b[K\u001b[38;5;6m\r\n› 1. Yes, continue\u001b[K\u001b[m\u001b[7;3H2.\u001b[1CNo,\u001b[1Cquit\u001b[K\u001b[8;2H\u001b[K\u001b[2m\u001b[9;3HPress enter to continue\u001b[22m\u001b[K\u001b[10;2H\u001b[K\n\u001b[K\n\u001b[K\n\u001b[K\n\u001b[K\n\u001b[K\n\u001b[K\n\u001b[K\n\u001b[K\n\u001b[K\n\u001b[K\n\u001b[K\n\u001b[K\n\u001b[K\n\u001b[K\u001b[79C",
+          "timestampMs": 1773504263047
+        },
+        {
+          "id": "ff40c23d-0c33-43b2-a521-36a525811fe2",
+          "terminalId": "cde0fc32-8422-46de-8699-5a4669d5eecf",
+          "data": "\r\n[cli-run-ui] Restored after server restart. The original PTY is no longer attached.\r\n",
+          "timestampMs": 1773504535166
+        }
+      ]
+    },
+    {
+      "summary": {
+        "id": "d5206daf-e368-4ff3-ac28-c32fcf214259",
+        "provider": "codex",
+        "mode": "task",
+        "cwd": "D:\\code\\cli-run-ui\\.tmp-smoke-repo-ops",
+        "command": [
+          "codex"
+        ],
+        "createdAtMs": 1773504034786,
+        "startedAtMs": 1773504034786,
+        "cols": 100,
+        "rows": 30,
+        "status": "failed",
+        "endedAtMs": 1773504035152,
+        "exitCode": -1073741510
+      },
+      "outputs": [
+        {
+          "id": "e5d06353-ff64-4cc3-b02d-27ab0c3342fa",
+          "terminalId": "d5206daf-e368-4ff3-ac28-c32fcf214259",
+          "data": "\r\n[cli-run-ui] Starting codex\r\n",
+          "timestampMs": 1773504035049
+        },
+        {
+          "id": "fe0a8c7b-d4f4-4e99-9435-0ab2ab498948",
+          "terminalId": "d5206daf-e368-4ff3-ac28-c32fcf214259",
+          "data": "\u001b[?9001h\u001b[?1004h",
+          "timestampMs": 1773504035071
+        },
+        {
+          "id": "82601999-3183-4797-b2ac-9fcdc0a85e20",
+          "terminalId": "d5206daf-e368-4ff3-ac28-c32fcf214259",
+          "data": "\u001b[?25l\u001b[2J\u001b[m\u001b[H\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\u001b[H\u001b]0;C:\\WINDOWS\\system32\\cmd.exe\u0007\u001b[?25h",
+          "timestampMs": 1773504035081
+        },
+        {
+          "id": "8178478b-29d9-4405-907f-75606b108d5b",
+          "terminalId": "d5206daf-e368-4ff3-ac28-c32fcf214259",
+          "data": "\u001b[?9001l\u001b[?1004l",
+          "timestampMs": 1773504035085
+        }
+      ]
+    },
+    {
+      "summary": {
+        "id": "20628862-ae7a-4732-98d7-3778bc448ac8",
+        "provider": "codex",
+        "mode": "task",
+        "cwd": "D:\\code\\cli-run-ui\\.tmp-smoke-repo-ops",
+        "command": [
+          "codex"
+        ],
+        "createdAtMs": 1773503964848,
+        "startedAtMs": 1773503964848,
+        "cols": 100,
+        "rows": 30,
+        "status": "failed",
+        "endedAtMs": 1773503965164,
+        "exitCode": -1073741510
+      },
+      "outputs": [
+        {
+          "id": "46270842-d4a0-4699-8692-ee59de398ff6",
+          "terminalId": "20628862-ae7a-4732-98d7-3778bc448ac8",
+          "data": "\r\n[cli-run-ui] Starting codex\r\n",
+          "timestampMs": 1773503965060
+        },
+        {
+          "id": "cd334e5a-b01f-4609-8ba2-764539bee45b",
+          "terminalId": "20628862-ae7a-4732-98d7-3778bc448ac8",
+          "data": "\u001b[?9001h\u001b[?1004h",
+          "timestampMs": 1773503965081
+        },
+        {
+          "id": "f420cc78-53ad-4b36-b9aa-84a760a77256",
+          "terminalId": "20628862-ae7a-4732-98d7-3778bc448ac8",
+          "data": "\u001b[?25l\u001b[2J\u001b[m\u001b[H\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\u001b[H\u001b]0;C:\\WINDOWS\\system32\\cmd.exe\u0007\u001b[?25h",
+          "timestampMs": 1773503965094
+        },
+        {
+          "id": "9702a104-318f-455f-9553-1f15c546b98a",
+          "terminalId": "20628862-ae7a-4732-98d7-3778bc448ac8",
+          "data": "\u001b[?25l\u001b[?9001l\u001b[?1004lMicrosoft Windows [版本 10.0.26200.8037]\r\n(c) Microsoft Corporation。保留所有权利。\u001b[4;1HD:\\code\\cli-run-ui\\.tmp-smoke-repo-ops>ping\r\n\u001b[?25h",
+          "timestampMs": 1773503965096
+        }
+      ]
+    },
+    {
+      "summary": {
+        "id": "b553e31a-5809-4f84-b457-02790883b65c",
+        "provider": "codex",
+        "mode": "task",
+        "cwd": "D:\\code\\cli-run-ui\\.tmp-smoke-repo",
+        "command": [
+          "codex"
+        ],
+        "createdAtMs": 1773503891796,
+        "startedAtMs": 1773503891796,
+        "cols": 80,
+        "rows": 24,
+        "status": "closed",
+        "endedAtMs": 1773504535166
+      },
+      "outputs": [
+        {
+          "id": "67ad4e29-4d68-44f8-99be-b348c261808c",
+          "terminalId": "b553e31a-5809-4f84-b457-02790883b65c",
+          "data": "\r\n[cli-run-ui] Starting codex\r\n",
+          "timestampMs": 1773503892147
+        },
+        {
+          "id": "78521b6c-7ba8-4600-80ee-49190cbd283a",
+          "terminalId": "b553e31a-5809-4f84-b457-02790883b65c",
+          "data": "\u001b[?9001h\u001b[?1004h\u001b[?25l\u001b[2J\u001b[m\u001b[HMicrosoft Windows [版本 10.0.26200.8037]\u001b]0;C:\\WINDOWS\\system32\\cmd.exe\u0007\u001b[?25h",
+          "timestampMs": 1773503892181
+        },
+        {
+          "id": "dc89e5f0-2766-47bf-a3e8-0287d7256edd",
+          "terminalId": "b553e31a-5809-4f84-b457-02790883b65c",
+          "data": "\u001b]9001;CmdNotFound;hello\u001b\\",
+          "timestampMs": 1773503892186
+        },
+        {
+          "id": "466d3242-0a1c-4582-97ad-4d012db7b6e0",
+          "terminalId": "b553e31a-5809-4f84-b457-02790883b65c",
+          "data": "\u001b[?25l\r\n(c) Microsoft Corporation。保留所有权利。\u001b[4;1HD:\\code\\cli-run-ui\\.tmp-smoke-repo>hello\r\n\u001b[?25h",
+          "timestampMs": 1773503892186
+        },
+        {
+          "id": "12a4fc2b-1950-41b0-aa08-2ab53ce064b3",
+          "terminalId": "b553e31a-5809-4f84-b457-02790883b65c",
+          "data": "\u001b[?25l'hello' 不是内部或外部命令，也不是可运行的程序\r\n或批处理文件。\u001b[8;1HD:\\code\\cli-run-ui\\.tmp-smoke-repo>\u001b[?25h",
+          "timestampMs": 1773503892202
+        },
+        {
+          "id": "60a6ad12-2169-4cbb-9dd5-4a351d6f5cfa",
+          "terminalId": "b553e31a-5809-4f84-b457-02790883b65c",
+          "data": "codex\r\n",
+          "timestampMs": 1773503892236
+        },
+        {
+          "id": "bd002dd8-fe46-42a0-b9d3-6ebf3d761fbd",
+          "terminalId": "b553e31a-5809-4f84-b457-02790883b65c",
+          "data": "\u001b]0;C:\\WINDOWS\\system32\\cmd.exe - codex\u0007",
+          "timestampMs": 1773503892257
+        },
+        {
+          "id": "d61f684c-7125-4bb7-aa99-6d24bbbbb941",
+          "terminalId": "b553e31a-5809-4f84-b457-02790883b65c",
+          "data": "\u001b]0;C:\\WINDOWS\\system32\\cmd.exe  - \"node\"   \"D:\\dev-env\\node\\node_global\\\\node_modules\\@openai\\codex\\bin\\codex.js\" \u0007",
+          "timestampMs": 1773503892310
+        },
+        {
+          "id": "354c63e4-925d-48b9-a0cf-c8841834cb8c",
+          "terminalId": "b553e31a-5809-4f84-b457-02790883b65c",
+          "data": "\u001b[?2004h",
+          "timestampMs": 1773503892711
+        },
+        {
+          "id": "78bade5b-9184-408c-8ea8-40827699cb42",
+          "terminalId": "b553e31a-5809-4f84-b457-02790883b65c",
+          "data": "\u001b[?2026h",
+          "timestampMs": 1773503892721
+        },
+        {
+          "id": "ac459f5a-9ae9-4e7a-bd37-ab46cde4f9dc",
+          "terminalId": "b553e31a-5809-4f84-b457-02790883b65c",
+          "data": "\u001b[?2026l",
+          "timestampMs": 1773503892727
+        },
+        {
+          "id": "a63b5dfd-10ee-49d7-91d7-a7803e3a31b8",
+          "terminalId": "b553e31a-5809-4f84-b457-02790883b65c",
+          "data": "\u001b[?25l\u001b[H> \u001b[1mYou are in \u001b[22mD:\\code\\cli-run-ui\\.tmp-smoke-repo\u001b[K\r\n\u001b[K\r\n  Do you trust the contents of this directory? Working with untrusted contents  \r\n  comes with higher risk of prompt injection.\u001b[K\r\n\u001b[K\u001b[38;5;6m\r\n› 1. Yes, continue\u001b[K\u001b[m\r\n  2. No, quit\u001b[K\r\n\u001b[K\u001b[2m\u001b[9;3HPress enter to continue\u001b[22m\u001b[K\u001b[10;2H\u001b[K\n\u001b[K\n\u001b[K\n\u001b[K\n\u001b[K\n\u001b[K\n\u001b[K\n\u001b[K\n\u001b[K\n\u001b[K\n\u001b[K\n\u001b[K\n\u001b[K\n\u001b[K\n\u001b[K\u001b[79C",
+          "timestampMs": 1773503892734
+        },
+        {
+          "id": "67a18f8f-555f-47ea-9a46-e4f87703edd7",
+          "terminalId": "b553e31a-5809-4f84-b457-02790883b65c",
+          "data": "\r\n[cli-run-ui] Restored after server restart. The original PTY is no longer attached.\r\n",
+          "timestampMs": 1773504535166
+        }
+      ]
+    },
+    {
+      "summary": {
         "id": "93b22236-f934-4178-a437-8d9c6c9586af",
         "provider": "codex",
         "mode": "new",
@@ -61,7 +2523,8 @@
         "startedAtMs": 1773499240632,
         "cols": 120,
         "rows": 32,
-        "status": "open"
+        "status": "closed",
+        "endedAtMs": 1773501251666
       },
       "outputs": [
         {
@@ -963,6 +3426,12 @@
           "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
           "data": "\u001b[?25l\u001b[19;1H\u001b[K\u001b[38;5;3m\r\n⚠ MCP startup incomplete (failed: fetch)\u001b[K\u001b[m\r\n\u001b[K\r\n\u001b[K\u001b[1m\r\n›\u001b[22m \u001b[2mExplain this codebase\u001b[22m\u001b[K\r\n\u001b[K\u001b[2m\r\n  gpt-5.4 xhigh · 100% left · D:\\code\\cli-run-ui\u001b[22m\u001b[K\r\n\u001b[K\r\n\u001b[K\r\n\u001b[K\r\n\u001b[K\r\n\u001b[K\r\n\u001b[K\r\n\u001b[K\u001b[23;3H\u001b[?25h",
           "timestampMs": 1773499244836
+        },
+        {
+          "id": "41cf91c9-4d1c-4453-bebd-a1c3c761d257",
+          "terminalId": "93b22236-f934-4178-a437-8d9c6c9586af",
+          "data": "\r\n[cli-run-ui] Restored after server restart. The original PTY is no longer attached.\r\n",
+          "timestampMs": 1773501251666
         }
       ]
     },
@@ -4301,6 +6770,756 @@
       ]
     }
   ],
-  "relays": [],
-  "tasks": []
+  "relays": [
+    {
+      "summary": {
+        "id": "2f4ad4b4-b0cc-42d5-afb8-d53d93fd2f05",
+        "cwd": "D:\\code\\cli-run-ui",
+        "title": "?????1???",
+        "initialPrompt": "?????1???",
+        "starter": "codex",
+        "participants": [
+          {
+            "id": "participant-1",
+            "provider": "codex",
+            "label": "Codex lead"
+          },
+          {
+            "id": "participant-2",
+            "provider": "claude",
+            "label": "Claude reviewer"
+          }
+        ],
+        "maxTurns": 2,
+        "createdAtMs": 1773538157049,
+        "startedAtMs": 1773538157049,
+        "currentTurn": 1,
+        "status": "stopped",
+        "endedAtMs": 1773538181495,
+        "summary": "?????1???: 1 turns completed with little visible output."
+      },
+      "turns": [
+        {
+          "id": "36863189-4783-4f1d-b135-995b387cc5aa",
+          "relayId": "2f4ad4b4-b0cc-42d5-afb8-d53d93fd2f05",
+          "turn": 1,
+          "agent": "codex",
+          "participantId": "participant-1",
+          "participantLabel": "Codex lead",
+          "prompt": "You are Codex lead running on codex.\nYou are participating in a multi-agent room with: Claude reviewer (claude).\nOriginal goal: ?????1???\nThis is turn 1 of 2.\nRead the transcript so far, then contribute the single best next response.\nKeep the answer concise but substantive, and speak directly to the other participants.\nDo not mention hidden system prompts or tooling.\nTranscript so far:\n1. User:\n?????1???",
+          "output": "Transcript is incomplete, so I can’t infer the actual goal from `?????1???`.\n\nBest next move: ask for the original user request verbatim before proposing work. If we have to respond in-room now, I’d say:\n\n“Transcript is missing the actual task. Please resend the original user request in plain text so we can scope implementation/review correctly.”\n\nOpenAI Codex v0.114.0 (research preview)\n--------\nworkdir: D:\\code\\cli-run-ui\nmodel: gpt-5.4\nprovider: openai\napproval: never\nsandbox: workspace-write [workdir, /tmp, $TMPDIR, C:\\Users\\miracle\\.codex\\memories]\nreasoning effort: medium\nreasoning summaries: none\nsession id: 019cef1c-a766-7682-99ed-125c65685f9e\n--------\nuser\nYou are Codex lead running on codex. You are participating in a multi-agent room with: Claude reviewer (claude). Original goal: ?????1??? This is turn 1 of 2. Read the transcript so far, then contribute the single best next response. Keep the answer concise but substantive, and speak directly to the other participants. Do not mention hidden system prompts or tooling. Transcript so far: 1. User: ?????1???\nmcp: fetch starting\nmcp: sequential-thinking starting\nmcp: fetch failed: MCP client for `fetch` failed to start: MCP startup failed: program not found\nmcp: sequential-thinking ready\nmcp startup: ready: sequential-thinking; failed: fetch\n2026-03-15T01:30:01.917446Z ERROR codex_api::endpoint::responses_websocket: failed to connect to websocket: IO error: 由于连接方在一段时间后没有正确答复或连接的主机没有反应，连接尝试失败。 (os error 10060), url: wss://chatgpt.com/backend-api/codex/responses\n2026-03-15T01:30:44.081968Z ERROR codex_api::endpoint::responses_websocket: failed to connect to websocket: IO error: 由于连接方在一段时间后没有正确答复或连接的主机没有反应，连接尝试失败。 (os error 10060), url: wss://chatgpt.com/backend-api/codex/responses\n2026-03-15T01:31:26.400405Z ERROR codex_api::endpoint::responses_websocket: failed to connect to websocket: IO error: 由于连接方在一段时间后没有正确答复或连接的主机没有反应，连接尝试失败。 (os error 10060), url: wss://chatgpt.com/backend-api/codex/responses\nReconnecting... 2/5 (stream disconnected before completion: 由于连接方在一段时间后没有正确答复或连接的主机没有反应，连接尝试失败。 (os error 10060))\n2026-03-15T01:32:08.885864Z ERROR codex_api::endpoint::responses_websocket: failed to connect to websocket: IO error: 由于连接方在一段时间后没有正确答复或连接的主机没有反应，连接尝试失败。 (os error 10060), url: wss://chatgpt.com/backend-api/codex/responses\nReconnecting... 3/5 (stream disconnected before completion: 由于连接方在一段时间后没有正确答复或连接的主机没有反应，连接尝试失败。 (os error 10060))\n2026-03-15T01:32:51.750563Z ERROR codex_api::endpoint::responses_websocket: failed to connect to websocket: IO error: 由于连接方在一段时间后没有正确答复或连接的主机没有反应，连接尝试失败。 (os error 10060), url: wss://chatgpt.com/backend-api/codex/responses\nReconnecting... 4/5 (stream disconnected before completion: 由于连接方在一段时间后没有正确答复或连接的主机没有反应，连接尝试失败。 (os error 10060))\n2026-03-15T01:33:35.336320Z ERROR codex_api::endpoint::responses_websocket: failed to connect to websocket: IO error: 由于连接方在一段时间后没有正确答复或连接的主机没有反应，连接尝试失败。 (os error 10060), url: wss://chatgpt.com/backend-api/codex/responses\nReconnecting... 5/5 (stream disconnected before completion: 由于连接方在一段时间后没有正确答复或连接的主机没有反应，连接尝试失败。 (os error 10060))\n2026-03-15T01:34:20.951521Z ERROR codex_api::endpoint::responses_websocket: failed to connect to websocket: IO error: 由于连接方在一段时间后没有正确答复或连接的主机没有反应，连接尝试失败。 (os error 10060), url: wss://chatgpt.com/backend-api/codex/responses\nwarning: Falling back from WebSockets to HTTPS transport. stream disconnected before completion: 由于连接方在一段时间后没有正确答复或连接的主机没有反应，连接尝试失败。 (os error 10060)\ncodex\nTranscript is incomplete, so I can’t infer the actual goal from `?????1???`.\n\nBest next move: ask for the original user request verbatim before proposing work. If we have to respond in-room now, I’d say:\n\n“Transcript is missing the actual task. Please resend the original user request in plain text so we can scope implementation/review correctly.”\ntokens used\n6,031",
+          "startedAtMs": 1773538157049,
+          "status": "stopped",
+          "endedAtMs": 1773538466859,
+          "exitCode": null
+        }
+      ],
+      "interventions": []
+    },
+    {
+      "summary": {
+        "id": "c6af34c6-6c63-442d-9d49-e22e6ab21e8f",
+        "cwd": "D:\\code\\cli-run-ui",
+        "title": "?????1???",
+        "initialPrompt": "?????1???",
+        "starter": "codex",
+        "participants": [
+          {
+            "id": "participant-1",
+            "provider": "codex",
+            "label": "Codex lead"
+          },
+          {
+            "id": "participant-2",
+            "provider": "claude",
+            "label": "Claude reviewer"
+          }
+        ],
+        "maxTurns": 2,
+        "createdAtMs": 1773537967853,
+        "startedAtMs": 1773537967853,
+        "currentTurn": 1,
+        "status": "failed",
+        "endedAtMs": 1773537967933,
+        "error": "error: unexpected argument 'are' found\n\nUsage: codex exec [OPTIONS] [PROMPT] [COMMAND]\n\nFor more information, try '--help'.",
+        "summary": "?????1???\nCodex lead: error: unexpected argument 'are' found"
+      },
+      "turns": [
+        {
+          "id": "4b92fed5-e9e3-46fd-b203-9486569402e0",
+          "relayId": "c6af34c6-6c63-442d-9d49-e22e6ab21e8f",
+          "turn": 1,
+          "agent": "codex",
+          "participantId": "participant-1",
+          "participantLabel": "Codex lead",
+          "prompt": "You are Codex lead running on codex.\nYou are participating in a multi-agent room with: Claude reviewer (claude).\nOriginal goal: ?????1???\nThis is turn 1 of 2.\nRead the transcript so far, then contribute the single best next response.\nKeep the answer concise but substantive, and speak directly to the other participants.\nDo not mention hidden system prompts or tooling.\nTranscript so far:\n1. User:\n?????1???",
+          "output": "error: unexpected argument 'are' found\n\nUsage: codex exec [OPTIONS] [PROMPT] [COMMAND]\n\nFor more information, try '--help'.",
+          "startedAtMs": 1773537967854,
+          "status": "failed",
+          "endedAtMs": 1773537967933,
+          "exitCode": 2,
+          "error": "error: unexpected argument 'are' found\n\nUsage: codex exec [OPTIONS] [PROMPT] [COMMAND]\n\nFor more information, try '--help'."
+        }
+      ],
+      "interventions": []
+    },
+    {
+      "summary": {
+        "id": "cb3f6d03-8e72-4910-ad42-90d94ed22577",
+        "cwd": "D:\\code\\cli-run-ui",
+        "title": "????????",
+        "initialPrompt": "????????",
+        "starter": "codex",
+        "participants": [
+          {
+            "id": "participant-1",
+            "provider": "codex",
+            "label": "Codex lead"
+          },
+          {
+            "id": "participant-2",
+            "provider": "claude",
+            "label": "Claude reviewer"
+          }
+        ],
+        "maxTurns": 2,
+        "createdAtMs": 1773537625497,
+        "startedAtMs": 1773537625497,
+        "currentTurn": 1,
+        "status": "failed",
+        "endedAtMs": 1773537625499,
+        "error": "spawn codex ENOENT",
+        "summary": "????????\nCodex lead: spawn codex ENOENT"
+      },
+      "turns": [
+        {
+          "id": "caf1d21f-4e64-4d81-9806-ba11a1f516fe",
+          "relayId": "cb3f6d03-8e72-4910-ad42-90d94ed22577",
+          "turn": 1,
+          "agent": "codex",
+          "participantId": "participant-1",
+          "participantLabel": "Codex lead",
+          "prompt": "You are Codex lead running on codex.\nYou are participating in a multi-agent room with: Claude reviewer (claude).\nOriginal goal: ????????\nThis is turn 1 of 2.\nRead the transcript so far, then contribute the single best next response.\nKeep the answer concise but substantive, and speak directly to the other participants.\nDo not mention hidden system prompts or tooling.\nTranscript so far:\n1. User:\n????????",
+          "output": "spawn codex ENOENT",
+          "startedAtMs": 1773537625497,
+          "status": "failed",
+          "endedAtMs": 1773537625499,
+          "error": "spawn codex ENOENT"
+        }
+      ],
+      "interventions": []
+    },
+    {
+      "summary": {
+        "id": "9eb07365-754d-46f6-891d-29b3de55ac42",
+        "cwd": "D:\\code\\cli-run-ui",
+        "title": "test relay",
+        "initialPrompt": "test relay",
+        "starter": "codex",
+        "participants": [
+          {
+            "id": "participant-1",
+            "provider": "codex",
+            "label": "Codex lead"
+          },
+          {
+            "id": "participant-2",
+            "provider": "claude",
+            "label": "Claude reviewer"
+          }
+        ],
+        "maxTurns": 2,
+        "createdAtMs": 1773537541934,
+        "startedAtMs": 1773537541934,
+        "currentTurn": 1,
+        "status": "failed",
+        "endedAtMs": 1773537541937,
+        "error": "spawn codex ENOENT",
+        "summary": "test relay\nCodex lead: spawn codex ENOENT"
+      },
+      "turns": [
+        {
+          "id": "1d5df92e-6830-4fb3-854c-d1e3a54ed97b",
+          "relayId": "9eb07365-754d-46f6-891d-29b3de55ac42",
+          "turn": 1,
+          "agent": "codex",
+          "participantId": "participant-1",
+          "participantLabel": "Codex lead",
+          "prompt": "You are Codex lead running on codex.\nYou are participating in a multi-agent room with: Claude reviewer (claude).\nOriginal goal: test relay\nThis is turn 1 of 2.\nRead the transcript so far, then contribute the single best next response.\nKeep the answer concise but substantive, and speak directly to the other participants.\nDo not mention hidden system prompts or tooling.\nTranscript so far:\n1. User:\ntest relay",
+          "output": "spawn codex ENOENT",
+          "startedAtMs": 1773537541934,
+          "status": "failed",
+          "endedAtMs": 1773537541936,
+          "error": "spawn codex ENOENT"
+        }
+      ],
+      "interventions": []
+    },
+    {
+      "summary": {
+        "id": "fa9c0fd3-446d-4540-9a5c-f0f24635fb1e",
+        "cwd": "D:\\code\\cli-run-ui\\.tmp-real-cli-repo-57e7b6ad",
+        "title": "Discuss one testing improvement and then conclude.",
+        "initialPrompt": "Discuss one testing improvement and then conclude.",
+        "starter": "codex",
+        "participants": [
+          {
+            "id": "participant-1",
+            "provider": "codex",
+            "label": "Codex lead"
+          },
+          {
+            "id": "participant-2",
+            "provider": "claude",
+            "label": "Claude reviewer"
+          }
+        ],
+        "maxTurns": 2,
+        "createdAtMs": 1773504539029,
+        "startedAtMs": 1773504539029,
+        "currentTurn": 1,
+        "status": "failed",
+        "endedAtMs": 1773504539032,
+        "error": "spawn EINVAL",
+        "summary": "Discuss one testing improvement and then conclude.\nCodex lead: spawn EINVAL"
+      },
+      "turns": [
+        {
+          "id": "b28b2499-ff6f-4be0-8eb2-1b214a1aa8bd",
+          "relayId": "fa9c0fd3-446d-4540-9a5c-f0f24635fb1e",
+          "turn": 1,
+          "agent": "codex",
+          "participantId": "participant-1",
+          "participantLabel": "Codex lead",
+          "prompt": "You are Codex lead running on codex.\nYou are participating in a multi-agent room with: Claude reviewer (claude).\nOriginal goal: Discuss one testing improvement and then conclude.\nThis is turn 1 of 2.\nRead the transcript so far, then contribute the single best next response.\nKeep the answer concise but substantive, and speak directly to the other participants.\nDo not mention hidden system prompts or tooling.\nTranscript so far:\n1. User:\nDiscuss one testing improvement and then conclude.",
+          "output": "spawn EINVAL",
+          "startedAtMs": 1773504539030,
+          "status": "failed",
+          "endedAtMs": 1773504539031,
+          "error": "spawn EINVAL"
+        }
+      ],
+      "interventions": []
+    },
+    {
+      "summary": {
+        "id": "a3095800-ba07-46f4-9295-89322ed1afcd",
+        "cwd": "D:\\code\\cli-run-ui\\.tmp-relay-probe-repo",
+        "title": "Discuss test strategy in two short turns.",
+        "initialPrompt": "Discuss test strategy in two short turns.",
+        "starter": "codex",
+        "participants": [
+          {
+            "id": "participant-1",
+            "provider": "codex",
+            "label": "Codex lead"
+          },
+          {
+            "id": "participant-2",
+            "provider": "claude",
+            "label": "Claude reviewer"
+          }
+        ],
+        "maxTurns": 2,
+        "createdAtMs": 1773504403191,
+        "startedAtMs": 1773504403191,
+        "currentTurn": 1,
+        "status": "failed",
+        "endedAtMs": 1773504403194,
+        "error": "spawn codex ENOENT",
+        "summary": "Discuss test strategy in two short turns.\nCodex lead: spawn codex ENOENT"
+      },
+      "turns": [
+        {
+          "id": "ca3e0b63-69c0-4cd0-bb8d-a5e7ad2b5f68",
+          "relayId": "a3095800-ba07-46f4-9295-89322ed1afcd",
+          "turn": 1,
+          "agent": "codex",
+          "participantId": "participant-1",
+          "participantLabel": "Codex lead",
+          "prompt": "You are Codex lead running on codex.\nYou are participating in a multi-agent room with: Claude reviewer (claude).\nOriginal goal: Discuss test strategy in two short turns.\nThis is turn 1 of 2.\nRead the transcript so far, then contribute the single best next response.\nKeep the answer concise but substantive, and speak directly to the other participants.\nDo not mention hidden system prompts or tooling.\nTranscript so far:\n1. User:\nDiscuss test strategy in two short turns.",
+          "output": "spawn codex ENOENT",
+          "startedAtMs": 1773504403191,
+          "status": "failed",
+          "endedAtMs": 1773504403194,
+          "error": "spawn codex ENOENT"
+        }
+      ],
+      "interventions": []
+    },
+    {
+      "summary": {
+        "id": "1e419289-5ad9-4812-a363-e59a13e15eb6",
+        "cwd": "D:\\code\\cli-run-ui\\.tmp-relay-probe-repo",
+        "title": "Discuss test strategy in two short turns.",
+        "initialPrompt": "Discuss test strategy in two short turns.",
+        "starter": "codex",
+        "participants": [
+          {
+            "id": "participant-1",
+            "provider": "codex",
+            "label": "Codex lead"
+          },
+          {
+            "id": "participant-2",
+            "provider": "claude",
+            "label": "Claude reviewer"
+          }
+        ],
+        "maxTurns": 2,
+        "createdAtMs": 1773504367210,
+        "startedAtMs": 1773504367210,
+        "currentTurn": 1,
+        "status": "failed",
+        "endedAtMs": 1773504367216,
+        "error": "spawn codex ENOENT",
+        "summary": "Discuss test strategy in two short turns.\nCodex lead: spawn codex ENOENT"
+      },
+      "turns": [
+        {
+          "id": "7aba8ada-6b61-4d1d-a427-59ac9456db48",
+          "relayId": "1e419289-5ad9-4812-a363-e59a13e15eb6",
+          "turn": 1,
+          "agent": "codex",
+          "participantId": "participant-1",
+          "participantLabel": "Codex lead",
+          "prompt": "You are Codex lead running on codex.\nYou are participating in a multi-agent room with: Claude reviewer (claude).\nOriginal goal: Discuss test strategy in two short turns.\nThis is turn 1 of 2.\nRead the transcript so far, then contribute the single best next response.\nKeep the answer concise but substantive, and speak directly to the other participants.\nDo not mention hidden system prompts or tooling.\nTranscript so far:\n1. User:\nDiscuss test strategy in two short turns.",
+          "output": "spawn codex ENOENT",
+          "startedAtMs": 1773504367211,
+          "status": "failed",
+          "endedAtMs": 1773504367216,
+          "error": "spawn codex ENOENT"
+        }
+      ],
+      "interventions": []
+    },
+    {
+      "summary": {
+        "id": "0badb822-2f5b-4de7-8bd4-16b91dcfd5c4",
+        "cwd": "D:\\code\\cli-run-ui\\.tmp-relay-probe-repo",
+        "title": "Discuss test strategy in two short turns.",
+        "initialPrompt": "Discuss test strategy in two short turns.",
+        "starter": "codex",
+        "participants": [
+          {
+            "id": "participant-1",
+            "provider": "codex",
+            "label": "Codex lead"
+          },
+          {
+            "id": "participant-2",
+            "provider": "claude",
+            "label": "Claude reviewer"
+          }
+        ],
+        "maxTurns": 2,
+        "createdAtMs": 1773504327601,
+        "startedAtMs": 1773504327601,
+        "currentTurn": 1,
+        "status": "failed",
+        "endedAtMs": 1773504327604,
+        "error": "spawn codex ENOENT",
+        "summary": "Discuss test strategy in two short turns.\nCodex lead: spawn codex ENOENT"
+      },
+      "turns": [
+        {
+          "id": "a0334c30-7498-4e95-8570-a87ec3080038",
+          "relayId": "0badb822-2f5b-4de7-8bd4-16b91dcfd5c4",
+          "turn": 1,
+          "agent": "codex",
+          "participantId": "participant-1",
+          "participantLabel": "Codex lead",
+          "prompt": "You are Codex lead running on codex.\nYou are participating in a multi-agent room with: Claude reviewer (claude).\nOriginal goal: Discuss test strategy in two short turns.\nThis is turn 1 of 2.\nRead the transcript so far, then contribute the single best next response.\nKeep the answer concise but substantive, and speak directly to the other participants.\nDo not mention hidden system prompts or tooling.\nTranscript so far:\n1. User:\nDiscuss test strategy in two short turns.",
+          "output": "spawn codex ENOENT",
+          "startedAtMs": 1773504327602,
+          "status": "failed",
+          "endedAtMs": 1773504327604,
+          "error": "spawn codex ENOENT"
+        }
+      ],
+      "interventions": []
+    },
+    {
+      "summary": {
+        "id": "303712fa-4fe2-45e8-ac23-f4198bb92717",
+        "cwd": "D:\\code\\cli-run-ui\\.tmp-real-cli-repo",
+        "title": "Discuss one testing improvement and then conclude.",
+        "initialPrompt": "Discuss one testing improvement and then conclude.",
+        "starter": "codex",
+        "participants": [
+          {
+            "id": "participant-1",
+            "provider": "codex",
+            "label": "Codex lead"
+          },
+          {
+            "id": "participant-2",
+            "provider": "claude",
+            "label": "Claude reviewer"
+          }
+        ],
+        "maxTurns": 2,
+        "createdAtMs": 1773504262377,
+        "startedAtMs": 1773504262377,
+        "currentTurn": 1,
+        "status": "failed",
+        "endedAtMs": 1773504262385,
+        "error": "spawn codex ENOENT",
+        "summary": "Discuss one testing improvement and then conclude.\nCodex lead: spawn codex ENOENT"
+      },
+      "turns": [
+        {
+          "id": "0e5411fd-07ae-45a3-bada-83d812785c7a",
+          "relayId": "303712fa-4fe2-45e8-ac23-f4198bb92717",
+          "turn": 1,
+          "agent": "codex",
+          "participantId": "participant-1",
+          "participantLabel": "Codex lead",
+          "prompt": "You are Codex lead running on codex.\nYou are participating in a multi-agent room with: Claude reviewer (claude).\nOriginal goal: Discuss one testing improvement and then conclude.\nThis is turn 1 of 2.\nRead the transcript so far, then contribute the single best next response.\nKeep the answer concise but substantive, and speak directly to the other participants.\nDo not mention hidden system prompts or tooling.\nTranscript so far:\n1. User:\nDiscuss one testing improvement and then conclude.",
+          "output": "spawn codex ENOENT",
+          "startedAtMs": 1773504262377,
+          "status": "failed",
+          "endedAtMs": 1773504262384,
+          "error": "spawn codex ENOENT"
+        }
+      ],
+      "interventions": []
+    },
+    {
+      "summary": {
+        "id": "74e9e9bd-842a-4b87-baa5-55e42348b7ef",
+        "cwd": "D:\\code\\cli-run-ui\\.tmp-smoke-repo-ops",
+        "title": "relay ops",
+        "initialPrompt": "relay ops",
+        "starter": "codex",
+        "participants": [
+          {
+            "id": "participant-1",
+            "provider": "codex",
+            "label": "Codex lead"
+          },
+          {
+            "id": "participant-2",
+            "provider": "claude",
+            "label": "Claude reviewer"
+          }
+        ],
+        "maxTurns": 3,
+        "createdAtMs": 1773504035063,
+        "startedAtMs": 1773504035063,
+        "currentTurn": 1,
+        "status": "failed",
+        "endedAtMs": 1773504035069,
+        "error": "spawn codex ENOENT",
+        "summary": "relay ops\nCodex lead: spawn codex ENOENT"
+      },
+      "turns": [
+        {
+          "id": "c6b8e105-2b85-4765-b8b9-39fd99c0ccdc",
+          "relayId": "74e9e9bd-842a-4b87-baa5-55e42348b7ef",
+          "turn": 1,
+          "agent": "codex",
+          "participantId": "participant-1",
+          "participantLabel": "Codex lead",
+          "prompt": "You are Codex lead running on codex.\nYou are participating in a multi-agent room with: Claude reviewer (claude).\nOriginal goal: relay ops\nThis is turn 1 of 3.\nRead the transcript so far, then contribute the single best next response.\nKeep the answer concise but substantive, and speak directly to the other participants.\nDo not mention hidden system prompts or tooling.\nTranscript so far:\n1. User:\nrelay ops",
+          "output": "spawn codex ENOENT",
+          "startedAtMs": 1773504035064,
+          "status": "failed",
+          "endedAtMs": 1773504035069,
+          "error": "spawn codex ENOENT"
+        }
+      ],
+      "interventions": []
+    },
+    {
+      "summary": {
+        "id": "6c942163-3655-459f-a624-a027df1416c9",
+        "cwd": "D:\\code\\cli-run-ui\\.tmp-smoke-repo-ops",
+        "title": "relay ops",
+        "initialPrompt": "relay ops",
+        "starter": "codex",
+        "participants": [
+          {
+            "id": "participant-1",
+            "provider": "codex",
+            "label": "Codex lead"
+          },
+          {
+            "id": "participant-2",
+            "provider": "claude",
+            "label": "Claude reviewer"
+          }
+        ],
+        "maxTurns": 3,
+        "createdAtMs": 1773503965075,
+        "startedAtMs": 1773503965075,
+        "currentTurn": 1,
+        "status": "failed",
+        "endedAtMs": 1773503965080,
+        "error": "spawn codex ENOENT",
+        "summary": "relay ops\nCodex lead: spawn codex ENOENT"
+      },
+      "turns": [
+        {
+          "id": "aacb72f3-fe4e-4c5a-b741-917aede976ad",
+          "relayId": "6c942163-3655-459f-a624-a027df1416c9",
+          "turn": 1,
+          "agent": "codex",
+          "participantId": "participant-1",
+          "participantLabel": "Codex lead",
+          "prompt": "You are Codex lead running on codex.\nYou are participating in a multi-agent room with: Claude reviewer (claude).\nOriginal goal: relay ops\nThis is turn 1 of 3.\nRead the transcript so far, then contribute the single best next response.\nKeep the answer concise but substantive, and speak directly to the other participants.\nDo not mention hidden system prompts or tooling.\nTranscript so far:\n1. User:\nrelay ops",
+          "output": "spawn codex ENOENT",
+          "startedAtMs": 1773503965075,
+          "status": "failed",
+          "endedAtMs": 1773503965080,
+          "error": "spawn codex ENOENT"
+        }
+      ],
+      "interventions": []
+    },
+    {
+      "summary": {
+        "id": "edcde8c1-5db8-422c-8c1b-194981c2c053",
+        "cwd": "D:\\code\\cli-run-ui\\.tmp-smoke-repo",
+        "title": "discuss test strategy",
+        "initialPrompt": "discuss test strategy",
+        "starter": "codex",
+        "participants": [
+          {
+            "id": "participant-1",
+            "provider": "codex",
+            "label": "Codex lead"
+          },
+          {
+            "id": "participant-2",
+            "provider": "claude",
+            "label": "Claude reviewer"
+          }
+        ],
+        "maxTurns": 2,
+        "createdAtMs": 1773503892162,
+        "startedAtMs": 1773503892162,
+        "currentTurn": 1,
+        "status": "failed",
+        "endedAtMs": 1773503892169,
+        "error": "spawn codex ENOENT",
+        "summary": "discuss test strategy\nCodex lead: spawn codex ENOENT"
+      },
+      "turns": [
+        {
+          "id": "892b78bc-5c29-4fc0-aa12-0f4911bf0ffe",
+          "relayId": "edcde8c1-5db8-422c-8c1b-194981c2c053",
+          "turn": 1,
+          "agent": "codex",
+          "participantId": "participant-1",
+          "participantLabel": "Codex lead",
+          "prompt": "You are Codex lead running on codex.\nYou are participating in a multi-agent room with: Claude reviewer (claude).\nOriginal goal: discuss test strategy\nThis is turn 1 of 2.\nRead the transcript so far, then contribute the single best next response.\nKeep the answer concise but substantive, and speak directly to the other participants.\nDo not mention hidden system prompts or tooling.\nTranscript so far:\n1. User:\ndiscuss test strategy",
+          "output": "spawn codex ENOENT",
+          "startedAtMs": 1773503892164,
+          "status": "failed",
+          "endedAtMs": 1773503892168,
+          "error": "spawn codex ENOENT"
+        }
+      ],
+      "interventions": []
+    }
+  ],
+  "tasks": [
+    {
+      "summary": {
+        "id": "42f50e51-5745-4f69-9371-b00309778f14",
+        "title": "ops task",
+        "provider": "codex",
+        "cwd": "D:\\code\\cli-run-ui\\.tmp-smoke-repo-ops",
+        "prompt": "ops task",
+        "repoRoot": "D:/code/cli-run-ui/.tmp-smoke-repo-ops",
+        "repoName": ".tmp-smoke-repo-ops",
+        "baseBranch": "master",
+        "branchName": "codex/task-ops-task-mmqiifz4",
+        "createdAtMs": 1773504035680,
+        "startedAtMs": 1773504035680,
+        "status": "stopped",
+        "workingTreeStatus": "clean",
+        "changedFiles": [],
+        "testResult": {
+          "status": "skipped",
+          "output": ""
+        },
+        "github": {
+          "owner": "",
+          "name": "",
+          "provider": "unknown",
+          "connected": false,
+          "tokenConfigured": false
+        },
+        "pullRequestReviews": [],
+        "pullRequestComments": [],
+        "checks": [],
+        "runId": "ba66efdc-e220-45e0-bab3-89d6cd65c367",
+        "endedAtMs": 1773504036252,
+        "error": "spawn codex ENOENT",
+        "lastRefreshedAtMs": 1773504037227
+      },
+      "events": [
+        {
+          "id": "e331a7a7-080c-4339-a35e-05af444b1d7d",
+          "taskId": "42f50e51-5745-4f69-9371-b00309778f14",
+          "kind": "system",
+          "tone": "info",
+          "message": "Preparing task branch from master.",
+          "createdAtMs": 1773504035680
+        },
+        {
+          "id": "f75130e8-3f45-431e-8640-6e5da29f28a7",
+          "taskId": "42f50e51-5745-4f69-9371-b00309778f14",
+          "kind": "git",
+          "tone": "success",
+          "message": "Checked out branch codex/task-ops-task-mmqiifz4.",
+          "createdAtMs": 1773504036233
+        },
+        {
+          "id": "1e221d7e-f096-4b2d-a322-41ceae4bfbee",
+          "taskId": "42f50e51-5745-4f69-9371-b00309778f14",
+          "kind": "system",
+          "tone": "success",
+          "message": "Assigned to codex. Run ba66efdc started.",
+          "createdAtMs": 1773504036237
+        },
+        {
+          "id": "1c49936c-62cf-4dfc-a1cc-514a7b968aa8",
+          "taskId": "42f50e51-5745-4f69-9371-b00309778f14",
+          "kind": "system",
+          "tone": "error",
+          "message": "Agent run failed: spawn codex ENOENT",
+          "createdAtMs": 1773504036239
+        },
+        {
+          "id": "600a3d37-93a0-41d2-9f05-397e664a80ce",
+          "taskId": "42f50e51-5745-4f69-9371-b00309778f14",
+          "kind": "git",
+          "tone": "info",
+          "message": "Refreshing git diff and repo status.",
+          "createdAtMs": 1773504036240
+        },
+        {
+          "id": "5d0ec9ee-b4f8-430b-9ea4-82f1a572237a",
+          "taskId": "42f50e51-5745-4f69-9371-b00309778f14",
+          "kind": "system",
+          "tone": "error",
+          "message": "Agent run failed: spawn codex ENOENT",
+          "createdAtMs": 1773504036249
+        },
+        {
+          "id": "f967c5c8-5630-4a9f-a45b-6c5a7cb7f491",
+          "taskId": "42f50e51-5745-4f69-9371-b00309778f14",
+          "kind": "system",
+          "tone": "info",
+          "message": "Stop requested by cli-run-ui.",
+          "createdAtMs": 1773504036252
+        },
+        {
+          "id": "a1b69b94-0c54-486a-9ebd-e14d872fe5e8",
+          "taskId": "42f50e51-5745-4f69-9371-b00309778f14",
+          "kind": "git",
+          "tone": "success",
+          "message": "Repository is clean after refresh.",
+          "createdAtMs": 1773504037227
+        }
+      ]
+    },
+    {
+      "summary": {
+        "id": "3c844d68-5b71-4428-a260-392e4d48a1b5",
+        "title": "smoke task",
+        "provider": "codex",
+        "cwd": "D:\\code\\cli-run-ui\\.tmp-smoke-repo",
+        "prompt": "add a tiny change",
+        "repoRoot": "D:/code/cli-run-ui/.tmp-smoke-repo",
+        "repoName": ".tmp-smoke-repo",
+        "baseBranch": "master",
+        "branchName": "codex/task-smoke-task-mmqifdkw",
+        "createdAtMs": 1773503892609,
+        "startedAtMs": 1773503892609,
+        "status": "failed",
+        "workingTreeStatus": "clean",
+        "changedFiles": [],
+        "testResult": {
+          "status": "skipped",
+          "output": ""
+        },
+        "github": {
+          "owner": "",
+          "name": "",
+          "provider": "unknown",
+          "connected": false,
+          "tokenConfigured": false
+        },
+        "pullRequestReviews": [],
+        "pullRequestComments": [],
+        "checks": [],
+        "runId": "4660894d-7fa6-4573-8eb7-3b7da5c52cb3",
+        "endedAtMs": 1773503893026,
+        "error": "spawn codex ENOENT",
+        "lastRefreshedAtMs": 1773503894119
+      },
+      "events": [
+        {
+          "id": "7aaf0023-4f08-4b55-be6c-457c3d7527f1",
+          "taskId": "3c844d68-5b71-4428-a260-392e4d48a1b5",
+          "kind": "system",
+          "tone": "info",
+          "message": "Preparing task branch from master.",
+          "createdAtMs": 1773503892609
+        },
+        {
+          "id": "96dc9342-70ac-42d2-8e7a-b5d49568bcc7",
+          "taskId": "3c844d68-5b71-4428-a260-392e4d48a1b5",
+          "kind": "git",
+          "tone": "success",
+          "message": "Checked out branch codex/task-smoke-task-mmqifdkw.",
+          "createdAtMs": 1773503892988
+        },
+        {
+          "id": "f05da4ab-65b2-4805-90e6-ebe24b0f2b84",
+          "taskId": "3c844d68-5b71-4428-a260-392e4d48a1b5",
+          "kind": "system",
+          "tone": "success",
+          "message": "Assigned to codex. Run 4660894d started.",
+          "createdAtMs": 1773503893000
+        },
+        {
+          "id": "a2494838-ac7d-4d77-94ca-148900971b04",
+          "taskId": "3c844d68-5b71-4428-a260-392e4d48a1b5",
+          "kind": "system",
+          "tone": "error",
+          "message": "Agent run failed: spawn codex ENOENT",
+          "createdAtMs": 1773503893006
+        },
+        {
+          "id": "597debae-83d1-4728-8364-aee28cb4a16d",
+          "taskId": "3c844d68-5b71-4428-a260-392e4d48a1b5",
+          "kind": "git",
+          "tone": "info",
+          "message": "Refreshing git diff and repo status.",
+          "createdAtMs": 1773503893007
+        },
+        {
+          "id": "58fd708d-b672-4564-b01d-790444d671ce",
+          "taskId": "3c844d68-5b71-4428-a260-392e4d48a1b5",
+          "kind": "system",
+          "tone": "error",
+          "message": "Agent run failed: spawn codex ENOENT",
+          "createdAtMs": 1773503893026
+        },
+        {
+          "id": "bfdcc0f6-2748-401c-badc-63656322e4e0",
+          "taskId": "3c844d68-5b71-4428-a260-392e4d48a1b5",
+          "kind": "git",
+          "tone": "success",
+          "message": "Repository is clean after refresh.",
+          "createdAtMs": 1773503894119
+        }
+      ]
+    }
+  ]
 }

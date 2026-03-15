@@ -9,6 +9,7 @@ import type {
   TerminalOutputDTO,
   TerminalSessionDTO,
 } from '@cli-run-ui/core';
+import { resolveProviderCliCommand } from './providerCommands.js';
 
 type TerminalListener = (session: TerminalSessionDTO) => void;
 type OutputListener = (output: TerminalOutputDTO) => void;
@@ -243,7 +244,11 @@ function buildTerminalSpec(request: StartTerminalRequestDTO): {
 
   const cols = clampDimension(request.cols, 120);
   const rows = clampDimension(request.rows, 32);
-  const displayCommand = buildProviderCommand(request.provider, request.mode, request.sessionUid);
+  const displayCommand = buildTerminalProviderCommand(
+    request.provider,
+    request.mode,
+    request.sessionUid
+  );
 
   if (os.platform() === 'win32') {
     return {
@@ -266,13 +271,13 @@ function buildTerminalSpec(request: StartTerminalRequestDTO): {
   };
 }
 
-function buildProviderCommand(
+function buildTerminalProviderCommand(
   provider: ProviderId,
   mode: StartTerminalRequestDTO['mode'],
   sessionUid?: string
 ): string[] {
   if (provider === 'codex') {
-    const command = process.env.CLI_RUN_UI_CODEX_COMMAND ?? 'codex';
+    const command = resolveProviderCliCommand(provider).command;
     if (mode === 'resume') {
       const sessionId = extractSessionId(provider, sessionUid);
       return [command, '--resume', sessionId];
@@ -281,7 +286,7 @@ function buildProviderCommand(
   }
 
   if (provider === 'claude') {
-    const command = process.env.CLI_RUN_UI_CLAUDE_COMMAND ?? 'claude';
+    const command = resolveProviderCliCommand(provider).command;
     if (mode === 'resume') {
       const sessionId = extractSessionId(provider, sessionUid);
       return [command, '--resume', sessionId];

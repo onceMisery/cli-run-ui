@@ -3,6 +3,7 @@ import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { ClaudeProvider, CodexProvider, WatcherHub, } from '@cli-run-ui/core';
 import { AgentRelayManager } from './AgentRelayManager.js';
+import { checkAgentCliHealth } from './AgentCliHealth.js';
 import { HistoryStore } from './HistoryStore.js';
 import { RunManager } from './RunManager.js';
 import { TaskManager } from './TaskManager.js';
@@ -62,6 +63,10 @@ if (authToken) {
 app.get('/api/sessions', async (c) => {
     const sessions = await listAllSessions();
     return c.json({ sessions });
+});
+app.get('/api/health/cli', async (c) => {
+    const health = await checkAgentCliHealth();
+    return c.json(health);
 });
 app.get('/api/sessions/stream', (c) => {
     return createSseResponse(c, async (stream) => {

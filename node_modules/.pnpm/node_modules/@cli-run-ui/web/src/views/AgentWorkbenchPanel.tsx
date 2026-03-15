@@ -27,6 +27,7 @@ import '@xterm/xterm/css/xterm.css';
 import {
   ArrowDown,
   ArrowUp,
+  CheckCircle2,
   Copy,
   Command,
   CornerDownLeft,
@@ -52,6 +53,7 @@ import {
 } from 'lucide-react';
 
 import { useAgentRelayStream } from '@/hooks/useAgentRelayStream';
+import { useCliHealth } from '@/hooks/useCliHealth';
 import type { StreamStatus } from '@/hooks/useSessionStream';
 import { useRunStream } from '@/hooks/useRunStream';
 import { useTaskStream } from '@/hooks/useTaskStream';
@@ -148,6 +150,12 @@ export function AgentWorkbenchPanel({
   relayStatus,
 }: AgentWorkbenchPanelProps) {
   const { isChinese } = useI18n();
+  const {
+    health: cliHealth,
+    loading: cliHealthLoading,
+    error: cliHealthError,
+    refresh: refreshCliHealth,
+  } = useCliHealth();
   const savedPreferences = useMemo(readWorkbenchPreferences, []);
   const [surface, setSurface] = useState<LaunchSurface>(savedPreferences?.surface ?? 'run');
   const [provider, setProvider] = useState<SessionDTO['provider']>(
@@ -428,6 +436,7 @@ export function AgentWorkbenchPanel({
     [activeSession, isChinese, provider]
   );
   const relayPromptIdeas = relayTemplate.promptIdeas ?? [];
+  const cliChecks = cliHealth?.checks ?? [];
   const surfaceMeta = useMemo(() => {
     if (surface === 'task') {
       return {
@@ -1087,7 +1096,7 @@ export function AgentWorkbenchPanel({
   };
 
   return (
-    <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+    <section className="agent-workbench theme-panel rounded-[30px] p-4">
       <div className="flex items-center justify-between gap-3">
         <div>
           <div className="flex items-center gap-2 text-sm font-medium text-white">
@@ -1118,16 +1127,43 @@ export function AgentWorkbenchPanel({
         </div>
       </div>
 
-      <div className="mt-4 grid gap-4 xl:grid-cols-[280px_minmax(0,1fr)]">
-        <div className="space-y-4">
-          <section className="rounded-2xl border border-white/10 bg-black/20 p-3">
+      <div className="mt-4 grid gap-3 sm:grid-cols-2 2xl:grid-cols-4">
+        <WorkbenchMiniMetric
+          label={isChinese ? '任务闭环' : 'Task loops'}
+          value={String(tasks.length)}
+          helper={isChinese ? '分支、测试、PR 一条线' : 'branch, tests, and PR in one flow'}
+          icon={GitBranch}
+        />
+        <WorkbenchMiniMetric
+          label={isChinese ? '无头运行' : 'Headless runs'}
+          value={String(runs.length)}
+          helper={isChinese ? '适合一次性后台执行' : 'best for one-shot background work'}
+          icon={Play}
+        />
+        <WorkbenchMiniMetric
+          label={isChinese ? '交互终端' : 'Interactive terminals'}
+          value={String(terminals.length)}
+          helper={isChinese ? '保留上下文继续协作' : 'keep context alive for follow-ups'}
+          icon={Monitor}
+        />
+        <WorkbenchMiniMetric
+          label={isChinese ? 'Agent 房间' : 'Agent rooms'}
+          value={String(relays.length)}
+          helper={isChinese ? '多智能体协作与人工介入' : 'multi-agent rooms with human steering'}
+          icon={SplitSquareVertical}
+        />
+      </div>
+
+      <div className="mt-4 grid gap-4 xl:grid-cols-[minmax(0,1fr)_360px]">
+        <div className="space-y-4 xl:order-2 xl:max-h-[calc(100vh-220px)] xl:overflow-y-auto xl:pr-1">
+          <section className={WORKBENCH_PANEL_CLASS}>
             <div className="flex items-center justify-between gap-3">
               <div className="text-xs uppercase tracking-[0.18em] text-slate-500">
                 {isChinese ? '启动' : 'Launch'}
               </div>
               <button
                 onClick={resetDraft}
-                className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/[0.03] px-2.5 py-1 text-[11px] text-slate-300 transition hover:bg-white/[0.08] hover:text-white"
+                className="inline-flex items-center gap-1 rounded-full border border-[var(--theme-panel-border)] bg-[var(--theme-input-bg)] px-2.5 py-1 text-[11px] text-slate-300 transition hover:bg-white/[0.08] hover:text-white"
               >
                 <RotateCcw className="h-3.5 w-3.5" />
                 {isChinese ? '重置草稿' : 'Reset draft'}
@@ -1160,6 +1196,74 @@ export function AgentWorkbenchPanel({
               />
             </div>
 
+            <div className={`${WORKBENCH_PANEL_MUTED_CLASS} mt-4`}>
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2 text-xs uppercase tracking-[0.18em] text-slate-500">
+                  <CheckCircle2 className="h-3.5 w-3.5" />
+                  {isChinese ? '环境自检' : 'Environment check'}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => void refreshCliHealth()}
+                  disabled={cliHealthLoading}
+                  className="inline-flex items-center gap-1 rounded-full border border-[var(--theme-panel-border)] bg-[var(--theme-input-bg)] px-2 py-1 text-[11px] text-slate-300 transition hover:bg-white/[0.08] hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  <RefreshCw className={cn('h-3 w-3', cliHealthLoading && 'animate-spin')} />
+                  {isChinese ? '刷新' : 'Refresh'}
+                </button>
+              </div>
+
+              <div className="mt-3 space-y-2">
+                {cliChecks.map((check) => (
+                  <div
+                    key={`cli-check-${check.provider}`}
+                    className="rounded-xl border border-[var(--theme-panel-border)] bg-[var(--theme-input-bg)] px-3 py-2"
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-sm font-medium text-white">{check.provider}</span>
+                      <Badge className={cliCheckBadgeClass(check.status)}>
+                        {check.status === 'ready'
+                          ? isChinese
+                            ? '可用'
+                            : 'ready'
+                          : check.status === 'missing'
+                            ? isChinese
+                              ? '缺失'
+                              : 'missing'
+                            : isChinese
+                              ? '异常'
+                              : 'error'}
+                      </Badge>
+                    </div>
+                    <div className="mt-1 font-mono text-[11px] text-slate-400">{check.command}</div>
+                    {check.version ? (
+                      <div className="mt-1 text-xs text-slate-300">{check.version}</div>
+                    ) : null}
+                    {check.message ? (
+                      <div className="mt-1 text-xs text-amber-100/90">{check.message}</div>
+                    ) : null}
+                  </div>
+                ))}
+
+                {!cliHealthLoading && cliChecks.length === 0 ? (
+                  <div className="rounded-xl border border-dashed border-[var(--theme-panel-border)] bg-[var(--theme-input-bg)] px-3 py-3 text-xs text-slate-400">
+                    {isChinese ? '暂无检测结果。' : 'No CLI checks available yet.'}
+                  </div>
+                ) : null}
+              </div>
+
+              <div className="mt-2 text-[11px] text-slate-400">
+                {isChinese
+                  ? '可通过 CLI_RUN_UI_CODEX_COMMAND / CLI_RUN_UI_CLAUDE_COMMAND 指定命令路径。'
+                  : 'Use CLI_RUN_UI_CODEX_COMMAND / CLI_RUN_UI_CLAUDE_COMMAND to override executable paths.'}
+              </div>
+              {cliHealthError ? (
+                <InlineNotice tone="error">
+                  {(isChinese ? '自检失败：' : 'Health check failed: ') + cliHealthError}
+                </InlineNotice>
+              ) : null}
+            </div>
+
             <label className="mt-3 block">
               <div className="mb-1 text-xs uppercase tracking-[0.18em] text-slate-500">
                 {isChinese ? '工作区' : 'Workspace'}
@@ -1168,7 +1272,7 @@ export function AgentWorkbenchPanel({
                 value={cwd}
                 onChange={(event) => setCwd(event.target.value)}
                 placeholder="D:\\code\\your-project"
-                className="w-full rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 text-sm text-slate-100 outline-none placeholder:text-slate-500"
+                className={WORKBENCH_INPUT_CLASS}
               />
             </label>
 
@@ -1189,7 +1293,7 @@ export function AgentWorkbenchPanel({
                 value={prompt}
                 onChange={(event) => setPrompt(event.target.value)}
                 rows={5}
-                className="w-full resize-none rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 text-sm text-slate-100 outline-none placeholder:text-slate-500"
+                className={`${WORKBENCH_INPUT_CLASS} resize-none`}
                 placeholder={
                   isChinese
                     ? '继续实现、解释改动，或者审查当前代码。'
@@ -1228,7 +1332,7 @@ export function AgentWorkbenchPanel({
                   value={taskIssueUrl}
                   onChange={(event) => setTaskIssueUrl(event.target.value)}
                   placeholder="https://github.com/owner/repo/issues/123"
-                  className="min-w-0 flex-1 rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 text-sm text-slate-100 outline-none placeholder:text-slate-500"
+                  className={`${WORKBENCH_INPUT_CLASS} min-w-0 flex-1`}
                 />
                 <Button
                   type="button"
@@ -1256,7 +1360,7 @@ export function AgentWorkbenchPanel({
                 value={taskTitle}
                 onChange={(event) => setTaskTitle(event.target.value)}
                 placeholder={isChinese ? '例如：实现 GitHub task loop' : 'For example: Ship the GitHub task loop'}
-                className="w-full rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 text-sm text-slate-100 outline-none placeholder:text-slate-500"
+                className={WORKBENCH_INPUT_CLASS}
               />
             </div>
 
@@ -1271,7 +1375,7 @@ export function AgentWorkbenchPanel({
                 value={taskTestCommand}
                 onChange={(event) => setTaskTestCommand(event.target.value)}
                 placeholder={isChinese ? '例如：corepack pnpm test' : 'For example: corepack pnpm test'}
-                className="w-full rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 text-sm text-slate-100 outline-none placeholder:text-slate-500"
+                className={WORKBENCH_INPUT_CLASS}
               />
             </div>
 
@@ -1326,7 +1430,7 @@ export function AgentWorkbenchPanel({
             </div>
           </section>
 
-          <section className="rounded-2xl border border-white/10 bg-black/20 p-3">
+          <section className={WORKBENCH_PANEL_CLASS}>
             <div className="flex items-center justify-between gap-3">
               <div className="text-xs uppercase tracking-[0.18em] text-slate-500">
                 Agent relay
@@ -1408,6 +1512,28 @@ export function AgentWorkbenchPanel({
               />
             </div>
 
+            <div className="mt-3 grid gap-3 sm:grid-cols-2">
+              <div className={WORKBENCH_PANEL_MUTED_CLASS}>
+                <div className="text-[11px] uppercase tracking-[0.18em] text-slate-500">
+                  {isChinese ? '模板重点' : 'Template focus'}
+                </div>
+                <div className="mt-2 text-sm leading-6 text-slate-100">
+                  {relayTemplate.focus ?? relayTemplate.description}
+                </div>
+              </div>
+              <div className={WORKBENCH_PANEL_MUTED_CLASS}>
+                <div className="text-[11px] uppercase tracking-[0.18em] text-slate-500">
+                  {isChinese ? '期望产出' : 'Expected output'}
+                </div>
+                <div className="mt-2 text-sm leading-6 text-slate-100">
+                  {relayTemplate.deliverable ??
+                    (isChinese
+                      ? '形成一个可执行的结论、计划或 review 决策。'
+                      : 'End with an actionable conclusion, plan, or review decision.')}
+                </div>
+              </div>
+            </div>
+
             <div className="mt-3 rounded-2xl border border-white/10 bg-white/[0.03] p-3">
               <div className="flex items-center gap-2 text-xs uppercase tracking-[0.18em] text-slate-500">
                 <Users className="h-3.5 w-3.5" />
@@ -1475,13 +1601,33 @@ export function AgentWorkbenchPanel({
                 value={relayPrompt}
                 onChange={(event) => setRelayPrompt(event.target.value)}
                 rows={4}
-                className="w-full resize-none rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 text-sm text-slate-100 outline-none placeholder:text-slate-500"
+                className={`${WORKBENCH_INPUT_CLASS} resize-none`}
                 placeholder={
-                  isChinese
+                  relayTemplate.promptPlaceholder ??
+                  (isChinese
                     ? '输入一个主题，让 Claude 和 Codex 围绕它轮流讨论、辩论或协作。'
-                    : 'Give Claude and Codex a topic so they can alternate, debate, or collaborate.'
+                    : 'Give Claude and Codex a topic so they can alternate, debate, or collaborate.')
                 }
               />
+              {relayPromptIdeas.length > 0 ? (
+                <div className="mt-3">
+                  <div className="text-[11px] uppercase tracking-[0.18em] text-slate-500">
+                    {isChinese ? '开场建议' : 'Suggested openers'}
+                  </div>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {relayPromptIdeas.map((idea) => (
+                      <button
+                        key={idea}
+                        type="button"
+                        onClick={() => setRelayPrompt(idea)}
+                        className="rounded-full border border-[var(--theme-panel-border)] bg-[var(--theme-input-bg)] px-3 py-1.5 text-left text-xs text-slate-300 transition hover:border-[var(--theme-accent-border)] hover:bg-[var(--theme-accent-soft)] hover:text-white"
+                      >
+                        {idea}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
             </div>
 
             <div className="mt-3">
@@ -1492,7 +1638,7 @@ export function AgentWorkbenchPanel({
                 value={relaySystemPrompt}
                 onChange={(event) => setRelaySystemPrompt(event.target.value)}
                 rows={3}
-                className="w-full resize-none rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 text-sm text-slate-100 outline-none placeholder:text-slate-500"
+                className={`${WORKBENCH_INPUT_CLASS} resize-none`}
                 placeholder={
                   isChinese
                     ? '给整个房间一条统一规则，比如先分析再决策，或重点关注风险与可执行性。'
@@ -1512,7 +1658,7 @@ export function AgentWorkbenchPanel({
                 value={relayPinnedRulesDraft}
                 onChange={(event) => setRelayPinnedRulesDraft(event.target.value)}
                 rows={4}
-                className="w-full resize-none rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 text-sm text-slate-100 outline-none placeholder:text-slate-500"
+                className={`${WORKBENCH_INPUT_CLASS} resize-none`}
                 placeholder={
                   isChinese
                     ? '输入房间长期规则，每行一条。比如：先统一结论，再给行动计划。'
@@ -1551,7 +1697,7 @@ export function AgentWorkbenchPanel({
                   value={customRelayTemplateName}
                   onChange={(event) => setCustomRelayTemplateName(event.target.value)}
                   placeholder={isChinese ? '例如：我的交付房间' : 'For example: My shipping room'}
-                  className="min-w-0 flex-1 rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-sm text-slate-100 outline-none placeholder:text-slate-500"
+                  className={`${WORKBENCH_INPUT_CLASS} min-w-0 flex-1`}
                 />
                 <Button
                   type="button"
@@ -1590,7 +1736,7 @@ export function AgentWorkbenchPanel({
             </div>
           </section>
 
-          <section className="rounded-2xl border border-white/10 bg-black/20 p-3">
+          <section className={WORKBENCH_PANEL_CLASS}>
             <div className="mb-2 flex items-center justify-between gap-3">
               <div className="text-xs uppercase tracking-[0.18em] text-slate-500">
                 {isChinese ? '活动历史' : 'Activity history'}
@@ -1671,7 +1817,7 @@ export function AgentWorkbenchPanel({
           </section>
         </div>
 
-        <div className="space-y-4">
+        <div className="space-y-4 xl:order-1">
           <BrowserChatCard
             chatDraft={chatDraft}
             canSend={canSendChat}
@@ -1686,6 +1832,65 @@ export function AgentWorkbenchPanel({
             onPickRecentPrompt={setChatDraft}
             onSend={() => void sendChatMessage()}
           />
+
+          <section className={`${WORKBENCH_PANEL_CLASS} grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px]`}>
+            <div>
+              <div className="text-xs uppercase tracking-[0.18em] text-slate-500">
+                {isChinese ? '当前工作面' : 'Current surface'}
+              </div>
+              <div className="mt-2 flex items-center gap-3">
+                <div className="text-xl font-semibold text-white">{surfaceMeta.title}</div>
+                <Badge variant="muted" className="bg-white/5 text-slate-200">
+                  {surfaceMeta.count}
+                </Badge>
+              </div>
+              <div className="mt-2 text-sm text-slate-300">{surfaceMeta.description}</div>
+              <div className={`${WORKBENCH_PANEL_MUTED_CLASS} mt-4`}>
+                <div className="text-[11px] uppercase tracking-[0.18em] text-slate-500">
+                  {isChinese ? '当前焦点' : 'Current focus'}
+                </div>
+                <div className="mt-2 text-sm leading-6 text-slate-100">{surfaceMeta.focus}</div>
+              </div>
+            </div>
+
+            <div className="grid gap-3">
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
+                <div className={WORKBENCH_PANEL_MUTED_CLASS}>
+                  <div className="text-[11px] uppercase tracking-[0.18em] text-slate-500">
+                    {isChinese ? '执行来源' : 'Execution source'}
+                  </div>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    <Badge className={provider === 'claude' ? 'border-sky-400/30 bg-sky-400/10 text-sky-100' : 'border-emerald-400/30 bg-emerald-400/10 text-emerald-100'}>
+                      {provider}
+                    </Badge>
+                    <Badge variant="muted" className="bg-white/5 text-slate-200">
+                      {mode === 'resume' ? (isChinese ? '恢复模式' : 'resume') : isChinese ? '新任务模式' : 'new task'}
+                    </Badge>
+                  </div>
+                </div>
+                <div className={WORKBENCH_PANEL_MUTED_CLASS}>
+                  <div className="text-[11px] uppercase tracking-[0.18em] text-slate-500">
+                    {isChinese ? '绑定会话' : 'Bound session'}
+                  </div>
+                  <div className="mt-2 text-sm text-slate-100">
+                    {activeSession
+                      ? activeSession.projectName || activeSession.sessionId
+                      : isChinese
+                        ? '当前未绑定会话'
+                        : 'No session bound yet'}
+                  </div>
+                </div>
+              </div>
+              <div className={WORKBENCH_PANEL_MUTED_CLASS}>
+                <div className="text-[11px] uppercase tracking-[0.18em] text-slate-500">
+                  {isChinese ? '工作区路径' : 'Workspace path'}
+                </div>
+                <div className="mt-2 break-all font-mono text-xs text-slate-300">
+                  {cwd || (isChinese ? '请先填写工作区路径。' : 'Add a workspace path to begin.')}
+                </div>
+              </div>
+            </div>
+          </section>
 
           <div className="flex gap-2">
             <SurfaceChip
@@ -1853,7 +2058,7 @@ function TaskLoopPane({
   }, [logs]);
 
   return (
-    <section className="rounded-2xl border border-white/10 bg-black/20 p-3">
+    <section className={WORKBENCH_PANEL_CLASS}>
       <div className="mb-3 flex items-center justify-between gap-3">
         <div>
           <div className="text-xs uppercase tracking-[0.18em] text-slate-500">
@@ -2491,7 +2696,7 @@ function HeadlessRunPane({
   }, [logs]);
 
   return (
-    <section className="rounded-2xl border border-white/10 bg-black/20 p-3">
+    <section className={WORKBENCH_PANEL_CLASS}>
       <div className="mb-3 flex items-center justify-between">
         <div>
           <div className="text-xs uppercase tracking-[0.18em] text-slate-500">
@@ -2666,7 +2871,7 @@ function InteractiveTerminalPane({
   }, [selectedTerminalId]);
 
   return (
-    <section className="rounded-2xl border border-white/10 bg-black/20 p-3">
+    <section className={WORKBENCH_PANEL_CLASS}>
       <div className="mb-3 flex items-center justify-between">
         <div>
           <div className="text-xs uppercase tracking-[0.18em] text-slate-500">
@@ -2760,7 +2965,7 @@ function AgentRelayPane({
   }, [interventions, turns]);
 
   return (
-    <section className="rounded-2xl border border-white/10 bg-black/20 p-3">
+    <section className={WORKBENCH_PANEL_CLASS}>
       <div className="mb-3 flex items-center justify-between gap-3">
         <div>
           <div className="text-xs uppercase tracking-[0.18em] text-slate-500">
@@ -3270,7 +3475,7 @@ function AgentRelayRoomPane({
                       onClick={() => onMoveIntervention(entry.id, 'up')}
                       disabled={
                         index === 0 ||
-                        isMovingIntervention === entry.id ||
+                        movingInterventionId === entry.id ||
                         pinningInterventionId === entry.id
                       }
                       className="inline-flex items-center gap-1 rounded-full border border-violet-300/20 px-2 py-1 text-[11px] text-violet-100 transition hover:bg-violet-300/10 disabled:cursor-not-allowed disabled:opacity-50"
@@ -3283,7 +3488,7 @@ function AgentRelayRoomPane({
                       onClick={() => onMoveIntervention(entry.id, 'down')}
                       disabled={
                         index === pinnedRules.length - 1 ||
-                        isMovingIntervention === entry.id ||
+                        movingInterventionId === entry.id ||
                         pinningInterventionId === entry.id
                       }
                       className="inline-flex items-center gap-1 rounded-full border border-violet-300/20 px-2 py-1 text-[11px] text-violet-100 transition hover:bg-violet-300/10 disabled:cursor-not-allowed disabled:opacity-50"
@@ -3469,7 +3674,7 @@ function BrowserChatCard({
         : 'Your first message will auto-start a terminal and begin the conversation';
 
   return (
-    <section className="flex min-h-[420px] flex-col rounded-2xl border border-white/10 bg-black/20 p-3">
+    <section className={`${WORKBENCH_PANEL_CLASS} overflow-hidden`}>
       <div className="flex items-start justify-between gap-3">
         <div>
           <div className="flex items-center gap-2 text-xs uppercase tracking-[0.18em] text-slate-500">
@@ -3479,18 +3684,18 @@ function BrowserChatCard({
           <div className="mt-1 text-sm text-slate-300">
             {terminalReady
               ? isChinese
-                ? '直接把消息发给当前打开的 agent terminal。'
-                : 'Send messages straight into the open agent terminal.'
+                ? '直接把消息送进当前打开的 agent 终端，适合连续协作。'
+                : 'Send messages straight into the open agent terminal for continuous collaboration.'
               : isChinese
-                ? '输入后会自动拉起一个 terminal，并把这条消息发送给 agent。'
-                : 'The first message will auto-open a terminal and send itself to the agent.'}
+                ? '第一条消息会自动拉起终端，再把内容直接送给 agent。'
+                : 'The first message auto-starts a terminal and hands the prompt to the agent.'}
           </div>
         </div>
         <Badge
           className={
             terminalReady
               ? 'border-emerald-400/30 bg-emerald-400/10 text-emerald-100'
-              : 'border-white/10 bg-white/[0.04] text-slate-300'
+              : 'border-[var(--theme-panel-border)] bg-[var(--theme-input-bg)] text-slate-300'
           }
         >
           {terminalReady
@@ -3503,181 +3708,199 @@ function BrowserChatCard({
         </Badge>
       </div>
 
-      <div className="mt-3 flex items-center justify-between gap-3 rounded-2xl border border-white/10 bg-white/[0.03] px-3 py-2.5">
-        <div className="flex min-w-0 items-center gap-2 text-sm text-slate-300">
-          <span
-            className={cn(
-              'h-2.5 w-2.5 rounded-full',
-              isSending
-                ? 'animate-pulse bg-[var(--theme-accent-foreground)] shadow-[0_0_16px_rgba(255,255,255,0.45)]'
-                : terminalReady
-                  ? 'bg-emerald-300 shadow-[0_0_16px_rgba(52,211,153,0.45)]'
-                  : 'bg-slate-500'
-            )}
-          />
-          <span className="truncate">{statusText}</span>
-        </div>
-        <div className="shrink-0 text-[11px] text-slate-500">
-          {isChinese ? '右侧终端实时回流' : 'Streams into the terminal pane'}
-        </div>
-      </div>
-
-      <div className="mt-3 flex-1 rounded-2xl border border-white/10 bg-white/[0.03] p-3">
-        <button
-          type="button"
-          onClick={() => setIsRecentPromptsOpen((current) => !current)}
-          className="flex w-full items-center justify-between gap-3 rounded-2xl border border-white/10 bg-black/20 px-3 py-3 text-left transition hover:bg-white/[0.04]"
-        >
-          <div className="min-w-0">
-            <div className="flex items-center gap-2 text-xs uppercase tracking-[0.18em] text-slate-500">
-              <Command className="h-3.5 w-3.5" />
-              {isChinese ? '历史快捷提问' : 'Recent prompts'}
+      <div className="mt-4 grid gap-4 xl:grid-cols-[minmax(0,1fr)_280px]">
+        <div className={`${WORKBENCH_PANEL_STRONG_CLASS} border-[var(--theme-accent-border)]`}>
+          <div className="flex items-center justify-between gap-3 rounded-2xl border border-[var(--theme-panel-border)] bg-[var(--theme-input-bg)] px-3 py-2.5">
+            <div className="flex min-w-0 items-center gap-2 text-sm text-slate-300">
+              <span
+                className={cn(
+                  'h-2.5 w-2.5 rounded-full',
+                  isSending
+                    ? 'animate-pulse bg-[var(--theme-accent-foreground)] shadow-[0_0_16px_rgba(255,255,255,0.45)]'
+                    : terminalReady
+                      ? 'bg-emerald-300 shadow-[0_0_16px_rgba(52,211,153,0.45)]'
+                      : 'bg-slate-500'
+                )}
+              />
+              <span className="truncate">{statusText}</span>
             </div>
-            <div className="mt-2 text-sm text-slate-300">
-              {isRecentPromptsOpen
-                ? isChinese
-                  ? '点击收起历史提问和发送说明。'
-                  : 'Click to collapse recent prompts and delivery guidance.'
-                : hasRecentPrompts
+            <div className="shrink-0 text-[11px] text-slate-500">
+              {isChinese ? '输出实时回流到终端面板' : 'Output keeps streaming into the terminal pane'}
+            </div>
+          </div>
+
+          <div className="mt-4 rounded-[22px] border border-[var(--theme-accent-border)] bg-[linear-gradient(180deg,rgba(255,255,255,0.06),rgba(255,255,255,0.03))] p-4 shadow-[0_18px_40px_rgba(0,0,0,0.24)]">
+            <div className="mb-2 flex items-center justify-between gap-3">
+              <div className="text-xs uppercase tracking-[0.18em] text-slate-500">
+                {isChinese ? '消息输入' : 'Message composer'}
+              </div>
+              <div className="text-xs text-slate-400">
+                {isChinese ? 'Ctrl/Cmd + Enter 发送' : 'Ctrl/Cmd + Enter to send'}
+              </div>
+            </div>
+            <textarea
+              value={chatDraft}
+              onChange={(event) => onDraftChange(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key !== 'Enter' || (!event.ctrlKey && !event.metaKey)) return;
+                event.preventDefault();
+                onSend();
+              }}
+              rows={6}
+              disabled={isSending}
+              className="w-full resize-none bg-transparent text-sm leading-7 text-slate-100 outline-none placeholder:text-slate-500 disabled:cursor-wait disabled:opacity-70"
+              placeholder={
+                isChinese
+                  ? '直接输入你想让 agent 完成的事，例如实现功能、修复问题、写测试或解释代码。'
+                  : 'Type what you want the agent to do: implement a feature, fix a bug, add tests, or explain code.'
+              }
+            />
+            <div className="mt-4 flex items-center justify-between gap-3 border-t border-white/10 pt-3">
+              <div className="min-w-0 text-xs text-slate-400">
+                {disabledReason ??
+                  (isSending
+                    ? isChinese
+                      ? '正在等待 agent 接收这条消息，终端与日志会继续滚动。'
+                      : 'Waiting for the agent to receive your message. Terminal output and logs will keep streaming.'
+                    : terminalReady
+                      ? isChinese
+                        ? `已连接到 ${terminal.provider} terminal，可以继续多轮对话。`
+                        : `Connected to the ${terminal.provider} terminal and ready for the next turn.`
+                      : isChinese
+                        ? '发送后会自动起终端，并把输出展示在交互终端面板。'
+                        : 'Sending will auto-start a terminal and stream the output into the interactive terminal pane.')}
+              </div>
+              <Button
+                onClick={onSend}
+                disabled={!canSend}
+                className="rounded-xl bg-[var(--theme-accent-solid)] text-[var(--theme-accent-foreground)] hover:bg-[var(--theme-accent-solid-hover)]"
+              >
+                {isSending ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <ArrowUp className="h-4 w-4" />}
+                {isSending
                   ? isChinese
-                    ? '点击展开最近提问，快速重新带回输入框。'
-                    : 'Click to expand recent prompts and refill the composer quickly.'
-                  : isChinese
-                    ? '当前没有历史提问，点击展开查看说明。'
-                    : 'No recent prompts yet. Click to expand the helper panel.'}
+                    ? '发送中...'
+                    : 'Sending...'
+                  : terminalReady
+                    ? isChinese
+                      ? '发送'
+                      : 'Send'
+                    : isChinese
+                      ? '启动并发送'
+                      : 'Start and send'}
+              </Button>
             </div>
           </div>
-          <div className="flex shrink-0 items-center gap-2">
-            <Badge variant="muted" className="bg-white/5 text-slate-300">
-              {recentPrompts.length}
-            </Badge>
-            {isRecentPromptsOpen ? (
-              <ArrowUp className="h-4 w-4 text-slate-400" />
-            ) : (
-              <ArrowDown className="h-4 w-4 text-slate-400" />
-            )}
-          </div>
-        </button>
+        </div>
 
-        {isRecentPromptsOpen ? (
-          <>
-            {hasRecentPrompts ? (
-              <div className="mt-3 flex flex-wrap gap-2">
-                {recentPrompts.map((entry) => (
-                  <button
-                    key={entry}
-                    type="button"
-                    onClick={() => onPickRecentPrompt(entry)}
-                    className="max-w-full rounded-full border border-white/10 bg-black/20 px-3 py-1.5 text-left text-xs text-slate-300 transition hover:border-[var(--theme-accent-border)] hover:bg-[var(--theme-accent-soft)] hover:text-white"
-                    title={entry}
-                  >
-                    <span className="block max-w-[260px] truncate">{entry}</span>
-                  </button>
-                ))}
+        <div className="space-y-3">
+          <button
+            type="button"
+            onClick={() => setIsRecentPromptsOpen((current) => !current)}
+            className={`${WORKBENCH_PANEL_MUTED_CLASS} flex w-full items-center justify-between gap-3 text-left transition hover:bg-white/[0.05]`}
+          >
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 text-xs uppercase tracking-[0.18em] text-slate-500">
+                <Command className="h-3.5 w-3.5" />
+                {isChinese ? '历史快捷提问' : 'Recent prompts'}
               </div>
-            ) : (
-              <div className="mt-3 rounded-2xl border border-dashed border-white/10 bg-black/20 px-3 py-4 text-sm text-slate-400">
-                {isChinese
-                  ? '这里会记住你最近发给 agent 的问题，点击就能重新带回输入框。'
-                  : 'Your latest prompts will show up here so you can reuse them with one click.'}
+              <div className="mt-2 text-sm text-slate-300">
+                {isRecentPromptsOpen
+                  ? isChinese
+                    ? '点击收起最近提问。'
+                    : 'Click to collapse recent prompts.'
+                  : hasRecentPrompts
+                    ? isChinese
+                      ? '点击展开最近提问，一键带回输入框。'
+                      : 'Click to expand your recent prompts and refill the composer.'
+                    : isChinese
+                      ? '当前没有历史提问，点击查看发送说明。'
+                      : 'No recent prompts yet. Click to open the helper panel.'}
               </div>
-            )}
+            </div>
+            <div className="flex shrink-0 items-center gap-2">
+              <Badge variant="muted" className="bg-white/5 text-slate-300">
+                {recentPrompts.length}
+              </Badge>
+              {isRecentPromptsOpen ? <ArrowUp className="h-4 w-4 text-slate-400" /> : <ArrowDown className="h-4 w-4 text-slate-400" />}
+            </div>
+          </button>
 
-            <div className="mt-3 grid gap-2 md:grid-cols-2">
-              <div className="rounded-2xl border border-white/10 bg-black/20 px-3 py-2.5">
-                <div className="flex items-center gap-2 text-xs uppercase tracking-[0.18em] text-slate-500">
-                  <Keyboard className="h-3.5 w-3.5" />
-                  {isChinese ? '发送快捷键' : 'Shortcut'}
+          {isRecentPromptsOpen ? (
+            <div className={`${WORKBENCH_PANEL_MUTED_CLASS} space-y-3`}>
+              {hasRecentPrompts ? (
+                <div className="flex flex-wrap gap-2">
+                  {recentPrompts.map((entry) => (
+                    <button
+                      key={entry}
+                      type="button"
+                      onClick={() => onPickRecentPrompt(entry)}
+                      className="max-w-full rounded-full border border-[var(--theme-panel-border)] bg-[var(--theme-input-bg)] px-3 py-1.5 text-left text-xs text-slate-300 transition hover:border-[var(--theme-accent-border)] hover:bg-[var(--theme-accent-soft)] hover:text-white"
+                      title={entry}
+                    >
+                      <span className="block max-w-[220px] truncate">{entry}</span>
+                    </button>
+                  ))}
                 </div>
-                <div className="mt-2 text-sm text-slate-300">
-                  {isChinese ? '`Ctrl/Cmd + Enter` 发送，`Enter` 换行。' : '`Ctrl/Cmd + Enter` sends, `Enter` adds a new line.'}
-                </div>
-              </div>
-              <div className="rounded-2xl border border-white/10 bg-black/20 px-3 py-2.5">
-                <div className="flex items-center gap-2 text-xs uppercase tracking-[0.18em] text-slate-500">
-                  <CornerDownLeft className="h-3.5 w-3.5" />
-                  {isChinese ? '发送方式' : 'Delivery'}
-                </div>
-                <div className="mt-2 text-sm text-slate-300">
+              ) : (
+                <div className="rounded-2xl border border-dashed border-[var(--theme-panel-border)] bg-[var(--theme-input-bg)] px-3 py-4 text-sm text-slate-400">
                   {isChinese
-                    ? '优先复用当前 terminal；没有打开会话时自动新建并发出首条消息。'
-                    : 'Reuses the current terminal when available, otherwise opens one and delivers the first message automatically.'}
+                    ? '这里会记住你最近发给 agent 的问题，点击就能重新带回输入框。'
+                    : 'Your latest prompts will show up here so you can reuse them with one click.'}
+                </div>
+              )}
+
+              <div className="grid gap-3">
+                <div className={WORKBENCH_PANEL_MUTED_CLASS}>
+                  <div className="flex items-center gap-2 text-xs uppercase tracking-[0.18em] text-slate-500">
+                    <Keyboard className="h-3.5 w-3.5" />
+                    {isChinese ? '发送快捷键' : 'Shortcut'}
+                  </div>
+                  <div className="mt-2 text-sm text-slate-300">
+                    {isChinese ? '`Ctrl/Cmd + Enter` 发送，`Enter` 换行。' : '`Ctrl/Cmd + Enter` sends, `Enter` adds a new line.'}
+                  </div>
+                </div>
+                <div className={WORKBENCH_PANEL_MUTED_CLASS}>
+                  <div className="flex items-center gap-2 text-xs uppercase tracking-[0.18em] text-slate-500">
+                    <CornerDownLeft className="h-3.5 w-3.5" />
+                    {isChinese ? '发送方式' : 'Delivery'}
+                  </div>
+                  <div className="mt-2 text-sm text-slate-300">
+                    {isChinese
+                      ? '优先复用当前 terminal；没有打开会话时会自动新建并发出首条消息。'
+                      : 'Reuses the current terminal when possible, otherwise creates one and delivers the first message automatically.'}
+                  </div>
                 </div>
               </div>
             </div>
-          </>
-        ) : null}
-      </div>
-
-      <div className="mt-3 shrink-0 rounded-[24px] border border-[var(--theme-accent-border)] bg-[linear-gradient(180deg,rgba(255,255,255,0.06),rgba(255,255,255,0.03))] p-3 shadow-[0_18px_40px_rgba(0,0,0,0.24)]">
-        <div className="mb-2 flex items-center justify-between gap-3">
-          <div className="text-xs uppercase tracking-[0.18em] text-slate-500">
-            {isChinese ? '消息输入' : 'Message composer'}
-          </div>
-          <div className="text-xs text-slate-400">
-            {isChinese ? '底部固定输入栏' : 'Docked composer'}
-          </div>
-        </div>
-        <textarea
-          value={chatDraft}
-          onChange={(event) => onDraftChange(event.target.value)}
-          onKeyDown={(event) => {
-            if (event.key !== 'Enter' || (!event.ctrlKey && !event.metaKey)) return;
-            event.preventDefault();
-            onSend();
-          }}
-          rows={4}
-          disabled={isSending}
-          className="w-full resize-none bg-transparent text-sm text-slate-100 outline-none placeholder:text-slate-500 disabled:cursor-wait disabled:opacity-70"
-          placeholder={
-            isChinese
-              ? '直接输入你想让 agent 做的事，Ctrl/Cmd + Enter 发送，Enter 换行。'
-              : 'Type what you want the agent to do. Press Ctrl/Cmd+Enter to send, Enter for a new line.'
-          }
-        />
-        <div className="mt-3 flex items-center justify-between gap-3 border-t border-white/10 pt-3">
-          <div className="min-w-0 text-xs text-slate-400">
-            {disabledReason ??
-              (isSending
-                ? isChinese
-                  ? '正在等待 agent 接收这条消息，输出会继续在终端面板滚动。'
-                  : 'Waiting for the agent to receive your message. Output will keep streaming in the terminal pane.'
-                : terminalReady
-                  ? isChinese
-                    ? `已连接到 ${terminal.provider} terminal，可继续对话`
-                    : `Connected to the ${terminal.provider} terminal and ready for the next turn`
-                  : isChinese
-                    ? '发送后会在右侧终端面板显示实时输出'
-                    : 'Output will stream into the terminal pane on the right')}
-          </div>
-          <div className="flex shrink-0 items-center gap-2">
-            <div className="hidden rounded-full border border-white/10 bg-black/20 px-2.5 py-1 text-[11px] text-slate-400 md:block">
-              {isChinese ? 'Ctrl/Cmd + Enter' : 'Ctrl/Cmd + Enter'}
-            </div>
-            <Button
-              onClick={onSend}
-              disabled={!canSend}
-              className="rounded-xl bg-[var(--theme-accent-solid)] text-[var(--theme-accent-foreground)] hover:bg-[var(--theme-accent-solid-hover)]"
-            >
-              {isSending ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <ArrowUp className="h-4 w-4" />}
-              {isSending
-                ? isChinese
-                  ? '发送中...'
-                  : 'Sending...'
-                : terminalReady
-                  ? isChinese
-                    ? '发送'
-                    : 'Send'
-                  : isChinese
-                    ? '启动并发送'
-                    : 'Start and send'}
-            </Button>
-          </div>
+          ) : null}
         </div>
       </div>
 
       {chatError ? <InlineNotice tone="error">{chatError}</InlineNotice> : null}
     </section>
+  );
+}
+
+function WorkbenchMiniMetric({
+  label,
+  value,
+  helper,
+  icon: Icon,
+}: {
+  label: string;
+  value: string;
+  helper: string;
+  icon: typeof GitBranch;
+}) {
+  return (
+    <div className={WORKBENCH_PANEL_MUTED_CLASS}>
+      <div className="flex items-center justify-between gap-3">
+        <div className="text-[11px] uppercase tracking-[0.18em] text-slate-500">{label}</div>
+        <Icon className="h-4 w-4 text-slate-400" />
+      </div>
+      <div className="mt-3 text-2xl font-semibold text-white">{value}</div>
+      <div className="mt-1 text-xs text-slate-400">{helper}</div>
+    </div>
   );
 }
 
@@ -3703,7 +3926,7 @@ function PickerRow({
         'w-full rounded-xl border px-3 py-2 text-left transition',
         active
           ? 'border-[var(--theme-accent-border)] bg-[var(--theme-accent-soft)]'
-          : 'border-white/10 bg-white/[0.03] hover:bg-white/[0.08]'
+          : 'border-[var(--theme-panel-border)] bg-[var(--theme-input-bg)] hover:bg-white/[0.08]'
       )}
     >
       <div className="flex items-center justify-between gap-3">
@@ -3735,7 +3958,7 @@ function SurfaceChip({
         'inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm transition',
         active
           ? 'border-[var(--theme-accent-border)] bg-[var(--theme-accent-soft)] text-[var(--theme-accent-text)]'
-          : 'border-white/10 bg-white/[0.03] text-slate-300 hover:bg-white/[0.08]'
+          : 'border-[var(--theme-panel-border)] bg-[var(--theme-input-bg)] text-slate-300 hover:bg-white/[0.08]'
       )}
     >
       <Icon className="h-4 w-4" />
@@ -3763,7 +3986,7 @@ function ModeChip({
         'rounded-full border px-3 py-1.5 text-xs font-medium transition',
         active
           ? 'border-[var(--theme-accent-border)] bg-[var(--theme-accent-soft)] text-[var(--theme-accent-text)]'
-          : 'border-white/10 bg-white/[0.03] text-slate-400 hover:text-slate-200',
+          : 'border-[var(--theme-panel-border)] bg-[var(--theme-input-bg)] text-slate-400 hover:text-slate-200',
         disabled && 'cursor-not-allowed opacity-45'
       )}
     >
@@ -3936,6 +4159,11 @@ function buildRelayTemplate(
   participants: AgentRelayParticipantInputDTO[];
   description: string;
   defaultPinnedRules: string[];
+  systemPrompt?: string;
+  focus?: string;
+  deliverable?: string;
+  promptPlaceholder?: string;
+  promptIdeas?: string[];
 } {
   if (templateId === 'review-trio') {
     return {
@@ -3956,6 +4184,29 @@ function buildRelayTemplate(
       description: isChinese
         ? '适合先拆问题、再落实现、最后做质量回看。'
         : 'Good for breaking down work, shipping changes, then reviewing quality.',
+      focus: isChinese
+        ? '先由架构视角澄清问题和边界，再由实现者提出落地方案，最后由评审者专门挑出风险、缺测和回归点。'
+        : 'Clarify the problem first, move into implementation strategy second, then let a reviewer stress-test risks, missing tests, and regressions.',
+      deliverable: isChinese
+        ? '输出一个能直接进入开发的计划，至少包含实现路径、验证方式、主要风险和 merge 前检查项。'
+        : 'Produce a plan that can directly enter development, including implementation path, validation, key risks, and merge-readiness checks.',
+      systemPrompt: isChinese
+        ? '你们处在一个三人评审房间里。第一位聚焦问题定义、架构与边界；第二位聚焦具体实现、代码改动与可执行步骤；第三位聚焦风险、测试、回归与 PR 质量。每一轮都必须推进结论，不要重复前文。最终请收敛成一个可执行方案，并明确仍未解决的风险。'
+        : 'You are operating in a three-seat review room. Seat one clarifies the problem, architecture, and boundaries. Seat two proposes concrete implementation steps and code changes. Seat three stress-tests risk, test coverage, regressions, and PR quality. Every turn must move the conclusion forward instead of repeating prior context. End by converging on an actionable plan and remaining risks.',
+      promptPlaceholder: isChinese
+        ? '例如：围绕这个功能或 bug，输出实现方案、测试清单、风险与 merge 建议。'
+        : 'Example: review this feature or bug and produce an implementation plan, test checklist, risks, and merge recommendation.',
+      promptIdeas: isChinese
+        ? [
+            '围绕这个 bug 讨论 root cause、修复路径、边界条件和回归测试。',
+            '审视当前改动是否可以 merge，并给出必须补做的 tests 与 review comments。',
+            '把这个功能拆成最小可交付步骤，并列出实现顺序、风险和验收标准。',
+          ]
+        : [
+            'Discuss the root cause, fix path, edge cases, and regression tests for this bug.',
+            'Review whether the current changes are merge-ready and list the tests and review comments still required.',
+            'Break this feature into the smallest shippable steps, with implementation order, risks, and acceptance criteria.',
+          ],
       defaultPinnedRules: isChinese
         ? [
             '先统一问题定义，再拆成可以验证的小结论。',
@@ -3993,6 +4244,29 @@ function buildRelayTemplate(
       description: isChinese
         ? '更像一个交付房间，强调推进、修补和最终拍板。'
         : 'Feels like a shipping room with momentum, fixes, and a final ship decision.',
+      focus: isChinese
+        ? '像一个上线指挥室：先确认目标和范围，再推进构建与修补，最后形成是否发布的明确决策。'
+        : 'Acts like a shipping room: align on scope, push through implementation and fixes, then make a clear ship decision.',
+      deliverable: isChinese
+        ? '给出一个可交付结论，至少包括当前状态、剩余阻塞、建议动作、测试和回滚考虑。'
+        : 'End with a shipping conclusion that includes current status, blockers, recommended next action, tests, and rollback considerations.',
+      systemPrompt: isChinese
+        ? '你们在一个交付房间里协作。构建者负责推进方案和代码实现，产品负责人负责对齐目标与优先级，修复者负责查漏补缺与降风险，发布官负责决定是否可发布。你们必须偏向交付、避免空谈，并在最后形成清晰的 go / no-go 建议和收尾动作。'
+        : 'You are collaborating inside a delivery room. The builder pushes implementation forward, the product lead aligns scope and priorities, the fixer closes gaps and reduces risk, and the ship captain decides release readiness. Bias toward delivery, avoid abstract debate, and finish with a clear go/no-go recommendation plus follow-up actions.',
+      promptPlaceholder: isChinese
+        ? '例如：围绕这次交付讨论发布路径、剩余阻塞、修补动作和最终上线建议。'
+        : 'Example: discuss the shipping path, remaining blockers, patch plan, and final release recommendation for this delivery.',
+      promptIdeas: isChinese
+        ? [
+            '围绕这次版本交付，判断现在离可上线还差哪些动作，并排出优先级。',
+            '讨论当前 PR / diff 是否足够安全，给出继续推进、补修还是暂停发布的建议。',
+            '把这个需求压缩成今天能交付的最小版本，并写出验证步骤和回滚预案。',
+          ]
+        : [
+            'Decide what still stands between this release and a safe ship, then prioritize the remaining actions.',
+            'Discuss whether the current PR or diff is safe enough, and recommend push forward, patch further, or pause release.',
+            'Compress this request into the smallest version that can ship today, including validation steps and rollback plans.',
+          ],
       defaultPinnedRules: isChinese
         ? [
             '优先推进到可交付结果，避免无止境讨论。',
@@ -4036,6 +4310,29 @@ function buildRelayTemplate(
     description: isChinese
       ? '最接近原始 relay 的双人回合制，对话清晰、节奏快。'
       : 'Closest to the original relay: a clear, fast two-agent back-and-forth.',
+    focus: isChinese
+      ? '一个主讲推进观点，另一个负责追问、挑战和收敛，适合快速形成单一结论。'
+      : 'One lead agent pushes the argument forward while the other challenges assumptions and drives convergence.',
+    deliverable: isChinese
+      ? '输出一个简洁但明确的结论，最好附带下一步行动、风险提醒或可选方案。'
+      : 'Produce a concise but explicit conclusion, ideally with next steps, risk notes, or a fallback option.',
+    systemPrompt: isChinese
+      ? '你们是一个双人协作房间。主讲负责提出判断、方案和推进节奏；评审负责指出疑点、边界条件和替代路径。每一轮都要推进结论，而不是重复摘要。结束时请给出统一结论，并说明还存在的分歧或待验证点。'
+      : 'You are a two-agent collaboration room. The lead agent proposes the judgement, plan, and momentum; the reviewer highlights uncertainties, edge cases, and alternatives. Every turn must advance the conclusion rather than restating the summary. Finish with one aligned recommendation and any remaining disagreements or validation gaps.',
+    promptPlaceholder: isChinese
+      ? '例如：围绕这个问题给出两套方案，比较权衡后收敛成一个推荐结论。'
+      : 'Example: compare two approaches for this problem and converge on one recommended path.',
+    promptIdeas: isChinese
+      ? [
+          '围绕这个需求给出两套方案，比较成本、风险和收益后收敛成一个推荐结论。',
+          '把这次代码改动当成 review duel：一方主张可交付，一方专门找风险，最后统一建议。',
+          '就这个技术选择进行短回合辩论，最后给出明确决策和后续行动。',
+        ]
+      : [
+          'Generate two approaches for this requirement, compare cost, risk, and upside, then converge on one recommendation.',
+          'Treat the current change set as a review duel: one agent argues it is ready to ship, the other searches for risk, then align on the final recommendation.',
+          'Run a short technical debate over this choice and finish with a clear decision and next actions.',
+        ],
     defaultPinnedRules: isChinese
       ? [
           '保持短回合，但每轮都要推进讨论而不是重复前文。',
@@ -4381,6 +4678,16 @@ function relayBadgeClass(status: AgentRelaySessionDTO['status']) {
     return 'border-emerald-400/30 bg-emerald-400/10 text-emerald-100';
   }
   if (status === 'stopped') {
+    return 'border-amber-400/30 bg-amber-400/10 text-amber-100';
+  }
+  return 'border-rose-400/30 bg-rose-400/10 text-rose-100';
+}
+
+function cliCheckBadgeClass(status: 'ready' | 'missing' | 'error') {
+  if (status === 'ready') {
+    return 'border-emerald-400/30 bg-emerald-400/10 text-emerald-100';
+  }
+  if (status === 'missing') {
     return 'border-amber-400/30 bg-amber-400/10 text-amber-100';
   }
   return 'border-rose-400/30 bg-rose-400/10 text-rose-100';

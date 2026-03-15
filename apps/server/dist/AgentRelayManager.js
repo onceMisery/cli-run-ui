@@ -397,16 +397,29 @@ export class AgentRelayManager {
         return new Promise((resolve, reject) => {
             const stdout = [];
             const stderr = [];
-            const child = spawn(spec.command, spec.args, {
-                cwd: relay.summary.cwd,
-                env: {
-                    ...process.env,
-                    FORCE_COLOR: '0',
-                    NO_COLOR: '1',
-                },
-                stdio: 'pipe',
-                shell: false,
-            });
+            const useShell = process.platform === 'win32';
+            const child = useShell
+                ? spawn(toWindowsShellCommand(spec.command, spec.args), {
+                    cwd: relay.summary.cwd,
+                    env: {
+                        ...process.env,
+                        FORCE_COLOR: '0',
+                        NO_COLOR: '1',
+                    },
+                    stdio: 'pipe',
+                    shell: true,
+                    windowsHide: true,
+                })
+                : spawn(spec.command, spec.args, {
+                    cwd: relay.summary.cwd,
+                    env: {
+                        ...process.env,
+                        FORCE_COLOR: '0',
+                        NO_COLOR: '1',
+                    },
+                    stdio: 'pipe',
+                    shell: false,
+                });
             relay.activeChild = child;
             child.stdout.on('data', (chunk) => {
                 stdout.push(chunk.toString('utf8'));
@@ -679,5 +692,14 @@ function truncateLine(value, maxLength) {
     if (value.length <= maxLength)
         return value;
     return `${value.slice(0, maxLength - 1)}…`;
+}
+function toWindowsShellCommand(command, args) {
+    return [quoteForCmd(command), ...args.map(quoteForCmd)].join(' ');
+}
+function quoteForCmd(value) {
+    const normalized = value.replace(/\r?\n/g, ' ').trim();
+    if (!normalized)
+        return '""';
+    return `"${normalized.replace(/"/g, '""').replace(/%/g, '%%')}"`;
 }
 //# sourceMappingURL=AgentRelayManager.js.map

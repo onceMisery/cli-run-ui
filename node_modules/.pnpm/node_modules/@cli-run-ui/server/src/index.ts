@@ -3,6 +3,7 @@ import { Hono, type Context } from 'hono';
 import { cors } from 'hono/cors';
 
 import {
+  type AgentCliHealthDTO,
   type CreateTaskPullRequestRequestDTO,
   type ImportGitHubIssueRequestDTO,
   type MergeTaskPullRequestRequestDTO,
@@ -22,6 +23,7 @@ import {
   WatcherHub,
 } from '@cli-run-ui/core';
 import { AgentRelayManager } from './AgentRelayManager.js';
+import { checkAgentCliHealth } from './AgentCliHealth.js';
 import { HistoryStore } from './HistoryStore.js';
 import { RunManager } from './RunManager.js';
 import { TaskManager } from './TaskManager.js';
@@ -96,6 +98,11 @@ if (authToken) {
 app.get('/api/sessions', async (c) => {
   const sessions = await listAllSessions();
   return c.json({ sessions });
+});
+
+app.get('/api/health/cli', async (c) => {
+  const health: AgentCliHealthDTO = await checkAgentCliHealth();
+  return c.json(health);
 });
 
 app.get('/api/sessions/stream', (c) => {

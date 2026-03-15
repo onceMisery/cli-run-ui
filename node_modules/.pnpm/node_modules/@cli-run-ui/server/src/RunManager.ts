@@ -85,16 +85,29 @@ export class RunManager {
     this.emitRun(summary);
 
     try {
-      const child = spawn(spec.command, spec.args, {
-        cwd: request.cwd,
-        env: {
-          ...process.env,
-          FORCE_COLOR: '0',
-          NO_COLOR: '1',
-        },
-        stdio: 'pipe',
-        shell: false,
-      });
+      const useShell = process.platform === 'win32';
+      const child = useShell
+        ? spawn(toWindowsShellCommand(spec.command, spec.args), {
+            cwd: request.cwd,
+            env: {
+              ...process.env,
+              FORCE_COLOR: '0',
+              NO_COLOR: '1',
+            },
+            stdio: 'pipe',
+            shell: true,
+            windowsHide: true,
+          })
+        : spawn(spec.command, spec.args, {
+            cwd: request.cwd,
+            env: {
+              ...process.env,
+              FORCE_COLOR: '0',
+              NO_COLOR: '1',
+            },
+            stdio: 'pipe',
+            shell: false,
+          });
 
       internal.child = child;
       this.updateRun(runId, { status: 'running' });
@@ -232,4 +245,14 @@ function normalizeRunLogs(logs: RunLogEntryDTO[], runId: string): RunLogEntryDTO
 
 function wasActiveRun(status: RunSessionDTO['status']): boolean {
   return status === 'starting' || status === 'running';
+}
+
+function toWindowsShellCommand(command: string, args: string[]): string {
+  return [quoteForCmd(command), ...args.map(quoteForCmd)].join(' ');
+}
+
+function quoteForCmd(value: string): string {
+  const normalized = value.replace(/\r?\n/g, ' ').trim();
+  if (!normalized) return '""';
+  return `"${normalized.replace(/"/g, '""').replace(/%/g, '%%')}"`;
 }
