@@ -170,6 +170,7 @@ export default function App() {
     sessions.find((session) => session.uid === resolvedActiveUid) ?? null;
   const { messages, status: conversationStatus } =
     useConversationStream(resolvedActiveUid);
+  const showOnboarding = !activeSession || messages.length === 0;
 
   const totalUsage = useMemo(
     () =>
@@ -550,6 +551,12 @@ export default function App() {
                 </section>
 
                 <aside className="theme-panel min-h-0 space-y-4 overflow-y-auto rounded-[26px] p-4">
+                  {showOnboarding ? (
+                    <OnboardingPanel
+                      isChinese={isChinese}
+                      hasSessions={sessions.length > 0}
+                    />
+                  ) : null}
                   <InsightPanel
                     activeSession={activeSession}
                     messages={messages}
@@ -1014,6 +1021,60 @@ function workspaceHeaderDescription(view: WorkspaceView, isChinese: boolean) {
   return isChinese
     ? '在聊天、启动、任务、终端和 Relay 页签之间切换，持续推进协作。'
     : 'Switch across chat, launch, task, terminal, and relay tabs to keep work moving.';
+}
+
+function OnboardingPanel({
+  isChinese,
+  hasSessions,
+}: {
+  isChinese: boolean;
+  hasSessions: boolean;
+}) {
+  const steps = isChinese
+    ? [
+        <>
+          在项目目录运行 <span className="font-mono">codex</span> 或{' '}
+          <span className="font-mono">claude</span>，保持窗口打开。
+        </>,
+        <>需要远程访问时，在左侧 Remote access 填写 URL 和 Token。</>,
+        <>从左侧选择会话，或切换到 Agent 工作台启动任务。</>,
+      ]
+    : [
+        <>
+          Run <span className="font-mono">codex</span> or{' '}
+          <span className="font-mono">claude</span> in your project and keep it running.
+        </>,
+        <>If you work remotely, fill in the URL and token in Remote access.</>,
+        <>Pick a session on the left or open the Agent workspace to launch tasks.</>,
+      ];
+
+  return (
+    <section className="theme-panel rounded-2xl p-4">
+      <div className="flex items-center gap-2 text-sm font-medium text-white">
+        <Sparkles className="h-4 w-4 text-[var(--theme-accent-text)]" />
+        {isChinese ? '快速上手' : 'Getting started'}
+      </div>
+      <div className="mt-2 text-xs text-slate-400">
+        {hasSessions
+          ? isChinese
+            ? '已检测到会话，选择一个即可开始。'
+            : 'Sessions detected. Pick one to begin.'
+          : isChinese
+            ? '还未检测到会话，先启动 CLI。'
+            : 'No sessions yet. Start the CLI first.'}
+      </div>
+      <div className="mt-3 grid gap-2">
+        {steps.map((step, index) => (
+          <div key={`guide-${index}`} className="theme-panel-muted rounded-xl p-3">
+            <div className="text-[11px] uppercase tracking-[0.18em] text-slate-500">
+              {isChinese ? `步骤 ${index + 1}` : `Step ${index + 1}`}
+            </div>
+            <div className="mt-1 text-sm text-slate-200">{step}</div>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
 }
 
 function InsightPanel({

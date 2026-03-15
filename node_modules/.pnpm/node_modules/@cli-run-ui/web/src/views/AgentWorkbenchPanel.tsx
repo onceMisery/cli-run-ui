@@ -14,6 +14,7 @@ import type {
   AgentTaskDTO,
   AgentTaskEventDTO,
   ImportedGitHubIssueDraftDTO,
+  RunLogEntryDTO,
   RunSessionDTO,
   SessionDTO,
   StartAgentTaskRequestDTO,
@@ -2401,7 +2402,15 @@ export function AgentWorkbenchPanel({
               onRequestChanges={() => void reviewTaskPullRequest('REQUEST_CHANGES')}
               onMerge={() => void mergeTaskPullRequest()}
               onExport={() =>
-                liveTask ? downloadTaskPackage(liveTask, taskLogs, taskEvents, liveTaskRun) : null
+                liveTask
+                  ? downloadTaskPackage(
+                      liveTask,
+                      taskLogs,
+                      taskEvents,
+                      liveTaskRun,
+                      isChinese
+                    )
+                  : null
               }
             />
           ) : activeSurface === 'run' ? (
@@ -4957,6 +4966,165 @@ function downloadRelayMarkdown(
   window.URL.revokeObjectURL(url);
 }
 
+function downloadTaskPackage(
+  task: AgentTaskDTO,
+  logs: RunLogEntryDTO[],
+  events: AgentTaskEventDTO[],
+  run: RunSessionDTO | null,
+  isChinese: boolean
+) {
+  if (typeof window === 'undefined') return;
+  const markdown = buildTaskPackageMarkdown(task, logs, events, run, isChinese);
+  const blob = new Blob([markdown], { type: 'text/markdown;charset=utf-8' });
+  const url = window.URL.createObjectURL(blob);
+  const anchor = document.createElement('a');
+  const titleBase = task.title || task.branchName || task.repoName || 'task-delivery';
+  anchor.href = url;
+  anchor.download = `${slugify(titleBase, 'task-delivery')}-package.md`;
+  anchor.click();
+  window.URL.revokeObjectURL(url);
+}
+
+function buildTaskPackageMarkdown(
+  task: AgentTaskDTO,
+  logs: RunLogEntryDTO[],
+  events: AgentTaskEventDTO[],
+  run: RunSessionDTO | null,
+  isChinese: boolean
+) {
+  const title =
+    task.title || (isChinese ? '任务交付包' : 'Task delivery package');
+  const lines: Array<string | null> = [
+    `# ${title}`,
+    '',
+    `- ${isChinese ? '状态' : 'Status'}: ${task.status}`,
+    `- ${isChinese ? '提供方' : 'Provider'}: ${task.provider}`,
+    `- ${isChinese ? '模式' : 'Mode'}: ${task.mode}`,
+    `- ${isChinese ? '仓库' : 'Repo'}: ${task.repoName}`,
+    `- ${isChinese ? '工作区' : 'Workspace'}: ${task.cwd}`,
+    `- ${isChinese ? '分支' : 'Branch'}: ${task.baseBranch} -> ${task.branchName}`,
+    `- ${isChinese ? '工作区状态' : 'Working tree'}: ${task.workingTreeStatus}`,
+    `- ${isChinese ? '创建时间' : 'Created'}: ${formatPackageTimestamp(task.createdAtMs)}`,
+    task.startedAtMs
+      ? `- ${isChinese ? '开始时间' : 'Started'}: ${formatPackageTimestamp(task.startedAtMs)}`
+      : null,
+    task.endedAtMs
+      ? `- ${isChinese ? '结束时间' : 'Ended'}: ${formatPackageTimestamp(task.endedAtMs)}`
+      : null,
+  ];
+
+  if (task.sourceIssue) {
+    lines.push(
+      `- ${isChinese ? '关联 Issue' : 'Issue'}: #${task.sourceIssue.number} ${task.sourceIssue.title} (${task.sourceIssue.url})`
+    );
+  }
+
+  if (task.pullRequest) {
+    lines.push(
+      `- ${isChinese ? '关联 PR' : 'Pull request'}: #${task.pullRequest.number} ${task.pullRequest.title} (${task.pullRequest.url})`,
+      `- ${isChinese ? 'PR 状态' : 'PR state'}: ${task.pullRequest.state}`
+    );
+  }
+
+  lines.push(
+    '',
+    `## ${isChinese ? '提示词' : 'Prompt'}`,
+    '',
+    task.prompt || (isChinese ? '_未提供提示词。_' : '_No prompt provided._'),
+    '',
+    `## ${isChinese ? 'Diff 摘要' : 'Diff summary'}`,
+    '',
+    '```',
+    task.diffStat ?? (isChinese ? '暂无 diff。' : 'No diff summary yet.'),
+    '```',
+    ''
+  );
+
+  if (task.changedFiles.length > 0) {
+    lines.push(`### ${isChinese ? '变更文件' : 'Changed files'}`, '');
+    for (const file of task.changedFiles) {
+      lines.push(`- ${file.status}: ${file.path}`);
+    }
+    lines.push('');
+  } else {
+    lines.push(
+      `${isChinese ? '暂无变更文件。' : 'No changed files detected yet.'}`,
+      ''
+    );
+  }
+
+  if (task.diffExcerpt) {
+    lines.push(
+      `### ${isChinese ? 'Diff 片段' : 'Diff excerpt'}`,
+      '',
+      '```diff',
+      task.diffExcerpt,
+      '```',
+      ''
+    );
+  }
+
+  lines.push(
+    `## ${isChinese ? '测试结果' : 'Test results'}`,
+    '',
+    `- ${isChinese ? '状态' : 'Status'}: ${task.testResult.status}`,
+    `- ${isChinese ? '命令' : 'Command'}: ${task.testResult.command ?? task.testCommand ?? 'n/a'}`,
+    `- ${isChinese ? '退出码' : 'Exit code'}: ${task.testResult.exitCode ?? 'n/a'}`,
+    `- ${isChinese ? '开始时间' : 'Started'}: ${formatPackageTimestamp(task.testResult.startedAtMs)}`,
+    `- ${isChinese ? '结束时间' : 'Ended'}: ${formatPackageTimestamp(task.testResult.endedAtMs)}`,
+    task.testResult.error
+      ? `- ${isChinese ? '错误' : 'Error'}: ${task.testResult.error}`
+      : null,
+    '',
+    '```text',
+    task.testResult.output || (isChinese ? '没有测试输出。' : 'No test output.'),
+    '```',
+    ''
+  );
+
+  lines.push(`## ${isChinese ? '运行信息' : 'Run details'}`, '');
+  if (run) {
+    lines.push(
+      `- ${isChinese ? 'Run ID' : 'Run ID'}: ${run.id}`,
+      `- ${isChinese ? '状态' : 'Status'}: ${run.status}`,
+      `- ${isChinese ? '命令' : 'Command'}: ${run.command.join(' ')}`,
+      `- ${isChinese ? '退出码' : 'Exit code'}: ${run.exitCode ?? 'n/a'}`,
+      `- ${isChinese ? '开始时间' : 'Started'}: ${formatPackageTimestamp(run.startedAtMs)}`,
+      `- ${isChinese ? '结束时间' : 'Ended'}: ${formatPackageTimestamp(run.endedAtMs)}`,
+      run.error ? `- ${isChinese ? '错误' : 'Error'}: ${run.error}` : null,
+      ''
+    );
+  } else {
+    lines.push(
+      isChinese ? '当前任务未绑定 run。' : 'No run attached to this task yet.',
+      ''
+    );
+  }
+
+  lines.push(`## ${isChinese ? '运行日志' : 'Run logs'}`, '');
+  const logLines = buildRunLogLines(logs);
+  if (logLines.length > 0) {
+    lines.push('```text', ...logLines, '```', '');
+  } else {
+    lines.push(isChinese ? '暂无日志。' : 'No logs captured yet.', '');
+  }
+
+  lines.push(`## ${isChinese ? '任务事件' : 'Task events'}`, '');
+  if (events.length > 0) {
+    const sortedEvents = [...events].sort((a, b) => a.createdAtMs - b.createdAtMs);
+    for (const entry of sortedEvents) {
+      lines.push(
+        `- ${formatPackageTimestamp(entry.createdAtMs)} [${entry.tone}] ${entry.kind}: ${entry.message}`
+      );
+    }
+    lines.push('');
+  } else {
+    lines.push(isChinese ? '暂无事件。' : 'No task events yet.', '');
+  }
+
+  return lines.filter((line): line is string => line !== null).join('\n');
+}
+
 function buildRelayMarkdown(
   relay: AgentRelaySessionDTO,
   turns: AgentRelayTurnDTO[],
@@ -5053,6 +5221,26 @@ function formatRelayTime(createdAtMs: number, language: string) {
   }).format(createdAtMs);
 }
 
+function formatPackageTimestamp(timestampMs?: number | null) {
+  if (!timestampMs) return 'n/a';
+  return new Date(timestampMs).toLocaleString();
+}
+
+function buildRunLogLines(logs: RunLogEntryDTO[]) {
+  if (!logs.length) return [];
+  const sorted = [...logs].sort((a, b) => a.timestampMs - b.timestampMs);
+  const lines: string[] = [];
+  for (const entry of sorted) {
+    const time = formatPackageTimestamp(entry.timestampMs);
+    const chunks = entry.text.split(/\r?\n/);
+    for (const chunk of chunks) {
+      if (!chunk) continue;
+      lines.push(`${time} [${entry.stream}] ${chunk}`);
+    }
+  }
+  return lines;
+}
+
 function formatTaskTimestamp(
   createdAtMs: number | undefined,
   language: string,
@@ -5087,9 +5275,9 @@ function parsePinnedRulesDraft(value: string) {
     .slice(0, 8);
 }
 
-function slugify(value: string) {
+function slugify(value: string, fallback = 'agent-relay') {
   const normalized = value.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-');
-  return normalized.replace(/^-+|-+$/g, '') || 'agent-relay';
+  return normalized.replace(/^-+|-+$/g, '') || fallback;
 }
 
 function readRecentChatPrompts(): string[] {
