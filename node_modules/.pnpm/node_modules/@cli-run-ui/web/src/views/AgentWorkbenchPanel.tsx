@@ -5,6 +5,7 @@
   useRef,
   useState,
 } from 'react';
+import type { RefObject } from 'react';
 import type {
   AgentRelayParticipantInputDTO,
   AgentRelayInterventionDTO,
@@ -28,6 +29,7 @@ import {
   ArrowDown,
   ArrowUp,
   CheckCircle2,
+  Clock3 as Clock3Icon,
   Copy,
   Command,
   CornerDownLeft,
@@ -65,6 +67,16 @@ import { useI18n } from '@/lib/i18n';
 import { cn } from '@/lib/utils';
 
 type LaunchSurface = 'task' | 'run' | 'terminal' | 'relay';
+type WorkbenchUiMode = 'guided' | 'advanced';
+export type AgentWorkbenchPage =
+  | 'chat'
+  | 'launch'
+  | 'task'
+  | 'run'
+  | 'terminal'
+  | 'relay'
+  | 'history';
+type WorkbenchPage = AgentWorkbenchPage;
 
 interface AgentWorkbenchPanelProps {
   activeSession: SessionDTO | null;
@@ -76,9 +88,15 @@ interface AgentWorkbenchPanelProps {
   terminalStatus: StreamStatus;
   relays: AgentRelaySessionDTO[];
   relayStatus: StreamStatus;
+  activePage?: WorkbenchPage;
+  onPageChange?: (page: WorkbenchPage) => void;
+  hidePageTabs?: boolean;
 }
 
 interface WorkbenchPreferences {
+  uiMode: WorkbenchUiMode;
+  showAdvancedControls: boolean;
+  page: WorkbenchPage;
   surface: LaunchSurface;
   provider: SessionDTO['provider'];
   mode: 'task' | 'resume';
@@ -148,6 +166,9 @@ export function AgentWorkbenchPanel({
   terminalStatus,
   relays,
   relayStatus,
+  activePage,
+  onPageChange,
+  hidePageTabs = false,
 }: AgentWorkbenchPanelProps) {
   const { isChinese } = useI18n();
   const {
@@ -157,6 +178,23 @@ export function AgentWorkbenchPanel({
     refresh: refreshCliHealth,
   } = useCliHealth();
   const savedPreferences = useMemo(readWorkbenchPreferences, []);
+  const [uiMode, setUiMode] = useState<WorkbenchUiMode>(savedPreferences?.uiMode ?? 'guided');
+  const [showAdvancedControls, setShowAdvancedControls] = useState(
+    savedPreferences?.showAdvancedControls ?? false
+  );
+  const [pageState, setPageState] = useState<WorkbenchPage>(savedPreferences?.page ?? 'chat');
+  const page = activePage ?? pageState;
+  const setPage = (nextPage: WorkbenchPage) => {
+    if (activePage !== undefined) {
+      if (onPageChange) {
+        onPageChange(nextPage);
+        return;
+      }
+      setPageState(nextPage);
+      return;
+    }
+    setPageState(nextPage);
+  };
   const [surface, setSurface] = useState<LaunchSurface>(savedPreferences?.surface ?? 'run');
   const [provider, setProvider] = useState<SessionDTO['provider']>(
     savedPreferences?.provider ?? activeSession?.provider ?? 'codex'
@@ -234,6 +272,7 @@ export function AgentWorkbenchPanel({
   const pendingRunSelectionRef = useRef<string | null>(null);
   const pendingTerminalSelectionRef = useRef<string | null>(null);
   const pendingRelaySelectionRef = useRef<string | null>(null);
+  const chatComposerRef = useRef<HTMLTextAreaElement | null>(null);
 
   useEffect(() => {
     if (!activeSession) return;
@@ -245,7 +284,16 @@ export function AgentWorkbenchPanel({
   }, [activeSession?.projectPath, activeSession?.provider, activeSession?.uid]);
 
   useEffect(() => {
+    if (uiMode === 'advanced' && !showAdvancedControls) {
+      setShowAdvancedControls(true);
+    }
+  }, [showAdvancedControls, uiMode]);
+
+  useEffect(() => {
     writeWorkbenchPreferences({
+      uiMode,
+      showAdvancedControls,
+      page,
       surface,
       provider,
       mode,
@@ -263,6 +311,9 @@ export function AgentWorkbenchPanel({
       selectedRelayId,
     });
   }, [
+    uiMode,
+    showAdvancedControls,
+    page,
     cwd,
     mode,
     prompt,
@@ -437,8 +488,33 @@ export function AgentWorkbenchPanel({
   );
   const relayPromptIdeas = relayTemplate.promptIdeas ?? [];
   const cliChecks = cliHealth?.checks ?? [];
+  const activeSurface: LaunchSurface =
+    page === 'task' || page === 'run' || page === 'terminal' || page === 'relay'
+      ? page
+      : surface;
+  const pageShowsControlRail = page === 'launch' || page === 'relay' || page === 'history';
+  const pageShowsMainPane =
+    page === 'chat' ||
+    page === 'task' ||
+    page === 'run' ||
+    page === 'terminal' ||
+    page === 'relay';
+  const layoutColumnsClass =
+    pageShowsControlRail && pageShowsMainPane
+      ? 'xl:grid-cols-[minmax(0,1fr)_360px]'
+      : 'xl:grid-cols-1';
+  const selectedProviderCheck = cliChecks.find((entry) => entry.provider === provider) ?? null;
+  const isProviderReady = selectedProviderCheck?.status === 'ready';
+  const hasWorkspace = cwd.trim().length > 0;
+  const hasAnyPrompt =
+    chatDraft.trim().length > 0 || prompt.trim().length > 0 || relayPrompt.trim().length > 0;
+  const guideStepsCompleted = Number(isProviderReady) + Number(hasWorkspace) + Number(hasAnyPrompt);
+  const guideProgressLabel = isChinese
+    ? `已完成 ${guideStepsCompleted}/3 步`
+    : `${guideStepsCompleted}/3 steps complete`;
+  const hasAnyActivity = tasks.length + runs.length + terminals.length + relays.length > 0;
   const surfaceMeta = useMemo(() => {
-    if (surface === 'task') {
+    if (activeSurface === 'task') {
       return {
         title: isChinese ? '任务闭环' : 'Task loop',
         description: isChinese
@@ -449,7 +525,7 @@ export function AgentWorkbenchPanel({
       };
     }
 
-    if (surface === 'run') {
+    if (activeSurface === 'run') {
       return {
         title: isChinese ? '无头运行' : 'Headless run',
         description: isChinese
@@ -462,7 +538,7 @@ export function AgentWorkbenchPanel({
       };
     }
 
-    if (surface === 'terminal') {
+    if (activeSurface === 'terminal') {
       return {
         title: isChinese ? '交互终端' : 'Interactive terminal',
         description: isChinese
@@ -485,7 +561,7 @@ export function AgentWorkbenchPanel({
         liveRelay?.title ??
         (isChinese ? '选择一个 relay 房间或从右侧模板发起。' : 'Pick a relay room or launch one from the right rail.'),
     };
-  }, [isChinese, liveRelay?.title, liveRun?.command, liveTask?.title, liveTerminal?.command, relays.length, runs.length, surface, tasks.length, terminals.length]);
+  }, [activeSurface, isChinese, liveRelay?.title, liveRun?.command, liveTask?.title, liveTerminal?.command, relays.length, runs.length, tasks.length, terminals.length]);
 
   useEffect(() => {
     if (isBuiltinRelayTemplateId(relayTemplateId)) return;
@@ -617,6 +693,7 @@ export function AgentWorkbenchPanel({
       }
       pendingTaskSelectionRef.current = data.task.id;
       startTransition(() => {
+        setPage('task');
         setSurface('task');
         setSelectedTaskId(data.task!.id);
       });
@@ -767,6 +844,7 @@ export function AgentWorkbenchPanel({
       }
       pendingRunSelectionRef.current = data.run.id;
       startTransition(() => {
+        setPage('run');
         setSurface('run');
         setSelectedRunId(data.run.id);
       });
@@ -816,6 +894,7 @@ export function AgentWorkbenchPanel({
     setTerminalError(null);
     try {
       await startTerminalSession(prompt.trim() || undefined);
+      setPage('terminal');
     } catch (reason) {
       setTerminalError(reason instanceof Error ? reason.message : 'Failed to open terminal.');
     } finally {
@@ -883,6 +962,7 @@ export function AgentWorkbenchPanel({
       }
       pendingRelaySelectionRef.current = data.relay.id;
       startTransition(() => {
+        setPage('relay');
         setSurface('relay');
         setSelectedRelayId(data.relay.id);
       });
@@ -1091,8 +1171,52 @@ export function AgentWorkbenchPanel({
     setRelayStarter('codex');
     setRelayTemplateId('duel');
     setRelayMaxTurns(4);
+    setUiMode('guided');
+    setShowAdvancedControls(false);
+    setPage('chat');
     setCwd(activeSession?.projectPath ?? '');
     setSurface('run');
+  };
+
+  const switchToGuidedMode = () => {
+    setUiMode('guided');
+    setShowAdvancedControls(false);
+  };
+
+  const switchToAdvancedMode = () => {
+    setUiMode('advanced');
+    setShowAdvancedControls(true);
+  };
+
+  const openPage = (nextPage: WorkbenchPage) => {
+    setPage(nextPage);
+    if (nextPage === 'launch' || nextPage === 'relay' || nextPage === 'history') {
+      setShowAdvancedControls(true);
+    }
+    if (
+      nextPage === 'task' ||
+      nextPage === 'run' ||
+      nextPage === 'terminal' ||
+      nextPage === 'relay'
+    ) {
+      setSurface(nextPage);
+    }
+  };
+
+  const focusBrowserChatComposer = () => {
+    openPage('chat');
+    setSurface('terminal');
+    window.setTimeout(() => {
+      chatComposerRef.current?.focus();
+    }, 30);
+  };
+
+  const fillStarterPrompt = () => {
+    const starterPrompt = isChinese
+      ? '请先阅读当前仓库结构，然后给我一个三步执行计划并开始第一步。'
+      : 'Read this repository first, then give me a 3-step plan and start step 1.';
+    setChatDraft(starterPrompt);
+    focusBrowserChatComposer();
   };
 
   return (
@@ -1109,7 +1233,31 @@ export function AgentWorkbenchPanel({
               : 'Unified controls for headless runs and interactive terminals, synced to the active session and remembered locally.'}
           </div>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap items-center justify-end gap-2">
+          <button
+            type="button"
+            onClick={switchToGuidedMode}
+            className={cn(
+              'rounded-full border px-3 py-1.5 text-xs font-medium transition',
+              uiMode === 'guided'
+                ? 'border-[var(--theme-accent-border)] bg-[var(--theme-accent-soft)] text-[var(--theme-accent-text)]'
+                : 'border-[var(--theme-panel-border)] bg-[var(--theme-input-bg)] text-slate-400 hover:text-slate-200'
+            )}
+          >
+            {isChinese ? '引导模式' : 'Guided'}
+          </button>
+          <button
+            type="button"
+            onClick={switchToAdvancedMode}
+            className={cn(
+              'rounded-full border px-3 py-1.5 text-xs font-medium transition',
+              uiMode === 'advanced'
+                ? 'border-[var(--theme-secondary-border)] bg-[var(--theme-secondary-soft)] text-[var(--theme-secondary-text)]'
+                : 'border-[var(--theme-panel-border)] bg-[var(--theme-input-bg)] text-slate-400 hover:text-slate-200'
+            )}
+          >
+            {isChinese ? '高级模式' : 'Advanced'}
+          </button>
           <Badge className={streamBadgeClass(taskStatus)}>
             {isChinese ? 'tasks' : 'tasks'} {taskStatus === 'open' ? 'live' : 'syncing'}
           </Badge>
@@ -1126,6 +1274,162 @@ export function AgentWorkbenchPanel({
           </Badge>
         </div>
       </div>
+
+      {uiMode === 'guided' ? (
+        <section className={`${WORKBENCH_PANEL_STRONG_CLASS} mt-4 border-[var(--theme-accent-border)]`}>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <div className="text-xs uppercase tracking-[0.18em] text-slate-500">
+                {isChinese ? '快速上手（推荐）' : 'Quick start (recommended)'}
+              </div>
+              <div className="mt-1 text-sm text-slate-200">
+                {isChinese
+                  ? '先完成 3 步，再在右侧「浏览器对话」里直接输入需求并发送。'
+                  : 'Finish these 3 steps, then use Browser chat on the right to send your request.'}
+              </div>
+            </div>
+            <Badge variant="muted" className="bg-white/5 text-slate-300">
+              {guideProgressLabel}
+            </Badge>
+          </div>
+
+          <div className="mt-3 grid gap-2 lg:grid-cols-3">
+            <GuideStepCard
+              done={isProviderReady}
+              title={isChinese ? '1. 检查 Agent CLI' : '1. Check agent CLI'}
+              description={
+                selectedProviderCheck
+                  ? selectedProviderCheck.status === 'ready'
+                    ? isChinese
+                      ? `${provider} 已可用：${selectedProviderCheck.command}`
+                      : `${provider} is ready: ${selectedProviderCheck.command}`
+                    : selectedProviderCheck.message ??
+                      (isChinese ? '命令不可用，请先检查环境。' : 'CLI command is unavailable.')
+                  : isChinese
+                    ? '等待环境检测结果...'
+                    : 'Waiting for health check results...'
+              }
+            />
+            <GuideStepCard
+              done={hasWorkspace}
+              title={isChinese ? '2. 填写工作区' : '2. Set workspace path'}
+              description={
+                hasWorkspace
+                  ? cwd
+                  : isChinese
+                    ? '请填写本地仓库绝对路径（例如 D:\\code\\cli-run-ui）。'
+                    : 'Add the absolute local repo path (for example D:\\code\\cli-run-ui).'
+              }
+            />
+            <GuideStepCard
+              done={hasAnyPrompt}
+              title={isChinese ? '3. 准备提示词' : '3. Prepare your prompt'}
+              description={
+                hasAnyPrompt
+                  ? isChinese
+                    ? '已准备提示词，可以发送。'
+                    : 'Prompt is ready to send.'
+                  : isChinese
+                    ? '你可以先使用「填入示例」快速开始。'
+                    : 'Use “Fill starter prompt” to begin quickly.'
+              }
+            />
+          </div>
+
+          <div className="mt-3 flex flex-wrap gap-2">
+            <Button
+              type="button"
+              onClick={focusBrowserChatComposer}
+              className="rounded-xl bg-[var(--theme-accent-solid)] text-[var(--theme-accent-foreground)] hover:bg-[var(--theme-accent-solid-hover)]"
+            >
+              <MessageSquare className="h-4 w-4" />
+              {isChinese ? '去浏览器对话（推荐）' : 'Go to browser chat'}
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={fillStarterPrompt}
+              className="border-white/10 bg-white/[0.03] text-slate-100 hover:bg-white/[0.08]"
+            >
+              <Sparkles className="h-4 w-4" />
+              {isChinese ? '填入示例提示词' : 'Fill starter prompt'}
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setShowAdvancedControls((current) => !current)}
+              className="border-white/10 bg-white/[0.03] text-slate-100 hover:bg-white/[0.08]"
+            >
+              <SplitSquareVertical className="h-4 w-4" />
+              {showAdvancedControls
+                ? isChinese
+                  ? '收起高级控制'
+                  : 'Hide advanced controls'
+                : isChinese
+                  ? '展开高级控制'
+                  : 'Show advanced controls'}
+            </Button>
+          </div>
+          <div className="mt-2 text-xs text-slate-400">
+            {hasAnyActivity
+              ? isChinese
+                ? '你已经有历史运行记录，可在下方 Current surface 中继续查看或接管。'
+                : 'You already have activity history. Continue from Current surface below.'
+              : isChinese
+                ? '首次使用建议：先用浏览器对话发一句“先阅读仓库并给出三步计划”。'
+                : 'First-time tip: send “read the repo and propose a 3-step plan” in Browser chat.'}
+          </div>
+        </section>
+      ) : null}
+
+      {!hidePageTabs ? (
+      <section className={`${WORKBENCH_PANEL_CLASS} mt-4`}>
+        <div className="flex flex-wrap items-center gap-2">
+          <WorkbenchPageChip
+            active={page === 'chat'}
+            onClick={() => openPage('chat')}
+            label={isChinese ? '聊天' : 'Chat'}
+            icon={MessageSquare}
+          />
+          <WorkbenchPageChip
+            active={page === 'launch'}
+            onClick={() => openPage('launch')}
+            label={isChinese ? '启动' : 'Launch'}
+            icon={Play}
+          />
+          <WorkbenchPageChip
+            active={page === 'task'}
+            onClick={() => openPage('task')}
+            label="Task"
+            icon={GitBranch}
+          />
+          <WorkbenchPageChip
+            active={page === 'run'}
+            onClick={() => openPage('run')}
+            label="Run"
+            icon={Monitor}
+          />
+          <WorkbenchPageChip
+            active={page === 'terminal'}
+            onClick={() => openPage('terminal')}
+            label={isChinese ? '终端' : 'Terminal'}
+            icon={SquareTerminal}
+          />
+          <WorkbenchPageChip
+            active={page === 'relay'}
+            onClick={() => openPage('relay')}
+            label="Relay"
+            icon={SplitSquareVertical}
+          />
+          <WorkbenchPageChip
+            active={page === 'history'}
+            onClick={() => openPage('history')}
+            label={isChinese ? '历史' : 'History'}
+            icon={Clock3Icon}
+          />
+        </div>
+      </section>
+      ) : null}
 
       <div className="mt-4 grid gap-3 sm:grid-cols-2 2xl:grid-cols-4">
         <WorkbenchMiniMetric
@@ -1154,8 +1458,42 @@ export function AgentWorkbenchPanel({
         />
       </div>
 
-      <div className="mt-4 grid gap-4 xl:grid-cols-[minmax(0,1fr)_360px]">
-        <div className="space-y-4 xl:order-2 xl:max-h-[calc(100vh-220px)] xl:overflow-y-auto xl:pr-1">
+      <div className={cn('mt-4 grid gap-4', layoutColumnsClass)}>
+        {pageShowsControlRail ? (
+        <div className="space-y-4 xl:max-h-[calc(100vh-220px)] xl:overflow-y-auto xl:pr-1">
+          {uiMode === 'guided' && !showAdvancedControls ? (
+            <section className={WORKBENCH_PANEL_CLASS}>
+              <div className="text-xs uppercase tracking-[0.18em] text-slate-500">
+                {isChinese ? '高级控制已收起' : 'Advanced controls are hidden'}
+              </div>
+              <div className="mt-2 text-sm text-slate-300">
+                {isChinese
+                  ? '当前使用引导模式。推荐先在右侧「浏览器对话」输入需求并发送，复杂操作再展开高级控制。'
+                  : 'You are in guided mode. Start from Browser chat on the right, and expand advanced controls when needed.'}
+              </div>
+              <div className="mt-3 flex flex-wrap gap-2">
+                <Button
+                  type="button"
+                  onClick={() => setShowAdvancedControls(true)}
+                  className="rounded-xl bg-[var(--theme-secondary-solid)] text-[var(--theme-secondary-foreground)] hover:bg-[var(--theme-secondary-solid-hover)]"
+                >
+                  <SplitSquareVertical className="h-4 w-4" />
+                  {isChinese ? '展开高级控制' : 'Show advanced controls'}
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={switchToAdvancedMode}
+                  className="border-white/10 bg-white/[0.03] text-slate-100 hover:bg-white/[0.08]"
+                >
+                  <Sparkles className="h-4 w-4" />
+                  {isChinese ? '切换到高级模式' : 'Switch to advanced mode'}
+                </Button>
+              </div>
+            </section>
+          ) : (
+            <>
+          {page === 'launch' ? (
           <section className={WORKBENCH_PANEL_CLASS}>
             <div className="flex items-center justify-between gap-3">
               <div className="text-xs uppercase tracking-[0.18em] text-slate-500">
@@ -1429,7 +1767,9 @@ export function AgentWorkbenchPanel({
               </Button>
             </div>
           </section>
+          ) : null}
 
+          {page === 'relay' ? (
           <section className={WORKBENCH_PANEL_CLASS}>
             <div className="flex items-center justify-between gap-3">
               <div className="text-xs uppercase tracking-[0.18em] text-slate-500">
@@ -1735,7 +2075,9 @@ export function AgentWorkbenchPanel({
               </Button>
             </div>
           </section>
+          ) : null}
 
+          {page === 'history' ? (
           <section className={WORKBENCH_PANEL_CLASS}>
             <div className="mb-2 flex items-center justify-between gap-3">
               <div className="text-xs uppercase tracking-[0.18em] text-slate-500">
@@ -1756,7 +2098,7 @@ export function AgentWorkbenchPanel({
                   badgeClass={taskBadgeClass(entry.status)}
                   onClick={() => {
                     pendingTaskSelectionRef.current = null;
-                    setSurface('task');
+                    openPage('task');
                     setSelectedTaskId(entry.id);
                   }}
                 />
@@ -1771,7 +2113,7 @@ export function AgentWorkbenchPanel({
                   badgeClass={runBadgeClass(entry.status)}
                   onClick={() => {
                     pendingRunSelectionRef.current = null;
-                    setSurface('run');
+                    openPage('run');
                     setSelectedRunId(entry.id);
                   }}
                 />
@@ -1786,7 +2128,7 @@ export function AgentWorkbenchPanel({
                   badgeClass={terminalBadgeClass(entry.status)}
                   onClick={() => {
                     pendingTerminalSelectionRef.current = null;
-                    setSurface('terminal');
+                    openPage('terminal');
                     setSelectedTerminalId(entry.id);
                   }}
                 />
@@ -1801,7 +2143,7 @@ export function AgentWorkbenchPanel({
                   badgeClass={relayBadgeClass(entry.status)}
                   onClick={() => {
                     pendingRelaySelectionRef.current = null;
-                    setSurface('relay');
+                    openPage('relay');
                     setSelectedRelayId(entry.id);
                   }}
                 />
@@ -1815,9 +2157,15 @@ export function AgentWorkbenchPanel({
               ) : null}
             </div>
           </section>
+          ) : null}
+            </>
+          )}
         </div>
+        ) : null}
 
-        <div className="space-y-4 xl:order-1">
+        {pageShowsMainPane ? (
+        <div className="space-y-4">
+          {page === 'chat' ? (
           <BrowserChatCard
             chatDraft={chatDraft}
             canSend={canSendChat}
@@ -1828,11 +2176,18 @@ export function AgentWorkbenchPanel({
             canResume={canResume}
             recentPrompts={recentChatPrompts}
             terminal={liveTerminal}
+            composerRef={chatComposerRef}
             onDraftChange={setChatDraft}
             onPickRecentPrompt={setChatDraft}
             onSend={() => void sendChatMessage()}
           />
+          ) : null}
 
+          {activeSurface === 'task' ||
+          activeSurface === 'run' ||
+          activeSurface === 'terminal' ||
+          activeSurface === 'relay' ? (
+          <>
           <section className={`${WORKBENCH_PANEL_CLASS} grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px]`}>
             <div>
               <div className="text-xs uppercase tracking-[0.18em] text-slate-500">
@@ -1892,34 +2247,36 @@ export function AgentWorkbenchPanel({
             </div>
           </section>
 
+          {page === 'task' || page === 'run' || page === 'terminal' || page === 'relay' ? (
           <div className="flex gap-2">
             <SurfaceChip
-              active={surface === 'task'}
-              onClick={() => setSurface('task')}
+              active={activeSurface === 'task'}
+              onClick={() => openPage('task')}
               icon={GitBranch}
               label={isChinese ? 'Task loop' : 'Task loop'}
             />
             <SurfaceChip
-              active={surface === 'run'}
-              onClick={() => setSurface('run')}
+              active={activeSurface === 'run'}
+              onClick={() => openPage('run')}
               icon={Play}
               label={isChinese ? '无头运行' : 'Headless run'}
             />
             <SurfaceChip
-              active={surface === 'terminal'}
-              onClick={() => setSurface('terminal')}
+              active={activeSurface === 'terminal'}
+              onClick={() => openPage('terminal')}
               icon={Monitor}
               label={isChinese ? '交互式终端' : 'Interactive terminal'}
             />
             <SurfaceChip
-              active={surface === 'relay'}
-              onClick={() => setSurface('relay')}
+              active={activeSurface === 'relay'}
+              onClick={() => openPage('relay')}
               icon={SplitSquareVertical}
               label="Agent relay"
             />
           </div>
+          ) : null}
 
-          {surface === 'task' ? (
+          {activeSurface === 'task' ? (
             <TaskLoopPane
               task={liveTask}
               tasks={tasks}
@@ -1939,7 +2296,7 @@ export function AgentWorkbenchPanel({
               onRequestChanges={() => void reviewTaskPullRequest('REQUEST_CHANGES')}
               onMerge={() => void mergeTaskPullRequest()}
             />
-          ) : surface === 'run' ? (
+          ) : activeSurface === 'run' ? (
             <HeadlessRunPane
               run={liveRun}
               logs={logs}
@@ -1947,7 +2304,7 @@ export function AgentWorkbenchPanel({
               onStop={stopRun}
               runs={runs}
             />
-          ) : surface === 'terminal' ? (
+          ) : activeSurface === 'terminal' ? (
             <InteractiveTerminalPane
               terminal={liveTerminal}
               terminals={terminals}
@@ -1987,7 +2344,10 @@ export function AgentWorkbenchPanel({
               onStop={stopRelay}
             />
           )}
+          </>
+          ) : null}
         </div>
+        ) : null}
       </div>
     </section>
   );
@@ -3625,6 +3985,7 @@ function BrowserChatCard({
   canResume,
   canSend,
   chatError,
+  composerRef,
   cwd,
   isSending,
   mode,
@@ -3638,6 +3999,7 @@ function BrowserChatCard({
   canResume: boolean;
   canSend: boolean;
   chatError: string | null;
+  composerRef?: RefObject<HTMLTextAreaElement | null>;
   cwd: string;
   isSending: boolean;
   mode: 'task' | 'resume';
@@ -3739,6 +4101,7 @@ function BrowserChatCard({
               </div>
             </div>
             <textarea
+              ref={composerRef}
               value={chatDraft}
               onChange={(event) => onDraftChange(event.target.value)}
               onKeyDown={(event) => {
@@ -3881,6 +4244,31 @@ function BrowserChatCard({
   );
 }
 
+function GuideStepCard({
+  done,
+  title,
+  description,
+}: {
+  done: boolean;
+  title: string;
+  description: string;
+}) {
+  return (
+    <div className={WORKBENCH_PANEL_MUTED_CLASS}>
+      <div className="flex items-center gap-2 text-sm text-slate-100">
+        <CheckCircle2
+          className={cn(
+            'h-4 w-4',
+            done ? 'text-emerald-300' : 'text-slate-500'
+          )}
+        />
+        <span>{title}</span>
+      </div>
+      <div className="mt-2 text-xs leading-5 text-slate-400">{description}</div>
+    </div>
+  );
+}
+
 function WorkbenchMiniMetric({
   label,
   value,
@@ -3936,6 +4324,34 @@ function PickerRow({
         </div>
         <Badge className={badgeClass}>{badge}</Badge>
       </div>
+    </button>
+  );
+}
+
+function WorkbenchPageChip({
+  active,
+  onClick,
+  icon: Icon,
+  label,
+}: {
+  active: boolean;
+  onClick: () => void;
+  icon: typeof Play;
+  label: string;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        'inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm transition',
+        active
+          ? 'border-[var(--theme-accent-border)] bg-[var(--theme-accent-soft)] text-[var(--theme-accent-text)]'
+          : 'border-[var(--theme-panel-border)] bg-[var(--theme-input-bg)] text-slate-300 hover:bg-white/[0.08]'
+      )}
+    >
+      <Icon className="h-4 w-4" />
+      {label}
     </button>
   );
 }
@@ -4716,10 +5132,14 @@ function readWorkbenchPreferences(): WorkbenchPreferences | null {
     if (!raw) return null;
     const parsed = JSON.parse(raw) as Partial<WorkbenchPreferences>;
     if (!isLaunchSurface(parsed.surface)) return null;
+    if (!isWorkbenchPage(parsed.page)) return null;
     if (parsed.provider !== 'claude' && parsed.provider !== 'codex') return null;
     if (parsed.mode !== 'task' && parsed.mode !== 'resume') return null;
 
     return {
+      uiMode: parsed.uiMode === 'advanced' ? 'advanced' : 'guided',
+      showAdvancedControls: parsed.showAdvancedControls === true,
+      page: parsed.page,
       surface: parsed.surface,
       provider: parsed.provider,
       mode: parsed.mode,
@@ -4760,6 +5180,18 @@ function writeWorkbenchPreferences(preferences: WorkbenchPreferences) {
 
 function isLaunchSurface(value: unknown): value is LaunchSurface {
   return value === 'task' || value === 'run' || value === 'terminal' || value === 'relay';
+}
+
+function isWorkbenchPage(value: unknown): value is WorkbenchPage {
+  return (
+    value === 'chat' ||
+    value === 'launch' ||
+    value === 'task' ||
+    value === 'run' ||
+    value === 'terminal' ||
+    value === 'relay' ||
+    value === 'history'
+  );
 }
 
 function isBuiltinRelayTemplateId(value: RelayTemplateId) {

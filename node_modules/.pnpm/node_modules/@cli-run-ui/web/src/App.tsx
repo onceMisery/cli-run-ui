@@ -5,7 +5,13 @@ import {
   Bot,
   Clock3,
   FolderKanban,
+  GitBranch,
+  History,
+  MessageSquare,
+  Monitor,
+  Play,
   Search,
+  SplitSquareVertical,
   Sparkles,
   TerminalSquare,
 } from 'lucide-react';
@@ -26,13 +32,16 @@ import {
   useI18n,
   type Language,
 } from './lib/i18n.tsx';
-import { AgentWorkbenchPanel } from './views/AgentWorkbenchPanel.tsx';
+import {
+  AgentWorkbenchPanel,
+  type AgentWorkbenchPage,
+} from './views/AgentWorkbenchPanel.tsx';
 import { ConversationView } from './views/ConversationView.tsx';
 import { HeaderBar } from './views/HeaderBar.tsx';
 import { SessionList } from './views/SessionList.tsx';
 
 type ProviderFilter = 'all' | SessionDTO['provider'];
-type WorkspaceView = 'transcript' | 'agent';
+type WorkspaceView = 'transcript' | AgentWorkbenchPage;
 
 export default function App() {
   const { theme, setTheme, themes } = useTheme();
@@ -47,6 +56,8 @@ export default function App() {
   const [workspaceView, setWorkspaceView] = useState<WorkspaceView>('transcript');
   const [query, setQuery] = useState('');
   const deferredQuery = useDeferredValue(query);
+  const activeWorkbenchPage: AgentWorkbenchPage =
+    workspaceView === 'transcript' ? 'chat' : workspaceView;
 
   const filteredSessions = useMemo(() => {
     const normalized = deferredQuery.trim().toLowerCase();
@@ -353,7 +364,7 @@ export default function App() {
                         : 'Give the agent controls a dedicated tab instead of squeezing them beside the transcript.'}
                   </div>
                 </div>
-                <div className="flex flex-wrap gap-2">
+                <div className="hidden">
                   <WorkspaceTabButton
                     active={workspaceView === 'transcript'}
                     icon={Activity}
@@ -362,11 +373,61 @@ export default function App() {
                     onClick={() => setWorkspaceView('transcript')}
                   />
                   <WorkspaceTabButton
-                    active={workspaceView === 'agent'}
+                    active={workspaceView !== 'transcript'}
                     icon={TerminalSquare}
                     title={isChinese ? 'Agent 工作台' : 'Agent Workspace'}
                     description={isChinese ? '任务 / 终端 / Relay' : 'Tasks, terminals, relays'}
-                    onClick={() => setWorkspaceView('agent')}
+                    onClick={() => setWorkspaceView('chat')}
+                  />
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <WorkspaceMiniTabButton
+                    active={workspaceView === 'transcript'}
+                    icon={Activity}
+                    title="Transcript"
+                    onClick={() => setWorkspaceView('transcript')}
+                  />
+                  <WorkspaceMiniTabButton
+                    active={workspaceView === 'chat'}
+                    icon={MessageSquare}
+                    title={isChinese ? '聊天' : 'Chat'}
+                    onClick={() => setWorkspaceView('chat')}
+                  />
+                  <WorkspaceMiniTabButton
+                    active={workspaceView === 'launch'}
+                    icon={Play}
+                    title={isChinese ? '启动' : 'Launch'}
+                    onClick={() => setWorkspaceView('launch')}
+                  />
+                  <WorkspaceMiniTabButton
+                    active={workspaceView === 'task'}
+                    icon={GitBranch}
+                    title="Task"
+                    onClick={() => setWorkspaceView('task')}
+                  />
+                  <WorkspaceMiniTabButton
+                    active={workspaceView === 'run'}
+                    icon={Monitor}
+                    title="Run"
+                    onClick={() => setWorkspaceView('run')}
+                  />
+                  <WorkspaceMiniTabButton
+                    active={workspaceView === 'terminal'}
+                    icon={TerminalSquare}
+                    title={isChinese ? '终端' : 'Terminal'}
+                    onClick={() => setWorkspaceView('terminal')}
+                  />
+                  <WorkspaceMiniTabButton
+                    active={workspaceView === 'relay'}
+                    icon={SplitSquareVertical}
+                    title="Relay"
+                    onClick={() => setWorkspaceView('relay')}
+                  />
+                  <WorkspaceMiniTabButton
+                    active={workspaceView === 'history'}
+                    icon={History}
+                    title={isChinese ? '历史' : 'History'}
+                    onClick={() => setWorkspaceView('history')}
                   />
                 </div>
               </div>
@@ -468,6 +529,9 @@ export default function App() {
                   terminalStatus={terminalStatus}
                   relays={relays}
                   relayStatus={relayStatus}
+                  activePage={activeWorkbenchPage}
+                  onPageChange={(nextPage) => setWorkspaceView(nextPage)}
+                  hidePageTabs
                 />
               </div>
             )}
@@ -597,6 +661,33 @@ function WorkspaceTabButton({
           {description}
         </div>
       </div>
+    </button>
+  );
+}
+
+function WorkspaceMiniTabButton({
+  active,
+  icon: Icon,
+  title,
+  onClick,
+}: {
+  active: boolean;
+  icon: typeof Activity;
+  title: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={cn(
+        'inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-medium transition',
+        active
+          ? 'border-[var(--theme-accent-border)] bg-[var(--theme-accent-soft)] text-[var(--theme-accent-text)]'
+          : 'theme-panel-muted text-slate-400 hover:text-slate-100'
+      )}
+    >
+      <Icon className="h-3.5 w-3.5" />
+      {title}
     </button>
   );
 }
