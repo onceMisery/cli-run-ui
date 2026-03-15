@@ -78,6 +78,26 @@ Default local URLs:
 - Web: `http://127.0.0.1:5173`
 - Server: `http://127.0.0.1:4000`
 
+## Remote Access
+
+You can point the UI to a remote cli-run-ui server for mobile or another desktop.
+
+1. Start the server on the host machine with an external bind and optional token:
+
+```bash
+CLI_RUN_UI_HOST=0.0.0.0
+CLI_RUN_UI_ALLOWED_ORIGINS=https://your-ui-host
+CLI_RUN_UI_TOKEN=your_shared_token
+PORT=4000
+```
+
+2. In the browser UI, open the Remote access panel and set:
+
+- API base URL: `https://your-host:4000`
+- Token: the same value as `CLI_RUN_UI_TOKEN`
+
+Leave the base URL empty to use the local proxy during development. To preconfigure a default base URL for builds, set `VITE_API_BASE`.
+
 ## Typical Workflow
 
 ### 1. Browse Existing Sessions

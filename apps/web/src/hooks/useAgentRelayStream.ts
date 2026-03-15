@@ -7,11 +7,13 @@ import type {
 } from '@cli-run-ui/core';
 
 import type { StreamStatus } from './useSessionStream.ts';
+import { apiEventSource, useApiConfig } from '@/lib/api';
 
 export function useAgentRelayStream(
   relayId: string | null,
   initialRelay: AgentRelaySessionDTO | null
 ) {
+  const { config } = useApiConfig();
   const [relay, setRelay] = useState<AgentRelaySessionDTO | null>(initialRelay);
   const [turns, setTurns] = useState<AgentRelayTurnDTO[]>([]);
   const [interventions, setInterventions] = useState<AgentRelayInterventionDTO[]>([]);
@@ -38,7 +40,7 @@ export function useAgentRelayStream(
       if (closed) return;
       setStatus('connecting');
       source?.close();
-      source = new EventSource(`/api/relays/${encodeURIComponent(relayId)}/stream`);
+      source = apiEventSource(`/api/relays/${encodeURIComponent(relayId)}/stream`);
 
       source.addEventListener('snapshot', (event) => {
         const data = safeParse(event.data) as {
@@ -104,7 +106,7 @@ export function useAgentRelayStream(
       if (reconnectTimer) clearTimeout(reconnectTimer);
       source?.close();
     };
-  }, [relayId]);
+  }, [config.baseUrl, config.token, relayId]);
 
   return { relay, turns, interventions, status };
 }

@@ -2,8 +2,10 @@ import { useEffect, useState } from 'react';
 import type { AgentRelaySessionDTO } from '@cli-run-ui/core';
 
 import type { StreamStatus } from './useSessionStream.ts';
+import { apiEventSource, useApiConfig } from '@/lib/api';
 
 export function useAgentRelaySessions() {
+  const { config } = useApiConfig();
   const [relays, setRelays] = useState<AgentRelaySessionDTO[]>([]);
   const [status, setStatus] = useState<StreamStatus>('connecting');
 
@@ -16,7 +18,7 @@ export function useAgentRelaySessions() {
       if (closed) return;
       setStatus('connecting');
       source?.close();
-      source = new EventSource('/api/relays/stream');
+      source = apiEventSource('/api/relays/stream');
 
       source.addEventListener('snapshot', (event) => {
         const data = safeParse(event.data) as { relays?: AgentRelaySessionDTO[] } | null;
@@ -53,7 +55,7 @@ export function useAgentRelaySessions() {
       if (reconnectTimer) clearTimeout(reconnectTimer);
       source?.close();
     };
-  }, []);
+  }, [config.baseUrl, config.token]);
 
   return { relays, status };
 }

@@ -2,8 +2,10 @@ import { useEffect, useState } from 'react';
 import type { RunLogEntryDTO, RunSessionDTO } from '@cli-run-ui/core';
 
 import type { StreamStatus } from './useSessionStream.ts';
+import { apiEventSource, useApiConfig } from '@/lib/api';
 
 export function useRunStream(runId: string | null, initialRun: RunSessionDTO | null) {
+  const { config } = useApiConfig();
   const [run, setRun] = useState<RunSessionDTO | null>(initialRun);
   const [logs, setLogs] = useState<RunLogEntryDTO[]>([]);
   const [status, setStatus] = useState<StreamStatus>(runId ? 'connecting' : 'closed');
@@ -28,7 +30,7 @@ export function useRunStream(runId: string | null, initialRun: RunSessionDTO | n
       if (closed) return;
       setStatus('connecting');
       source?.close();
-      source = new EventSource(`/api/runs/${encodeURIComponent(runId)}/stream`);
+      source = apiEventSource(`/api/runs/${encodeURIComponent(runId)}/stream`);
 
       source.addEventListener('snapshot', (event) => {
         const data = safeParse(event.data) as {
@@ -75,7 +77,7 @@ export function useRunStream(runId: string | null, initialRun: RunSessionDTO | n
       if (reconnectTimer) clearTimeout(reconnectTimer);
       source?.close();
     };
-  }, [runId]);
+  }, [config.baseUrl, config.token, runId]);
 
   return { run, logs, status };
 }

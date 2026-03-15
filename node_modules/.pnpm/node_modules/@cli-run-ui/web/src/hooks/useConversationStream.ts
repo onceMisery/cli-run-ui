@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import type { MessageDTO } from '@cli-run-ui/core';
 import type { StreamStatus } from './useSessionStream.ts';
+import { apiEventSource, useApiConfig } from '@/lib/api';
 
 export function useConversationStream(sessionUid: string | null) {
+  const { config } = useApiConfig();
   const [messages, setMessages] = useState<MessageDTO[]>([]);
   const [status, setStatus] = useState<StreamStatus>('connecting');
   const offsetRef = useRef(0);
@@ -27,7 +29,7 @@ export function useConversationStream(sessionUid: string | null) {
       if (closed) return;
       setStatus('connecting');
       source?.close();
-      source = new EventSource(
+      source = apiEventSource(
         `/api/conversation/${encodeURIComponent(sessionUid)}/stream?offset=${offset}`
       );
 
@@ -66,7 +68,7 @@ export function useConversationStream(sessionUid: string | null) {
       if (reconnectTimer) clearTimeout(reconnectTimer);
       source?.close();
     };
-  }, [sessionUid]);
+  }, [config.baseUrl, config.token, sessionUid]);
 
   return { messages, status };
 }

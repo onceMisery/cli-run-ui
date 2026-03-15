@@ -1,4 +1,4 @@
-import { Suspense, useDeferredValue, useMemo, useState } from 'react';
+import { Suspense, useDeferredValue, useEffect, useMemo, useState } from 'react';
 import type { MessageDTO, SessionDTO } from '@cli-run-ui/core';
 import {
   Activity,
@@ -24,6 +24,7 @@ import { useRunSessions } from './hooks/useRunSessions.ts';
 import { useSessionStream } from './hooks/useSessionStream.ts';
 import { useTaskSessions } from './hooks/useTaskSessions.ts';
 import { useTerminalSessions } from './hooks/useTerminalSessions.ts';
+import { useApiConfig } from './lib/api.ts';
 import { useTheme } from './lib/theme.tsx';
 import { cn } from './lib/utils.ts';
 import {
@@ -46,6 +47,7 @@ type WorkspaceView = 'transcript' | AgentWorkbenchPage;
 export default function App() {
   const { theme, setTheme, themes } = useTheme();
   const { language, isChinese, setLanguage } = useI18n();
+  const { config: apiConfig, setConfig: setApiConfig } = useApiConfig();
   const { sessions, status: sessionStatus } = useSessionStream();
   const { runs, status: runStatus } = useRunSessions();
   const { tasks, status: taskStatus } = useTaskSessions();
@@ -344,6 +346,12 @@ export default function App() {
                   onSelect={setActiveSessionUid}
                 />
               </div>
+
+              <RemoteAccessPanel
+                config={apiConfig}
+                onUpdateConfig={setApiConfig}
+                isChinese={isChinese}
+              />
             </div>
           </aside>
 
@@ -355,30 +363,8 @@ export default function App() {
                     {isChinese ? '主工作区' : 'Workspace'}
                   </div>
                   <div className="mt-1 text-sm text-slate-300">
-                    {workspaceView === 'transcript'
-                      ? isChinese
-                        ? '专注查看当前会话 transcript，并在旁边保留关键信息。'
-                        : 'Focus on the live transcript while keeping session context nearby.'
-                      : isChinese
-                        ? '把 Agent 工作台独立成单独页签，不再和 transcript 挤在一起。'
-                        : 'Give the agent controls a dedicated tab instead of squeezing them beside the transcript.'}
+                    {workspaceHeaderDescription(workspaceView, isChinese)}
                   </div>
-                </div>
-                <div className="hidden">
-                  <WorkspaceTabButton
-                    active={workspaceView === 'transcript'}
-                    icon={Activity}
-                    title={isChinese ? '会话页' : 'Transcript'}
-                    description={isChinese ? '查看消息流' : 'Live transcript'}
-                    onClick={() => setWorkspaceView('transcript')}
-                  />
-                  <WorkspaceTabButton
-                    active={workspaceView !== 'transcript'}
-                    icon={TerminalSquare}
-                    title={isChinese ? 'Agent 工作台' : 'Agent Workspace'}
-                    description={isChinese ? '任务 / 终端 / Relay' : 'Tasks, terminals, relays'}
-                    onClick={() => setWorkspaceView('chat')}
-                  />
                 </div>
                 <div className="flex flex-wrap gap-2">
                   <WorkspaceMiniTabButton
@@ -622,48 +608,118 @@ function FilterChip({
   );
 }
 
-function WorkspaceTabButton({
-  active,
-  icon: Icon,
-  title,
-  description,
-  onClick,
+function RemoteAccessPanel({
+  config,
+  onUpdateConfig,
+  isChinese,
 }: {
-  active: boolean;
-  icon: typeof Activity;
-  title: string;
-  description: string;
-  onClick: () => void;
+  config: { baseUrl: string; token: string };
+  onUpdateConfig: (patch: { baseUrl?: string; token?: string }) => void;
+  isChinese: boolean;
 }) {
+  const [baseDraft, setBaseDraft] = useState(config.baseUrl);
+  const [tokenDraft, setTokenDraft] = useState(config.token);
+  const [showToken, setShowToken] = useState(false);
+
+  useEffect(() => {
+    setBaseDraft(config.baseUrl);
+    setTokenDraft(config.token);
+  }, [config.baseUrl, config.token]);
+
+  const hasChanges =
+    baseDraft.trim() !== config.baseUrl || tokenDraft !== config.token;
+  const modeLabel = config.baseUrl
+    ? isChinese
+      ? '远程'
+      : 'Remote'
+    : isChinese
+      ? '本地'
+      : 'Local';
+
   return (
-    <button
-      onClick={onClick}
-      className={cn(
-        'flex min-w-[180px] items-start gap-3 rounded-2xl border px-4 py-3 text-left transition',
-        active
-          ? 'border-[var(--theme-accent-border)] bg-[var(--theme-accent-soft)] text-[var(--theme-accent-text)]'
-          : 'theme-panel-muted text-slate-300 hover:bg-white/[0.06] hover:text-white'
-      )}
-    >
-      <div
-        className={cn(
-          'mt-0.5 flex h-9 w-9 items-center justify-center rounded-xl border',
-          active
-            ? 'border-[var(--theme-accent-border)] bg-[var(--theme-input-bg)]'
-            : 'border-[var(--theme-panel-border)] bg-[var(--theme-input-bg)]'
-        )}
-      >
-        <Icon className="h-4 w-4" />
+    <div className="theme-panel rounded-2xl p-3">
+      <div className="flex items-center justify-between">
+        <div className="text-sm font-medium text-white">
+          {isChinese ? '远程连接' : 'Remote access'}
+        </div>
+        <Badge variant="muted" className="bg-white/5 text-slate-300">
+          {modeLabel}
+        </Badge>
       </div>
-      <div>
-        <div className="text-sm font-medium">{title}</div>
-        <div className={cn('mt-1 text-xs', active ? 'text-current/80' : 'text-slate-400')}>
-          {description}
+      <div className="mt-3 space-y-3">
+        <div>
+          <div className="text-xs text-slate-400">
+            {isChinese ? 'API 地址' : 'API base URL'}
+          </div>
+          <div className="theme-input mt-2 flex items-center gap-2 rounded-xl px-3 py-2">
+            <input
+              value={baseDraft}
+              onChange={(event) => setBaseDraft(event.target.value)}
+              placeholder={
+                isChinese
+                  ? '例如 http://127.0.0.1:4000'
+                  : 'e.g. http://127.0.0.1:4000'
+              }
+              className="w-full bg-transparent text-sm text-slate-100 outline-none placeholder:text-slate-500"
+            />
+          </div>
+        </div>
+        <div>
+          <div className="text-xs text-slate-400">Token</div>
+          <div className="theme-input mt-2 flex items-center gap-2 rounded-xl px-3 py-2">
+            <input
+              value={tokenDraft}
+              onChange={(event) => setTokenDraft(event.target.value)}
+              type={showToken ? 'text' : 'password'}
+              placeholder={isChinese ? '可选' : 'optional'}
+              className="w-full bg-transparent text-sm text-slate-100 outline-none placeholder:text-slate-500"
+            />
+            <button
+              type="button"
+              onClick={() => setShowToken((prev) => !prev)}
+              className="text-xs text-slate-400 hover:text-slate-200"
+            >
+              {showToken ? (isChinese ? '隐藏' : 'Hide') : isChinese ? '显示' : 'Show'}
+            </button>
+          </div>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <Button
+            size="sm"
+            variant="outline"
+            className="theme-panel-muted text-slate-100 hover:bg-white/[0.08]"
+            onClick={() =>
+              onUpdateConfig({
+                baseUrl: baseDraft.trim(),
+                token: tokenDraft.trim(),
+              })
+            }
+            disabled={!hasChanges}
+          >
+            {isChinese ? '保存' : 'Save'}
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            className="theme-panel-muted text-slate-100 hover:bg-white/[0.08]"
+            onClick={() => {
+              onUpdateConfig({ baseUrl: '', token: '' });
+              setShowToken(false);
+            }}
+          >
+            {isChinese ? '清空' : 'Clear'}
+          </Button>
+        </div>
+        <div className="text-xs text-slate-400">
+          {isChinese
+            ? '留空使用本地代理。修改会立即生效并触发重连。'
+            : 'Leave empty to use the local proxy. Changes apply immediately and reconnect.'}
         </div>
       </div>
-    </button>
+    </div>
   );
 }
+
 
 function WorkspaceMiniTabButton({
   active,
@@ -690,6 +746,18 @@ function WorkspaceMiniTabButton({
       {title}
     </button>
   );
+}
+
+function workspaceHeaderDescription(view: WorkspaceView, isChinese: boolean) {
+  if (view === 'transcript') {
+    return isChinese
+      ? '专注查看当前会话 transcript，并保留关键上下文。'
+      : 'Focus on the live transcript while keeping session context nearby.';
+  }
+
+  return isChinese
+    ? '在聊天、启动、任务、终端和 Relay 页签之间切换，持续推进协作。'
+    : 'Switch across chat, launch, task, terminal, and relay tabs to keep work moving.';
 }
 
 function InsightPanel({

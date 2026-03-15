@@ -85,6 +85,26 @@ corepack pnpm dev
 - Web：`http://127.0.0.1:5173`
 - Server：`http://127.0.0.1:4000`
 
+## 远程访问
+
+你可以把 UI 指向远程 cli-run-ui 服务，用手机或其他电脑访问。
+
+1. 在主机上启动服务并绑定外网地址，可选加 Token：
+
+```bash
+CLI_RUN_UI_HOST=0.0.0.0
+CLI_RUN_UI_ALLOWED_ORIGINS=https://your-ui-host
+CLI_RUN_UI_TOKEN=your_shared_token
+PORT=4000
+```
+
+2. 在浏览器 UI 的「远程连接」面板填写：
+
+- API 地址：`https://your-host:4000`
+- Token：与 `CLI_RUN_UI_TOKEN` 一致
+
+留空表示使用本地代理（开发环境会通过 Vite 转发）。如需在构建时预置默认地址，设置 `VITE_API_BASE`。
+
 ## 推荐使用路径
 
 ### 1. 浏览已有会话

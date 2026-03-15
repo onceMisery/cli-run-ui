@@ -2,11 +2,13 @@ import { useEffect, useState } from 'react';
 import type { TerminalOutputDTO, TerminalSessionDTO } from '@cli-run-ui/core';
 
 import type { StreamStatus } from './useSessionStream.ts';
+import { apiEventSource, useApiConfig } from '@/lib/api';
 
 export function useTerminalStream(
   terminalId: string | null,
   initialTerminal: TerminalSessionDTO | null
 ) {
+  const { config } = useApiConfig();
   const [terminal, setTerminal] = useState<TerminalSessionDTO | null>(initialTerminal);
   const [outputs, setOutputs] = useState<TerminalOutputDTO[]>([]);
   const [status, setStatus] = useState<StreamStatus>(terminalId ? 'connecting' : 'closed');
@@ -31,7 +33,7 @@ export function useTerminalStream(
       if (closed) return;
       setStatus('connecting');
       source?.close();
-      source = new EventSource(`/api/terminals/${encodeURIComponent(terminalId)}/stream`);
+      source = apiEventSource(`/api/terminals/${encodeURIComponent(terminalId)}/stream`);
 
       source.addEventListener('snapshot', (event) => {
         const data = safeParse(event.data) as {
@@ -78,7 +80,7 @@ export function useTerminalStream(
       if (reconnectTimer) clearTimeout(reconnectTimer);
       source?.close();
     };
-  }, [terminalId]);
+  }, [config.baseUrl, config.token, terminalId]);
 
   return { terminal, outputs, status };
 }

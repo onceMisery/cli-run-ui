@@ -2,8 +2,10 @@ import { useEffect, useState } from 'react';
 import type { RunSessionDTO } from '@cli-run-ui/core';
 
 import type { StreamStatus } from './useSessionStream.ts';
+import { apiEventSource, useApiConfig } from '@/lib/api';
 
 export function useRunSessions() {
+  const { config } = useApiConfig();
   const [runs, setRuns] = useState<RunSessionDTO[]>([]);
   const [status, setStatus] = useState<StreamStatus>('connecting');
 
@@ -16,7 +18,7 @@ export function useRunSessions() {
       if (closed) return;
       setStatus('connecting');
       source?.close();
-      source = new EventSource('/api/runs/stream');
+      source = apiEventSource('/api/runs/stream');
 
       source.addEventListener('snapshot', (event) => {
         const data = safeParse(event.data) as { runs?: RunSessionDTO[] } | null;
@@ -53,7 +55,7 @@ export function useRunSessions() {
       if (reconnectTimer) clearTimeout(reconnectTimer);
       source?.close();
     };
-  }, []);
+  }, [config.baseUrl, config.token]);
 
   return { runs, status };
 }

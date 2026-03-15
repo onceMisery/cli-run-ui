@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react';
 import type { SessionDTO } from '@cli-run-ui/core';
+import { apiEventSource, useApiConfig } from '@/lib/api';
 
 export type StreamStatus = 'connecting' | 'open' | 'closed';
 
 export function useSessionStream() {
+  const { config } = useApiConfig();
   const [sessions, setSessions] = useState<SessionDTO[]>([]);
   const [status, setStatus] = useState<StreamStatus>('connecting');
 
@@ -16,7 +18,7 @@ export function useSessionStream() {
       if (closed) return;
       setStatus('connecting');
       source?.close();
-      source = new EventSource('/api/sessions/stream');
+      source = apiEventSource('/api/sessions/stream');
 
       source.addEventListener('sessions', (event) => {
         const data = safeParse(event.data);
@@ -53,7 +55,7 @@ export function useSessionStream() {
       if (reconnectTimer) clearTimeout(reconnectTimer);
       source?.close();
     };
-  }, []);
+  }, [config.baseUrl, config.token]);
 
   return { sessions, status };
 }

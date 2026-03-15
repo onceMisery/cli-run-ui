@@ -69,17 +69,33 @@ const devOrigins = new Set([
   'http://127.0.0.1:4173',
 ]);
 
-const enableCors = process.env.NODE_ENV !== 'production';
+const allowedOriginsEnv = process.env.CLI_RUN_UI_ALLOWED_ORIGINS?.trim();
+const allowAllOrigins =
+  allowedOriginsEnv === '*' || allowedOriginsEnv?.toLowerCase() === 'all';
+const allowedOrigins = new Set(
+  [
+    ...devOrigins,
+    ...(allowedOriginsEnv
+      ? allowedOriginsEnv
+          .split(',')
+          .map((origin) => origin.trim())
+          .filter(Boolean)
+      : []),
+  ]
+);
+
+const enableCors = process.env.NODE_ENV !== 'production' || Boolean(allowedOriginsEnv);
 if (enableCors) {
   app.use(
     '/api/*',
     cors({
       origin: (origin) => {
         if (!origin) return null;
-        return devOrigins.has(origin) ? origin : null;
+        if (allowAllOrigins) return origin;
+        return allowedOrigins.has(origin) ? origin : null;
       },
       allowMethods: ['GET', 'POST', 'PATCH', 'DELETE'],
-      allowHeaders: ['Content-Type', 'X-Auth-Token'],
+      allowHeaders: ['Content-Type', 'X-Auth-Token', 'Authorization'],
     })
   );
 }
@@ -87,8 +103,8 @@ if (enableCors) {
 const authToken = process.env.CLI_RUN_UI_TOKEN;
 if (authToken) {
   app.use('/api/*', async (c, next) => {
-    const token = c.req.header('x-auth-token');
-    if (token !== authToken) {
+    const token = readAuthToken(c);
+    if (!token || token !== authToken) {
       return c.json({ error: 'unauthorized' }, 401);
     }
     await next();
@@ -686,14 +702,15 @@ app.get('/api/relays/:id/stream', (c) => {
 app.get('/', (c) => c.text('cli-run-ui server'));
 
 const port = Number(process.env.PORT ?? 4000);
+const host = process.env.CLI_RUN_UI_HOST ?? process.env.HOST ?? '127.0.0.1';
 
 serve({
   fetch: app.fetch,
   port,
-  hostname: '127.0.0.1',
+  hostname: host,
 });
 
-console.log(`cli-run-ui server listening on http://127.0.0.1:${port}`);
+console.log(`cli-run-ui server listening on http://${host}:${port}`);
 
 async function listAllSessions() {
   const sessions = await Promise.all(providers.map((provider) => provider.listSessions()));
@@ -802,4 +819,15 @@ function createRuntimePersistenceTask(
       }, 150);
     },
   };
+}
+
+function readAuthToken(c: Context) {
+  const headerToken = c.req.header('x-auth-token');
+  if (headerToken) return headerToken;
+  const auth = c.req.header('authorization');
+  if (auth?.toLowerCase().startsWith('bearer ')) {
+    return auth.slice(7).trim();
+  }
+  const queryToken = c.req.query('token');
+  return queryToken ?? null;
 }

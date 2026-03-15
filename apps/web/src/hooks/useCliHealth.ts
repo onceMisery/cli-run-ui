@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { AgentCliHealthDTO } from '@cli-run-ui/core';
+import { apiFetch, useApiConfig } from '@/lib/api';
 
 export function useCliHealth(pollMs = 20000) {
+  const { config } = useApiConfig();
   const [health, setHealth] = useState<AgentCliHealthDTO | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -11,7 +13,7 @@ export function useCliHealth(pollMs = 20000) {
     if (inFlightRef.current) return;
     inFlightRef.current = true;
     try {
-      const response = await fetch('/api/health/cli');
+      const response = await apiFetch('/api/health/cli');
       const data = (await response.json().catch(() => null)) as
         | AgentCliHealthDTO
         | { error?: string }
@@ -41,7 +43,7 @@ export function useCliHealth(pollMs = 20000) {
     return () => {
       window.clearInterval(timer);
     };
-  }, [fetchHealth, pollMs]);
+  }, [fetchHealth, pollMs, config.baseUrl, config.token]);
 
   return {
     health,

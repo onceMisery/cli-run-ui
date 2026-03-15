@@ -62,6 +62,7 @@ import { useTaskStream } from '@/hooks/useTaskStream';
 import { useTerminalStream } from '@/hooks/useTerminalStream';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { apiFetch } from '@/lib/api';
 import { copyTextWithFeedback } from '@/lib/copy-feedback';
 import { useI18n } from '@/lib/i18n';
 import { cn } from '@/lib/utils';
@@ -492,13 +493,14 @@ export function AgentWorkbenchPanel({
     page === 'task' || page === 'run' || page === 'terminal' || page === 'relay'
       ? page
       : surface;
-  const pageShowsControlRail = page === 'launch' || page === 'relay' || page === 'history';
+  const pageShowsControlRail = page === 'launch' || page === 'history';
   const pageShowsMainPane =
     page === 'chat' ||
     page === 'task' ||
     page === 'run' ||
     page === 'terminal' ||
     page === 'relay';
+  const showSurfaceOverview = page === 'task' || page === 'run' || page === 'terminal';
   const layoutColumnsClass =
     pageShowsControlRail && pageShowsMainPane
       ? 'xl:grid-cols-[minmax(0,1fr)_360px]'
@@ -710,7 +712,7 @@ export function AgentWorkbenchPanel({
     setTaskError(null);
 
     try {
-      const response = await fetch('/api/tasks/import-issue', {
+      const response = await apiFetch('/api/tasks/import-issue', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ issueUrl: taskIssueUrl.trim(), cwd: cwd.trim() || undefined }),
@@ -736,7 +738,7 @@ export function AgentWorkbenchPanel({
     setIsRefreshingTask(true);
     setTaskError(null);
     try {
-      const response = await fetch(`/api/tasks/${encodeURIComponent(liveTask.id)}/refresh`, {
+      const response = await apiFetch(`/api/tasks/${encodeURIComponent(liveTask.id)}/refresh`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ rerunTests }),
@@ -757,7 +759,7 @@ export function AgentWorkbenchPanel({
     setIsCreatingTaskPr(true);
     setTaskError(null);
     try {
-      const response = await fetch(
+      const response = await apiFetch(
         `/api/tasks/${encodeURIComponent(liveTask.id)}/pull-request`,
         {
           method: 'POST',
@@ -781,7 +783,7 @@ export function AgentWorkbenchPanel({
     setIsReviewingTaskPr(true);
     setTaskError(null);
     try {
-      const response = await fetch(`/api/tasks/${encodeURIComponent(liveTask.id)}/review`, {
+      const response = await apiFetch(`/api/tasks/${encodeURIComponent(liveTask.id)}/review`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ event }),
@@ -802,7 +804,7 @@ export function AgentWorkbenchPanel({
     setIsMergingTaskPr(true);
     setTaskError(null);
     try {
-      const response = await fetch(`/api/tasks/${encodeURIComponent(liveTask.id)}/merge`, {
+      const response = await apiFetch(`/api/tasks/${encodeURIComponent(liveTask.id)}/merge`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ method: 'squash' }),
@@ -980,7 +982,7 @@ export function AgentWorkbenchPanel({
 
     try {
       const response = editingRelayInterventionId
-        ? await fetch(
+        ? await apiFetch(
             `/api/relays/${encodeURIComponent(liveRelay.id)}/interventions/${encodeURIComponent(editingRelayInterventionId)}`,
             {
               method: 'PATCH',
@@ -988,7 +990,7 @@ export function AgentWorkbenchPanel({
               body: JSON.stringify({ content: relayInterventionDraft.trim() }),
             }
           )
-        : await fetch(`/api/relays/${encodeURIComponent(liveRelay.id)}/interventions`, {
+        : await apiFetch(`/api/relays/${encodeURIComponent(liveRelay.id)}/interventions`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ content: relayInterventionDraft.trim() }),
@@ -1035,7 +1037,7 @@ export function AgentWorkbenchPanel({
     setRelayInterventionError(null);
 
     try {
-      const response = await fetch(
+      const response = await apiFetch(
         `/api/relays/${encodeURIComponent(liveRelay.id)}/interventions/${encodeURIComponent(interventionId)}`,
         { method: 'DELETE' }
       );
@@ -1064,7 +1066,7 @@ export function AgentWorkbenchPanel({
     setRelayInterventionError(null);
 
     try {
-      const response = await fetch(
+      const response = await apiFetch(
         `/api/relays/${encodeURIComponent(liveRelay.id)}/interventions/${encodeURIComponent(interventionId)}`,
         {
           method: 'PATCH',
@@ -1094,7 +1096,7 @@ export function AgentWorkbenchPanel({
     setRelayInterventionError(null);
 
     try {
-      const response = await fetch(
+      const response = await apiFetch(
         `/api/relays/${encodeURIComponent(liveRelay.id)}/interventions/${encodeURIComponent(interventionId)}/move`,
         {
           method: 'POST',
@@ -2183,10 +2185,7 @@ export function AgentWorkbenchPanel({
           />
           ) : null}
 
-          {activeSurface === 'task' ||
-          activeSurface === 'run' ||
-          activeSurface === 'terminal' ||
-          activeSurface === 'relay' ? (
+          {showSurfaceOverview ? (
           <>
           <section className={`${WORKBENCH_PANEL_CLASS} grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px]`}>
             <div>
@@ -2247,7 +2246,7 @@ export function AgentWorkbenchPanel({
             </div>
           </section>
 
-          {page === 'task' || page === 'run' || page === 'terminal' || page === 'relay' ? (
+          {page === 'task' || page === 'run' || page === 'terminal' ? (
           <div className="flex gap-2">
             <SurfaceChip
               active={activeSurface === 'task'}
@@ -2266,12 +2265,6 @@ export function AgentWorkbenchPanel({
               onClick={() => openPage('terminal')}
               icon={Monitor}
               label={isChinese ? '交互式终端' : 'Interactive terminal'}
-            />
-            <SurfaceChip
-              active={activeSurface === 'relay'}
-              onClick={() => openPage('relay')}
-              icon={SplitSquareVertical}
-              label="Agent relay"
             />
           </div>
           ) : null}
@@ -2313,7 +2306,11 @@ export function AgentWorkbenchPanel({
               onPick={setSelectedTerminalId}
               onStop={stopTerminal}
             />
-          ) : (
+          ) : null}
+          </>
+          ) : null}
+
+          {page === 'relay' ? (
             <AgentRelayRoomPane
               relay={liveRelay}
               relays={relays}
@@ -2343,9 +2340,8 @@ export function AgentWorkbenchPanel({
               onResume={() => void resumeLiveRelay()}
               onStop={stopRelay}
             />
-          )}
-          </>
           ) : null}
+
         </div>
         ) : null}
       </div>
@@ -4433,23 +4429,23 @@ function InlineNotice({
 }
 
 async function stopRun(runId: string) {
-  await fetch(`/api/runs/${encodeURIComponent(runId)}/stop`, { method: 'POST' });
+  await apiFetch(`/api/runs/${encodeURIComponent(runId)}/stop`, { method: 'POST' });
 }
 
 async function stopAgentTask(taskId: string) {
-  await fetch(`/api/tasks/${encodeURIComponent(taskId)}/stop`, { method: 'POST' });
+  await apiFetch(`/api/tasks/${encodeURIComponent(taskId)}/stop`, { method: 'POST' });
 }
 
 async function stopTerminal(terminalId: string) {
-  await fetch(`/api/terminals/${encodeURIComponent(terminalId)}/stop`, { method: 'POST' });
+  await apiFetch(`/api/terminals/${encodeURIComponent(terminalId)}/stop`, { method: 'POST' });
 }
 
 async function stopRelay(relayId: string) {
-  await fetch(`/api/relays/${encodeURIComponent(relayId)}/stop`, { method: 'POST' });
+  await apiFetch(`/api/relays/${encodeURIComponent(relayId)}/stop`, { method: 'POST' });
 }
 
 async function pauseRelay(relayId: string) {
-  const response = await fetch(`/api/relays/${encodeURIComponent(relayId)}/pause`, {
+  const response = await apiFetch(`/api/relays/${encodeURIComponent(relayId)}/pause`, {
     method: 'POST',
   });
   if (!response.ok) {
@@ -4459,7 +4455,7 @@ async function pauseRelay(relayId: string) {
 }
 
 async function resumeRelay(relayId: string) {
-  const response = await fetch(`/api/relays/${encodeURIComponent(relayId)}/resume`, {
+  const response = await apiFetch(`/api/relays/${encodeURIComponent(relayId)}/resume`, {
     method: 'POST',
   });
   if (!response.ok) {
@@ -4505,7 +4501,7 @@ async function requestJson<T>(
   const timer = window.setTimeout(() => controller.abort(), timeoutMs);
 
   try {
-    const response = await fetch(input, {
+    const response = await apiFetch(input, {
       ...init,
       signal: controller.signal,
     });
@@ -4944,7 +4940,7 @@ function rememberRecentChatPrompt(existing: string[], nextPrompt: string) {
 }
 
 async function resizeTerminal(terminalId: string, cols: number, rows: number) {
-  await fetch(`/api/terminals/${encodeURIComponent(terminalId)}/resize`, {
+  await apiFetch(`/api/terminals/${encodeURIComponent(terminalId)}/resize`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ cols, rows }),

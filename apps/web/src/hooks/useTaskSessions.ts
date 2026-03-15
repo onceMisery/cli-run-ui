@@ -2,8 +2,10 @@ import { useEffect, useState } from 'react';
 import type { AgentTaskDTO } from '@cli-run-ui/core';
 
 import type { StreamStatus } from './useSessionStream.ts';
+import { apiEventSource, useApiConfig } from '@/lib/api';
 
 export function useTaskSessions() {
+  const { config } = useApiConfig();
   const [tasks, setTasks] = useState<AgentTaskDTO[]>([]);
   const [status, setStatus] = useState<StreamStatus>('connecting');
 
@@ -16,7 +18,7 @@ export function useTaskSessions() {
       if (closed) return;
       setStatus('connecting');
       source?.close();
-      source = new EventSource('/api/tasks/stream');
+      source = apiEventSource('/api/tasks/stream');
 
       source.addEventListener('snapshot', (event) => {
         const data = safeParse(event.data) as { tasks?: AgentTaskDTO[] } | null;
@@ -53,7 +55,7 @@ export function useTaskSessions() {
       if (reconnectTimer) clearTimeout(reconnectTimer);
       source?.close();
     };
-  }, []);
+  }, [config.baseUrl, config.token]);
 
   return { tasks, status };
 }
