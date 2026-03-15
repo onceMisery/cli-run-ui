@@ -7,6 +7,7 @@ import {
   FolderKanban,
   GitBranch,
   History,
+  Menu,
   MessageSquare,
   Monitor,
   Play,
@@ -14,6 +15,7 @@ import {
   SplitSquareVertical,
   Sparkles,
   TerminalSquare,
+  X,
 } from 'lucide-react';
 
 import { Badge } from './components/ui/badge.tsx';
@@ -44,6 +46,48 @@ import { SessionList } from './views/SessionList.tsx';
 type ProviderFilter = 'all' | SessionDTO['provider'];
 type WorkspaceView = 'transcript' | AgentWorkbenchPage;
 
+const WORKSPACE_HASH: Record<WorkspaceView, string> = {
+  transcript: '#/transcript',
+  chat: '#/chat',
+  launch: '#/launch',
+  task: '#/task',
+  run: '#/run',
+  terminal: '#/terminal',
+  relay: '#/relay',
+  history: '#/history',
+};
+
+function workspaceViewFromHash(hash: string): WorkspaceView {
+  const normalized = hash.trim();
+  if (!normalized || normalized === '#') return 'transcript';
+  const path = normalized.startsWith('#') ? normalized.slice(1) : normalized;
+  const cleaned = path.startsWith('/') ? path : `/${path}`;
+  switch (cleaned) {
+    case '/chat':
+      return 'chat';
+    case '/launch':
+      return 'launch';
+    case '/task':
+      return 'task';
+    case '/run':
+      return 'run';
+    case '/terminal':
+      return 'terminal';
+    case '/relay':
+      return 'relay';
+    case '/history':
+      return 'history';
+    case '/transcript':
+    case '/':
+    default:
+      return 'transcript';
+  }
+}
+
+function hashForWorkspaceView(view: WorkspaceView) {
+  return WORKSPACE_HASH[view] ?? '#/transcript';
+}
+
 export default function App() {
   const { theme, setTheme, themes } = useTheme();
   const { language, isChinese, setLanguage } = useI18n();
@@ -55,11 +99,38 @@ export default function App() {
   const { relays, status: relayStatus } = useAgentRelaySessions();
   const [activeSessionUid, setActiveSessionUid] = useState<string | null>(null);
   const [providerFilter, setProviderFilter] = useState<ProviderFilter>('all');
-  const [workspaceView, setWorkspaceView] = useState<WorkspaceView>('transcript');
+  const [workspaceView, setWorkspaceView] = useState<WorkspaceView>(() => {
+    if (typeof window === 'undefined') return 'transcript';
+    return workspaceViewFromHash(window.location.hash);
+  });
   const [query, setQuery] = useState('');
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const deferredQuery = useDeferredValue(query);
   const activeWorkbenchPage: AgentWorkbenchPage =
     workspaceView === 'transcript' ? 'chat' : workspaceView;
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const handler = () => {
+      setWorkspaceView(workspaceViewFromHash(window.location.hash));
+    };
+    window.addEventListener('hashchange', handler);
+    return () => {
+      window.removeEventListener('hashchange', handler);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const nextHash = hashForWorkspaceView(workspaceView);
+    if (window.location.hash !== nextHash) {
+      window.location.hash = nextHash;
+    }
+  }, [workspaceView]);
+
+  useEffect(() => {
+    setIsSidebarOpen(false);
+  }, [workspaceView]);
 
   const filteredSessions = useMemo(() => {
     const normalized = deferredQuery.trim().toLowerCase();
@@ -183,9 +254,24 @@ export default function App() {
 
   return (
     <div className="app-shell min-h-screen text-foreground">
+      {isSidebarOpen ? (
+        <button
+          type="button"
+          aria-label={isChinese ? '关闭侧边栏' : 'Close sidebar'}
+          className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm xl:hidden"
+          onClick={() => setIsSidebarOpen(false)}
+        />
+      ) : null}
       <div className="mx-auto flex min-h-screen max-w-[1800px] flex-col gap-6 px-4 py-4 lg:px-6">
         <section className="grid min-h-[calc(100vh-2rem)] gap-4 xl:grid-cols-[340px_minmax(0,1fr)]">
-          <aside className="theme-frame overflow-hidden rounded-[30px]">
+          <aside
+            className={cn(
+              'theme-frame flex flex-col overflow-hidden rounded-[30px]',
+              isSidebarOpen
+                ? 'fixed inset-y-0 left-0 z-50 w-[min(92vw,360px)] max-w-full'
+                : 'hidden xl:flex'
+            )}
+          >
             <div className="border-b border-[var(--theme-panel-border)] px-5 py-5">
               <div className="flex items-start justify-between gap-4">
                 <div className="space-y-2">
@@ -205,6 +291,13 @@ export default function App() {
                 </div>
 
                 <div className="flex flex-col items-end gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setIsSidebarOpen(false)}
+                    className="xl:hidden inline-flex h-8 w-8 items-center justify-center rounded-full border border-white/10 text-slate-200 transition hover:bg-white/[0.08]"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
                   <div className="theme-panel-muted inline-flex rounded-full p-1">
                     <button
                       onClick={() => setLanguage('en')}
@@ -286,7 +379,7 @@ export default function App() {
               </div>
             </div>
 
-            <div className="space-y-4 px-5 py-5">
+            <div className="flex-1 space-y-4 overflow-y-auto px-5 py-5">
               <div className="theme-panel rounded-2xl p-3">
                 <div className="theme-input flex items-center gap-2 rounded-xl px-3 py-2">
                   <Search className="h-4 w-4 text-slate-400" />
@@ -343,7 +436,10 @@ export default function App() {
                 <SessionList
                   sessions={filteredSessions}
                   activeUid={resolvedActiveUid}
-                  onSelect={setActiveSessionUid}
+                  onSelect={(uid) => {
+                    setActiveSessionUid(uid);
+                    setIsSidebarOpen(false);
+                  }}
                 />
               </div>
 
@@ -366,55 +462,65 @@ export default function App() {
                     {workspaceHeaderDescription(workspaceView, isChinese)}
                   </div>
                 </div>
-                <div className="flex flex-wrap gap-2">
-                  <WorkspaceMiniTabButton
-                    active={workspaceView === 'transcript'}
-                    icon={Activity}
-                    title="Transcript"
-                    onClick={() => setWorkspaceView('transcript')}
-                  />
-                  <WorkspaceMiniTabButton
-                    active={workspaceView === 'chat'}
-                    icon={MessageSquare}
-                    title={isChinese ? '聊天' : 'Chat'}
-                    onClick={() => setWorkspaceView('chat')}
-                  />
-                  <WorkspaceMiniTabButton
-                    active={workspaceView === 'launch'}
-                    icon={Play}
-                    title={isChinese ? '启动' : 'Launch'}
-                    onClick={() => setWorkspaceView('launch')}
-                  />
-                  <WorkspaceMiniTabButton
-                    active={workspaceView === 'task'}
-                    icon={GitBranch}
-                    title="Task"
-                    onClick={() => setWorkspaceView('task')}
-                  />
-                  <WorkspaceMiniTabButton
-                    active={workspaceView === 'run'}
-                    icon={Monitor}
-                    title="Run"
-                    onClick={() => setWorkspaceView('run')}
-                  />
-                  <WorkspaceMiniTabButton
-                    active={workspaceView === 'terminal'}
-                    icon={TerminalSquare}
-                    title={isChinese ? '终端' : 'Terminal'}
-                    onClick={() => setWorkspaceView('terminal')}
-                  />
-                  <WorkspaceMiniTabButton
-                    active={workspaceView === 'relay'}
-                    icon={SplitSquareVertical}
-                    title="Relay"
-                    onClick={() => setWorkspaceView('relay')}
-                  />
-                  <WorkspaceMiniTabButton
-                    active={workspaceView === 'history'}
-                    icon={History}
-                    title={isChinese ? '历史' : 'History'}
-                    onClick={() => setWorkspaceView('history')}
-                  />
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setIsSidebarOpen(true)}
+                    className="xl:hidden inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/10 text-slate-200 transition hover:bg-white/[0.08]"
+                    aria-label={isChinese ? '打开侧边栏' : 'Open sidebar'}
+                  >
+                    <Menu className="h-4 w-4" />
+                  </button>
+                  <div className="flex flex-1 gap-2 overflow-x-auto pb-2 -mb-2 xl:flex-wrap xl:overflow-visible">
+                    <WorkspaceMiniTabButton
+                      active={workspaceView === 'transcript'}
+                      icon={Activity}
+                      title="Transcript"
+                      onClick={() => setWorkspaceView('transcript')}
+                    />
+                    <WorkspaceMiniTabButton
+                      active={workspaceView === 'chat'}
+                      icon={MessageSquare}
+                      title={isChinese ? '聊天' : 'Chat'}
+                      onClick={() => setWorkspaceView('chat')}
+                    />
+                    <WorkspaceMiniTabButton
+                      active={workspaceView === 'launch'}
+                      icon={Play}
+                      title={isChinese ? '启动' : 'Launch'}
+                      onClick={() => setWorkspaceView('launch')}
+                    />
+                    <WorkspaceMiniTabButton
+                      active={workspaceView === 'task'}
+                      icon={GitBranch}
+                      title="Task"
+                      onClick={() => setWorkspaceView('task')}
+                    />
+                    <WorkspaceMiniTabButton
+                      active={workspaceView === 'run'}
+                      icon={Monitor}
+                      title="Run"
+                      onClick={() => setWorkspaceView('run')}
+                    />
+                    <WorkspaceMiniTabButton
+                      active={workspaceView === 'terminal'}
+                      icon={TerminalSquare}
+                      title={isChinese ? '终端' : 'Terminal'}
+                      onClick={() => setWorkspaceView('terminal')}
+                    />
+                    <WorkspaceMiniTabButton
+                      active={workspaceView === 'relay'}
+                      icon={SplitSquareVertical}
+                      title="Relay"
+                      onClick={() => setWorkspaceView('relay')}
+                    />
+                    <WorkspaceMiniTabButton
+                      active={workspaceView === 'history'}
+                      icon={History}
+                      title={isChinese ? '历史' : 'History'}
+                      onClick={() => setWorkspaceView('history')}
+                    />
+                  </div>
                 </div>
               </div>
             </div>
@@ -613,21 +719,34 @@ function RemoteAccessPanel({
   onUpdateConfig,
   isChinese,
 }: {
-  config: { baseUrl: string; token: string };
-  onUpdateConfig: (patch: { baseUrl?: string; token?: string }) => void;
+  config: { baseUrl: string; token: string; readOnly: boolean };
+  onUpdateConfig: (patch: { baseUrl?: string; token?: string; readOnly?: boolean }) => void;
   isChinese: boolean;
 }) {
   const [baseDraft, setBaseDraft] = useState(config.baseUrl);
   const [tokenDraft, setTokenDraft] = useState(config.token);
+  const [readOnlyDraft, setReadOnlyDraft] = useState(config.readOnly ?? false);
   const [showToken, setShowToken] = useState(false);
+  const [testState, setTestState] = useState<'idle' | 'testing' | 'success' | 'error'>(
+    'idle'
+  );
+  const [testMessage, setTestMessage] = useState<string | null>(null);
 
   useEffect(() => {
     setBaseDraft(config.baseUrl);
     setTokenDraft(config.token);
-  }, [config.baseUrl, config.token]);
+    setReadOnlyDraft(config.readOnly ?? false);
+  }, [config.baseUrl, config.readOnly, config.token]);
+
+  useEffect(() => {
+    setTestState('idle');
+    setTestMessage(null);
+  }, [baseDraft, tokenDraft]);
 
   const hasChanges =
-    baseDraft.trim() !== config.baseUrl || tokenDraft !== config.token;
+    baseDraft.trim() !== config.baseUrl ||
+    tokenDraft !== config.token ||
+    readOnlyDraft !== (config.readOnly ?? false);
   const modeLabel = config.baseUrl
     ? isChinese
       ? '远程'
@@ -635,6 +754,92 @@ function RemoteAccessPanel({
     : isChinese
       ? '本地'
       : 'Local';
+  const testTone =
+    testState === 'success'
+      ? 'border-emerald-400/30 bg-emerald-400/10 text-emerald-100'
+      : testState === 'error'
+        ? 'border-rose-400/30 bg-rose-400/10 text-rose-100'
+        : 'border-amber-400/30 bg-amber-400/10 text-amber-100';
+  const testLabel =
+    testState === 'testing'
+      ? isChinese
+        ? '正在测试'
+        : 'Testing'
+      : testState === 'success'
+        ? isChinese
+          ? '连接正常'
+          : 'Connected'
+        : testState === 'error'
+          ? isChinese
+            ? '连接失败'
+            : 'Failed'
+          : isChinese
+            ? '未测试'
+            : 'Not tested';
+
+  const runConnectionTest = async () => {
+    const trimmedBase = baseDraft.trim();
+    if (trimmedBase && !/^https?:\/\//i.test(trimmedBase)) {
+      setTestState('error');
+      setTestMessage(
+        isChinese
+          ? '请填写带 http/https 的完整地址。'
+          : 'Please enter a full URL starting with http/https.'
+      );
+      return;
+    }
+
+    setTestState('testing');
+    setTestMessage(null);
+
+    const controller = new AbortController();
+    const timer = window.setTimeout(() => controller.abort(), 6000);
+    try {
+      const base = trimmedBase || window.location.origin;
+      const url = new URL('/api/health/cli', base).toString();
+      const headers = tokenDraft.trim()
+        ? { 'x-auth-token': tokenDraft.trim() }
+        : undefined;
+      const response = await fetch(url, { headers, signal: controller.signal });
+      if (response.status === 401 || response.status === 403) {
+        setTestState('error');
+        setTestMessage(
+          isChinese
+            ? '鉴权失败，请检查 Token 是否正确。'
+            : 'Unauthorized. Check your token.'
+        );
+        return;
+      }
+      if (!response.ok) {
+        setTestState('error');
+        setTestMessage(
+          isChinese
+            ? `服务返回异常状态：${response.status}`
+            : `Server responded with status ${response.status}.`
+        );
+        return;
+      }
+      setTestState('success');
+      setTestMessage(
+        isChinese ? '服务可用，CLI 已响应。' : 'Server reachable. CLI health OK.'
+      );
+    } catch (error) {
+      setTestState('error');
+      if (error instanceof DOMException && error.name === 'AbortError') {
+        setTestMessage(
+          isChinese ? '连接超时，请检查网络或防火墙。' : 'Timed out. Check network or firewall.'
+        );
+      } else {
+        setTestMessage(
+          isChinese
+            ? '连接失败，可能是网络不可达或 CORS 被拒绝。'
+            : 'Connection failed. Network or CORS may be blocking the request.'
+        );
+      }
+    } finally {
+      window.clearTimeout(timer);
+    }
+  };
 
   return (
     <div className="theme-panel rounded-2xl p-3">
@@ -683,6 +888,30 @@ function RemoteAccessPanel({
             </button>
           </div>
         </div>
+        <div className="flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2">
+          <div>
+            <div className="text-xs uppercase tracking-[0.18em] text-slate-500">
+              {isChinese ? '只读模式' : 'Read-only'}
+            </div>
+            <div className="mt-1 text-xs text-slate-400">
+              {isChinese
+                ? '开启后禁止写操作，仅查看会话和日志。'
+                : 'Disables write actions; view-only mode.'}
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => setReadOnlyDraft((prev) => !prev)}
+            className={cn(
+              'rounded-full border px-3 py-1 text-xs font-medium transition',
+              readOnlyDraft
+                ? 'border-amber-400/40 bg-amber-400/10 text-amber-100'
+                : 'border-white/10 bg-white/[0.04] text-slate-300 hover:text-slate-100'
+            )}
+          >
+            {readOnlyDraft ? (isChinese ? '已开启' : 'On') : isChinese ? '已关闭' : 'Off'}
+          </button>
+        </div>
         <div className="flex flex-wrap items-center gap-2">
           <Button
             size="sm"
@@ -692,6 +921,7 @@ function RemoteAccessPanel({
               onUpdateConfig({
                 baseUrl: baseDraft.trim(),
                 token: tokenDraft.trim(),
+                readOnly: readOnlyDraft,
               })
             }
             disabled={!hasChanges}
@@ -702,13 +932,39 @@ function RemoteAccessPanel({
             size="sm"
             variant="outline"
             className="theme-panel-muted text-slate-100 hover:bg-white/[0.08]"
+            onClick={() => void runConnectionTest()}
+          >
+            {testState === 'testing' ? (
+              <span className="inline-flex items-center gap-2">
+                <span className="h-3 w-3 animate-spin rounded-full border-2 border-white/30 border-t-white/80" />
+                {isChinese ? '测试中' : 'Testing'}
+              </span>
+            ) : (
+              <span>{isChinese ? '测试连接' : 'Test connection'}</span>
+            )}
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            className="theme-panel-muted text-slate-100 hover:bg-white/[0.08]"
             onClick={() => {
-              onUpdateConfig({ baseUrl: '', token: '' });
+              onUpdateConfig({ baseUrl: '', token: '', readOnly: false });
               setShowToken(false);
             }}
           >
             {isChinese ? '清空' : 'Clear'}
           </Button>
+        </div>
+        <div className={cn('rounded-xl border px-3 py-2 text-xs', testTone)}>
+          <div className="flex items-center justify-between gap-3">
+            <span>{testLabel}</span>
+            {testState === 'success' ? (
+              <Badge variant="muted" className="bg-white/10 text-emerald-100">
+                {isChinese ? '已通过' : 'OK'}
+              </Badge>
+            ) : null}
+          </div>
+          {testMessage ? <div className="mt-1 text-slate-200">{testMessage}</div> : null}
         </div>
         <div className="text-xs text-slate-400">
           {isChinese
@@ -736,7 +992,7 @@ function WorkspaceMiniTabButton({
     <button
       onClick={onClick}
       className={cn(
-        'inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-medium transition',
+        'inline-flex shrink-0 items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-medium transition',
         active
           ? 'border-[var(--theme-accent-border)] bg-[var(--theme-accent-soft)] text-[var(--theme-accent-text)]'
           : 'theme-panel-muted text-slate-400 hover:text-slate-100'

@@ -62,7 +62,7 @@ import { useTaskStream } from '@/hooks/useTaskStream';
 import { useTerminalStream } from '@/hooks/useTerminalStream';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { apiFetch } from '@/lib/api';
+import { apiFetch, useApiConfig } from '@/lib/api';
 import { copyTextWithFeedback } from '@/lib/copy-feedback';
 import { useI18n } from '@/lib/i18n';
 import { cn } from '@/lib/utils';
@@ -172,6 +172,8 @@ export function AgentWorkbenchPanel({
   hidePageTabs = false,
 }: AgentWorkbenchPanelProps) {
   const { isChinese } = useI18n();
+  const { config: apiConfig } = useApiConfig();
+  const isReadOnly = apiConfig.readOnly;
   const {
     health: cliHealth,
     loading: cliHealthLoading,
@@ -433,25 +435,30 @@ export function AgentWorkbenchPanel({
     activeSession.provider === provider &&
     !!activeSession.sessionId;
   const canLaunchRun =
+    !isReadOnly &&
     !isLaunchingRun &&
     cwd.trim().length > 0 &&
     prompt.trim().length > 0 &&
     (mode === 'task' || canResume);
   const canLaunchTask =
+    !isReadOnly &&
     !isLaunchingTask &&
     cwd.trim().length > 0 &&
     prompt.trim().length > 0 &&
     (mode === 'task' || canResume);
   const canLaunchTerminal =
+    !isReadOnly &&
     !isLaunchingTerminal &&
     cwd.trim().length > 0 &&
     (mode === 'task' || canResume);
   const canSendChat =
+    !isReadOnly &&
     !isSendingChat &&
     chatDraft.trim().length > 0 &&
     cwd.trim().length > 0 &&
     (mode === 'task' || canResume);
   const canLaunchRelay =
+    !isReadOnly &&
     !isLaunchingRelay &&
     cwd.trim().length > 0 &&
     relayPrompt.trim().length > 0;
@@ -514,6 +521,9 @@ export function AgentWorkbenchPanel({
   const guideProgressLabel = isChinese
     ? `已完成 ${guideStepsCompleted}/3 步`
     : `${guideStepsCompleted}/3 steps complete`;
+  const readOnlyNotice = isChinese
+    ? '当前处于只读模式，已禁用写操作。'
+    : 'Read-only mode is enabled. Write actions are disabled.';
   const hasAnyActivity = tasks.length + runs.length + terminals.length + relays.length > 0;
   const surfaceMeta = useMemo(() => {
     if (activeSurface === 'task') {
@@ -666,6 +676,10 @@ export function AgentWorkbenchPanel({
   };
 
   const launchTask = async () => {
+    if (isReadOnly) {
+      setTaskError(readOnlyNotice);
+      return;
+    }
     if (!canLaunchTask) return;
     setIsLaunchingTask(true);
     setTaskError(null);
@@ -707,6 +721,10 @@ export function AgentWorkbenchPanel({
   };
 
   const importTaskIssue = async () => {
+    if (isReadOnly) {
+      setTaskError(readOnlyNotice);
+      return;
+    }
     if (!taskIssueUrl.trim() || isImportingTaskIssue) return;
     setIsImportingTaskIssue(true);
     setTaskError(null);
@@ -734,6 +752,10 @@ export function AgentWorkbenchPanel({
   };
 
   const refreshTaskArtifacts = async (rerunTests = false) => {
+    if (isReadOnly) {
+      setTaskError(readOnlyNotice);
+      return;
+    }
     if (!liveTask || isRefreshingTask) return;
     setIsRefreshingTask(true);
     setTaskError(null);
@@ -755,6 +777,10 @@ export function AgentWorkbenchPanel({
   };
 
   const createTaskPullRequest = async () => {
+    if (isReadOnly) {
+      setTaskError(readOnlyNotice);
+      return;
+    }
     if (!liveTask || isCreatingTaskPr) return;
     setIsCreatingTaskPr(true);
     setTaskError(null);
@@ -779,6 +805,10 @@ export function AgentWorkbenchPanel({
   };
 
   const reviewTaskPullRequest = async (event: 'APPROVE' | 'REQUEST_CHANGES') => {
+    if (isReadOnly) {
+      setTaskError(readOnlyNotice);
+      return;
+    }
     if (!liveTask?.pullRequest || isReviewingTaskPr) return;
     setIsReviewingTaskPr(true);
     setTaskError(null);
@@ -800,6 +830,10 @@ export function AgentWorkbenchPanel({
   };
 
   const mergeTaskPullRequest = async () => {
+    if (isReadOnly) {
+      setTaskError(readOnlyNotice);
+      return;
+    }
     if (!liveTask?.pullRequest || isMergingTaskPr) return;
     setIsMergingTaskPr(true);
     setTaskError(null);
@@ -821,6 +855,10 @@ export function AgentWorkbenchPanel({
   };
 
   const launchRun = async () => {
+    if (isReadOnly) {
+      setRunError(readOnlyNotice);
+      return;
+    }
     if (!canLaunchRun) return;
     setIsLaunchingRun(true);
     setRunError(null);
@@ -858,6 +896,10 @@ export function AgentWorkbenchPanel({
   };
 
   const startTerminalSession = async (bootPrompt?: string) => {
+    if (isReadOnly) {
+      setTerminalError(readOnlyNotice);
+      throw new Error(readOnlyNotice);
+    }
     const payload: StartTerminalRequestDTO = {
       provider,
       mode: mode === 'resume' ? 'resume' : 'new',
@@ -891,6 +933,10 @@ export function AgentWorkbenchPanel({
   };
 
   const launchTerminal = async () => {
+    if (isReadOnly) {
+      setTerminalError(readOnlyNotice);
+      return;
+    }
     if (!canLaunchTerminal) return;
     setIsLaunchingTerminal(true);
     setTerminalError(null);
@@ -905,6 +951,10 @@ export function AgentWorkbenchPanel({
   };
 
   const sendChatMessage = async () => {
+    if (isReadOnly) {
+      setChatError(readOnlyNotice);
+      return;
+    }
     if (!canSendChat) return;
     const message = chatDraft.trim();
     setIsSendingChat(true);
@@ -932,6 +982,10 @@ export function AgentWorkbenchPanel({
   };
 
   const launchRelay = async () => {
+    if (isReadOnly) {
+      setRelayError(readOnlyNotice);
+      return;
+    }
     if (!canLaunchRelay) return;
     setIsLaunchingRelay(true);
     setRelayError(null);
@@ -976,6 +1030,10 @@ export function AgentWorkbenchPanel({
   };
 
   const sendRelayIntervention = async () => {
+    if (isReadOnly) {
+      setRelayInterventionError(readOnlyNotice);
+      return;
+    }
     if (!liveRelay || !relayInterventionDraft.trim() || isSendingRelayIntervention) return;
     setIsSendingRelayIntervention(true);
     setRelayInterventionError(null);
@@ -1032,6 +1090,10 @@ export function AgentWorkbenchPanel({
   };
 
   const removeRelayIntervention = async (interventionId: string) => {
+    if (isReadOnly) {
+      setRelayInterventionError(readOnlyNotice);
+      return;
+    }
     if (!liveRelay || isRemovingRelayIntervention) return;
     setIsRemovingRelayIntervention(interventionId);
     setRelayInterventionError(null);
@@ -1061,6 +1123,10 @@ export function AgentWorkbenchPanel({
     interventionId: string,
     pinned: boolean
   ) => {
+    if (isReadOnly) {
+      setRelayInterventionError(readOnlyNotice);
+      return;
+    }
     if (!liveRelay || isPinningRelayIntervention) return;
     setIsPinningRelayIntervention(interventionId);
     setRelayInterventionError(null);
@@ -1091,6 +1157,10 @@ export function AgentWorkbenchPanel({
     interventionId: string,
     direction: 'up' | 'down'
   ) => {
+    if (isReadOnly) {
+      setRelayInterventionError(readOnlyNotice);
+      return;
+    }
     if (!liveRelay || isMovingRelayIntervention) return;
     setIsMovingRelayIntervention(interventionId);
     setRelayInterventionError(null);
@@ -1118,6 +1188,10 @@ export function AgentWorkbenchPanel({
   };
 
   const pauseLiveRelay = async () => {
+    if (isReadOnly) {
+      setRelayError(readOnlyNotice);
+      return;
+    }
     if (!liveRelay || isUpdatingRelayLifecycle) return;
     setIsUpdatingRelayLifecycle(true);
     setRelayError(null);
@@ -1132,6 +1206,10 @@ export function AgentWorkbenchPanel({
   };
 
   const resumeLiveRelay = async () => {
+    if (isReadOnly) {
+      setRelayError(readOnlyNotice);
+      return;
+    }
     if (!liveRelay || isUpdatingRelayLifecycle) return;
     setIsUpdatingRelayLifecycle(true);
     setRelayError(null);
@@ -1178,6 +1256,38 @@ export function AgentWorkbenchPanel({
     setPage('chat');
     setCwd(activeSession?.projectPath ?? '');
     setSurface('run');
+  };
+
+  const handleStopRun = async (runId: string) => {
+    if (isReadOnly) {
+      setRunError(readOnlyNotice);
+      return;
+    }
+    await stopRun(runId);
+  };
+
+  const handleStopTask = async (taskId: string) => {
+    if (isReadOnly) {
+      setTaskError(readOnlyNotice);
+      return;
+    }
+    await stopAgentTask(taskId);
+  };
+
+  const handleStopTerminal = async (terminalId: string) => {
+    if (isReadOnly) {
+      setTerminalError(readOnlyNotice);
+      return;
+    }
+    await stopTerminal(terminalId);
+  };
+
+  const handleStopRelay = async (relayId: string) => {
+    if (isReadOnly) {
+      setRelayError(readOnlyNotice);
+      return;
+    }
+    await stopRelay(relayId);
   };
 
   const switchToGuidedMode = () => {
@@ -2173,6 +2283,7 @@ export function AgentWorkbenchPanel({
             canSend={canSendChat}
             chatError={chatError}
             cwd={cwd}
+            isReadOnly={isReadOnly}
             isSending={isSendingChat}
             mode={mode}
             canResume={canResume}
@@ -2276,6 +2387,7 @@ export function AgentWorkbenchPanel({
               events={taskEvents}
               logs={taskLogs}
               run={liveTaskRun}
+              isReadOnly={isReadOnly}
               isRefreshing={isRefreshingTask}
               isCreatingPullRequest={isCreatingTaskPr}
               isReviewingPullRequest={isReviewingTaskPr}
@@ -2283,18 +2395,22 @@ export function AgentWorkbenchPanel({
               taskError={taskError}
               onPick={setSelectedTaskId}
               onRefresh={(rerunTests) => void refreshTaskArtifacts(rerunTests)}
-              onStop={(taskId) => void stopAgentTask(taskId)}
+              onStop={(taskId) => void handleStopTask(taskId)}
               onCreatePullRequest={() => void createTaskPullRequest()}
               onApprove={() => void reviewTaskPullRequest('APPROVE')}
               onRequestChanges={() => void reviewTaskPullRequest('REQUEST_CHANGES')}
               onMerge={() => void mergeTaskPullRequest()}
+              onExport={() =>
+                liveTask ? downloadTaskPackage(liveTask, taskLogs, taskEvents, liveTaskRun) : null
+              }
             />
           ) : activeSurface === 'run' ? (
             <HeadlessRunPane
               run={liveRun}
               logs={logs}
+              isReadOnly={isReadOnly}
               onPick={setSelectedRunId}
-              onStop={stopRun}
+              onStop={handleStopRun}
               runs={runs}
             />
           ) : activeSurface === 'terminal' ? (
@@ -2303,8 +2419,9 @@ export function AgentWorkbenchPanel({
               terminals={terminals}
               outputs={outputs}
               selectedTerminalId={selectedTerminalId}
+              isReadOnly={isReadOnly}
               onPick={setSelectedTerminalId}
-              onStop={stopTerminal}
+              onStop={handleStopTerminal}
             />
           ) : null}
           </>
@@ -2324,6 +2441,7 @@ export function AgentWorkbenchPanel({
               movingInterventionId={isMovingRelayIntervention}
               pinningInterventionId={isPinningRelayIntervention}
               removingInterventionId={isRemovingRelayIntervention}
+              isReadOnly={isReadOnly}
               onInterventionDraftChange={setRelayInterventionDraft}
               onCancelInterventionEdit={cancelEditingRelayIntervention}
               onEditIntervention={startEditingRelayIntervention}
@@ -2338,7 +2456,7 @@ export function AgentWorkbenchPanel({
               onPick={setSelectedRelayId}
               onPause={() => void pauseLiveRelay()}
               onResume={() => void resumeLiveRelay()}
-              onStop={stopRelay}
+              onStop={handleStopRelay}
             />
           ) : null}
 
@@ -2355,6 +2473,7 @@ function TaskLoopPane({
   run,
   logs,
   events,
+  isReadOnly,
   taskError,
   isRefreshing,
   isCreatingPullRequest,
@@ -2367,12 +2486,14 @@ function TaskLoopPane({
   onApprove,
   onRequestChanges,
   onMerge,
+  onExport,
 }: {
   task: AgentTaskDTO | null;
   tasks: AgentTaskDTO[];
   run: RunSessionDTO | null;
   logs: { id: string; text: string; stream: 'stdout' | 'stderr' | 'system'; timestampMs: number }[];
   events: AgentTaskEventDTO[];
+  isReadOnly: boolean;
   taskError: string | null;
   isRefreshing: boolean;
   isCreatingPullRequest: boolean;
@@ -2385,9 +2506,13 @@ function TaskLoopPane({
   onApprove: () => void;
   onRequestChanges: () => void;
   onMerge: () => void;
+  onExport: () => void;
 }) {
   const { isChinese, language } = useI18n();
   const logViewportRef = useRef<HTMLDivElement | null>(null);
+  const readOnlyNotice = isChinese
+    ? '当前处于只读模式，已禁用写操作。'
+    : 'Read-only mode is enabled. Write actions are disabled.';
   const recentReviews = task
     ? [...task.pullRequestReviews]
         .sort((left, right) => (right.submittedAtMs ?? 0) - (left.submittedAtMs ?? 0))
@@ -2577,13 +2702,14 @@ function TaskLoopPane({
               <div className="text-xs uppercase tracking-[0.18em] text-slate-500">
                 {isChinese ? 'Actions' : 'Actions'}
               </div>
+              {isReadOnly ? <InlineNotice tone="warn">{readOnlyNotice}</InlineNotice> : null}
               <div className="mt-3 grid gap-2">
                 <Button
                   variant="outline"
                   size="sm"
                   className="border-white/10 bg-white/[0.03] text-slate-100 hover:bg-white/[0.08]"
                   onClick={() => onRefresh(false)}
-                  disabled={isRefreshing}
+                  disabled={isRefreshing || isReadOnly}
                 >
                   {isRefreshing ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
                   {isChinese ? '刷新 diff' : 'Refresh diff'}
@@ -2593,7 +2719,7 @@ function TaskLoopPane({
                   size="sm"
                   className="border-white/10 bg-white/[0.03] text-slate-100 hover:bg-white/[0.08]"
                   onClick={() => onRefresh(true)}
-                  disabled={isRefreshing || !task.testCommand}
+                  disabled={isRefreshing || !task.testCommand || isReadOnly}
                 >
                   <Command className="h-4 w-4" />
                   {isChinese ? '重新跑测试' : 'Rerun tests'}
@@ -2604,6 +2730,7 @@ function TaskLoopPane({
                     size="sm"
                     className="border-white/10 bg-white/[0.03] text-slate-100 hover:bg-white/[0.08]"
                     onClick={() => onStop(task.id)}
+                    disabled={isReadOnly}
                   >
                     <Square className="h-4 w-4" />
                     {isChinese ? '停止任务' : 'Stop task'}
@@ -2614,7 +2741,7 @@ function TaskLoopPane({
                     size="sm"
                     className="bg-[var(--theme-accent-solid)] text-[var(--theme-accent-foreground)] hover:bg-[var(--theme-accent-solid-hover)]"
                     onClick={onCreatePullRequest}
-                    disabled={isCreatingPullRequest}
+                    disabled={isCreatingPullRequest || isReadOnly}
                   >
                     {isCreatingPullRequest ? (
                       <LoaderCircle className="h-4 w-4 animate-spin" />
@@ -2630,7 +2757,7 @@ function TaskLoopPane({
                       size="sm"
                       className="border-white/10 bg-white/[0.03] text-slate-100 hover:bg-white/[0.08]"
                       onClick={onApprove}
-                      disabled={isReviewingPullRequest}
+                      disabled={isReviewingPullRequest || isReadOnly}
                     >
                       {isReviewingPullRequest ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <Play className="h-4 w-4" />}
                       {isChinese ? 'Approve PR' : 'Approve PR'}
@@ -2640,7 +2767,7 @@ function TaskLoopPane({
                       size="sm"
                       className="border-white/10 bg-white/[0.03] text-slate-100 hover:bg-white/[0.08]"
                       onClick={onRequestChanges}
-                      disabled={isReviewingPullRequest}
+                      disabled={isReviewingPullRequest || isReadOnly}
                     >
                       <MessageSquare className="h-4 w-4" />
                       {isChinese ? 'Request changes' : 'Request changes'}
@@ -2649,13 +2776,27 @@ function TaskLoopPane({
                       size="sm"
                       className="bg-[var(--theme-secondary-solid)] text-[var(--theme-secondary-foreground)] hover:bg-[var(--theme-secondary-solid-hover)]"
                       onClick={onMerge}
-                      disabled={isMergingPullRequest || Boolean(task.mergeReadiness && !task.mergeReadiness.ready)}
+                      disabled={
+                        isMergingPullRequest ||
+                        Boolean(task.mergeReadiness && !task.mergeReadiness.ready) ||
+                        isReadOnly
+                      }
                     >
                       {isMergingPullRequest ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <GitPullRequestArrow className="h-4 w-4" />}
                       {isChinese ? 'Merge PR' : 'Merge PR'}
                     </Button>
                   </>
                 )}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="border-white/10 bg-white/[0.03] text-slate-100 hover:bg-white/[0.08]"
+                  onClick={onExport}
+                  disabled={!task}
+                >
+                  <Download className="h-4 w-4" />
+                  {isChinese ? '导出交付包' : 'Export package'}
+                </Button>
               </div>
             </div>
           </div>
@@ -3033,16 +3174,21 @@ function HeadlessRunPane({
   run,
   runs,
   logs,
+  isReadOnly,
   onPick,
   onStop,
 }: {
   run: RunSessionDTO | null;
   runs: RunSessionDTO[];
   logs: { id: string; text: string; stream: 'stdout' | 'stderr' | 'system'; timestampMs: number }[];
+  isReadOnly: boolean;
   onPick: (id: string) => void;
   onStop: (id: string) => Promise<void>;
 }) {
   const { isChinese } = useI18n();
+  const readOnlyNotice = isChinese
+    ? '当前处于只读模式，已禁用写操作。'
+    : 'Read-only mode is enabled. Write actions are disabled.';
   const viewportRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -3068,12 +3214,14 @@ function HeadlessRunPane({
             size="sm"
             className="border-white/10 bg-white/[0.03] text-slate-100 hover:bg-white/[0.08]"
             onClick={() => void onStop(run.id)}
+            disabled={isReadOnly}
           >
             <Square className="h-4 w-4" />
             {isChinese ? '停止' : 'Stop'}
           </Button>
         ) : null}
       </div>
+      {isReadOnly ? <InlineNotice tone="warn">{readOnlyNotice}</InlineNotice> : null}
 
       <div
         ref={viewportRef}
@@ -3121,6 +3269,7 @@ function InteractiveTerminalPane({
   terminals,
   outputs,
   selectedTerminalId,
+  isReadOnly,
   onPick,
   onStop,
 }: {
@@ -3128,10 +3277,14 @@ function InteractiveTerminalPane({
   terminals: TerminalSessionDTO[];
   outputs: { id: string; data: string }[];
   selectedTerminalId: string | null;
+  isReadOnly: boolean;
   onPick: (id: string) => void;
   onStop: (id: string) => Promise<void>;
 }) {
   const { isChinese } = useI18n();
+  const readOnlyNotice = isChinese
+    ? '当前处于只读模式，已禁用写操作。'
+    : 'Read-only mode is enabled. Write actions are disabled.';
   const hostRef = useRef<HTMLDivElement | null>(null);
   const termRef = useRef<XTermTerminal | null>(null);
   const fitRef = useRef<XTermFitAddon | null>(null);
@@ -3152,6 +3305,7 @@ function InteractiveTerminalPane({
         const xterm = new xtermModule.Terminal({
           convertEol: true,
           cursorBlink: true,
+          disableStdin: isReadOnly,
           fontFamily: '"JetBrains Mono", ui-monospace, monospace',
           fontSize: 12,
           lineHeight: 1.35,
@@ -3167,6 +3321,7 @@ function InteractiveTerminalPane({
         fitAddon.fit();
 
         xterm.onData((data) => {
+          if (isReadOnly) return;
           if (!selectedTerminalId) return;
           bufferRef.current += data;
           if (timerRef.current) return;
@@ -3180,7 +3335,7 @@ function InteractiveTerminalPane({
 
         resizeObserver = new ResizeObserver(() => {
           fitAddon.fit();
-          if (!selectedTerminalId) return;
+          if (!selectedTerminalId || isReadOnly) return;
           void resizeTerminal(selectedTerminalId, xterm.cols, xterm.rows);
         });
         resizeObserver.observe(host);
@@ -3201,7 +3356,7 @@ function InteractiveTerminalPane({
       termRef.current = null;
       fitRef.current = null;
     };
-  }, [selectedTerminalId]);
+  }, [isReadOnly, selectedTerminalId]);
 
   useEffect(() => {
     termRef.current?.reset();
@@ -3222,9 +3377,12 @@ function InteractiveTerminalPane({
     const term = termRef.current;
     const fit = fitRef.current;
     if (!term || !fit || !selectedTerminalId) return;
+    term.setOption('disableStdin', isReadOnly);
     fit.fit();
-    void resizeTerminal(selectedTerminalId, term.cols, term.rows);
-  }, [selectedTerminalId]);
+    if (!isReadOnly) {
+      void resizeTerminal(selectedTerminalId, term.cols, term.rows);
+    }
+  }, [isReadOnly, selectedTerminalId]);
 
   return (
     <section className={WORKBENCH_PANEL_CLASS}>
@@ -3247,12 +3405,14 @@ function InteractiveTerminalPane({
             size="sm"
             className="border-white/10 bg-white/[0.03] text-slate-100 hover:bg-white/[0.08]"
             onClick={() => void onStop(terminal.id)}
+            disabled={isReadOnly}
           >
             <SquareTerminal className="h-4 w-4" />
             {isChinese ? '停止' : 'Stop'}
           </Button>
         ) : null}
       </div>
+      {isReadOnly ? <InlineNotice tone="warn">{readOnlyNotice}</InlineNotice> : null}
 
       <div className="rounded-2xl border border-white/10 bg-[#07111b] p-2">
         <div ref={hostRef} className="h-[320px] overflow-hidden rounded-xl" />
@@ -3438,6 +3598,7 @@ function AgentRelayRoomPane({
   movingInterventionId,
   pinningInterventionId,
   removingInterventionId,
+  isReadOnly,
   onInterventionDraftChange,
   onCancelInterventionEdit,
   onEditIntervention,
@@ -3462,6 +3623,7 @@ function AgentRelayRoomPane({
   movingInterventionId: string | null;
   pinningInterventionId: string | null;
   removingInterventionId: string | null;
+  isReadOnly: boolean;
   onInterventionDraftChange: (value: string) => void;
   onCancelInterventionEdit: () => void;
   onEditIntervention: (intervention: AgentRelayInterventionDTO) => void;
@@ -3475,6 +3637,9 @@ function AgentRelayRoomPane({
   onStop: (id: string) => Promise<void>;
 }) {
   const { isChinese, language } = useI18n();
+  const readOnlyNotice = isChinese
+    ? '当前处于只读模式，已禁用写操作。'
+    : 'Read-only mode is enabled. Write actions are disabled.';
   const viewportRef = useRef<HTMLDivElement | null>(null);
   const [copiedSummary, setCopiedSummary] = useState(false);
   const timeline = useMemo(
@@ -3515,7 +3680,7 @@ function AgentRelayRoomPane({
               <Button
                 variant="outline"
                 size="sm"
-                disabled={isUpdatingLifecycle}
+                disabled={isUpdatingLifecycle || isReadOnly}
                 className="border-white/10 bg-white/[0.03] text-slate-100 hover:bg-white/[0.08]"
                 onClick={onPause}
               >
@@ -3531,7 +3696,7 @@ function AgentRelayRoomPane({
               <Button
                 variant="outline"
                 size="sm"
-                disabled={isUpdatingLifecycle}
+                disabled={isUpdatingLifecycle || isReadOnly}
                 className="border-white/10 bg-white/[0.03] text-slate-100 hover:bg-white/[0.08]"
                 onClick={onResume}
               >
@@ -3551,6 +3716,7 @@ function AgentRelayRoomPane({
                 size="sm"
                 className="border-white/10 bg-white/[0.03] text-slate-100 hover:bg-white/[0.08]"
                 onClick={() => void onStop(relay.id)}
+                disabled={isReadOnly}
               >
                 <Square className="h-4 w-4" />
                 {isChinese ? '停止 relay' : 'Stop relay'}
@@ -3559,6 +3725,7 @@ function AgentRelayRoomPane({
           </div>
         ) : null}
       </div>
+      {isReadOnly ? <InlineNotice tone="warn">{readOnlyNotice}</InlineNotice> : null}
 
       {relay ? (
         <div className="mb-3 grid gap-3 xl:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)]">
@@ -3762,7 +3929,8 @@ function AgentRelayRoomPane({
           disabled={
             !relay ||
             (relay.status !== 'running' && relay.status !== 'paused') ||
-            isSendingIntervention
+            isSendingIntervention ||
+            isReadOnly
           }
           className="mt-3 w-full resize-none rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-sm text-slate-100 outline-none placeholder:text-slate-500 disabled:cursor-not-allowed disabled:opacity-60"
           placeholder={
@@ -3791,7 +3959,8 @@ function AgentRelayRoomPane({
               !relay ||
               (relay.status !== 'running' && relay.status !== 'paused') ||
               !interventionDraft.trim() ||
-              isSendingIntervention
+              isSendingIntervention ||
+              isReadOnly
             }
             className="rounded-xl bg-[var(--theme-accent-solid)] text-[var(--theme-accent-foreground)] hover:bg-[var(--theme-accent-solid-hover)]"
           >
@@ -3832,7 +4001,8 @@ function AgentRelayRoomPane({
                       disabled={
                         index === 0 ||
                         movingInterventionId === entry.id ||
-                        pinningInterventionId === entry.id
+                        pinningInterventionId === entry.id ||
+                        isReadOnly
                       }
                       className="inline-flex items-center gap-1 rounded-full border border-violet-300/20 px-2 py-1 text-[11px] text-violet-100 transition hover:bg-violet-300/10 disabled:cursor-not-allowed disabled:opacity-50"
                     >
@@ -3845,7 +4015,8 @@ function AgentRelayRoomPane({
                       disabled={
                         index === pinnedRules.length - 1 ||
                         movingInterventionId === entry.id ||
-                        pinningInterventionId === entry.id
+                        pinningInterventionId === entry.id ||
+                        isReadOnly
                       }
                       className="inline-flex items-center gap-1 rounded-full border border-violet-300/20 px-2 py-1 text-[11px] text-violet-100 transition hover:bg-violet-300/10 disabled:cursor-not-allowed disabled:opacity-50"
                     >
@@ -3855,7 +4026,7 @@ function AgentRelayRoomPane({
                     <button
                       type="button"
                       onClick={() => onToggleInterventionPin(entry.id, false)}
-                      disabled={pinningInterventionId === entry.id}
+                      disabled={pinningInterventionId === entry.id || isReadOnly}
                       className="inline-flex items-center gap-1 rounded-full border border-violet-300/20 px-2 py-1 text-[11px] text-violet-100 transition hover:bg-violet-300/10 disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       {pinningInterventionId === entry.id ? (
@@ -3892,7 +4063,8 @@ function AgentRelayRoomPane({
                         disabled={
                           isSendingIntervention ||
                           removingInterventionId === entry.id ||
-                          movingInterventionId === entry.id
+                          movingInterventionId === entry.id ||
+                          isReadOnly
                         }
                         className="inline-flex items-center gap-1 rounded-full border border-amber-300/20 px-2 py-1 text-[11px] text-amber-100 transition hover:bg-amber-300/10 disabled:cursor-not-allowed disabled:opacity-50"
                       >
@@ -3904,7 +4076,8 @@ function AgentRelayRoomPane({
                         onClick={() => onToggleInterventionPin(entry.id, !entry.pinned)}
                         disabled={
                           pinningInterventionId === entry.id ||
-                          removingInterventionId === entry.id
+                          removingInterventionId === entry.id ||
+                          isReadOnly
                         }
                         className="inline-flex items-center gap-1 rounded-full border border-violet-300/20 px-2 py-1 text-[11px] text-violet-100 transition hover:bg-violet-300/10 disabled:cursor-not-allowed disabled:opacity-50"
                       >
@@ -3927,7 +4100,8 @@ function AgentRelayRoomPane({
                         disabled={
                           isSendingIntervention ||
                           removingInterventionId === entry.id ||
-                          pinningInterventionId === entry.id
+                          pinningInterventionId === entry.id ||
+                          isReadOnly
                         }
                         className="inline-flex items-center gap-1 rounded-full border border-rose-300/20 px-2 py-1 text-[11px] text-rose-100 transition hover:bg-rose-300/10 disabled:cursor-not-allowed disabled:opacity-50"
                       >
@@ -3983,6 +4157,7 @@ function BrowserChatCard({
   chatError,
   composerRef,
   cwd,
+  isReadOnly,
   isSending,
   mode,
   recentPrompts,
@@ -3997,6 +4172,7 @@ function BrowserChatCard({
   chatError: string | null;
   composerRef?: RefObject<HTMLTextAreaElement | null>;
   cwd: string;
+  isReadOnly: boolean;
   isSending: boolean;
   mode: 'task' | 'resume';
   recentPrompts: string[];
@@ -4009,8 +4185,15 @@ function BrowserChatCard({
   const terminalReady = terminal?.status === 'open';
   const hasRecentPrompts = recentPrompts.length > 0;
   const [isRecentPromptsOpen, setIsRecentPromptsOpen] = useState(false);
+  const readOnlyNotice = isChinese
+    ? '当前处于只读模式，已禁用写操作。'
+    : 'Read-only mode is enabled. Write actions are disabled.';
   const disabledReason =
-    cwd.trim().length === 0
+    isReadOnly
+      ? isChinese
+        ? '只读模式下无法发送消息。'
+        : 'Read-only mode does not allow sending messages.'
+      : cwd.trim().length === 0
       ? isChinese
         ? '先填写工作区路径后再发送消息。'
         : 'Add a workspace path before sending a message.'
@@ -4068,6 +4251,7 @@ function BrowserChatCard({
 
       <div className="mt-4 grid gap-4 xl:grid-cols-[minmax(0,1fr)_280px]">
         <div className={`${WORKBENCH_PANEL_STRONG_CLASS} border-[var(--theme-accent-border)]`}>
+          {isReadOnly ? <InlineNotice tone="warn">{readOnlyNotice}</InlineNotice> : null}
           <div className="flex items-center justify-between gap-3 rounded-2xl border border-[var(--theme-panel-border)] bg-[var(--theme-input-bg)] px-3 py-2.5">
             <div className="flex min-w-0 items-center gap-2 text-sm text-slate-300">
               <span
@@ -4106,7 +4290,7 @@ function BrowserChatCard({
                 onSend();
               }}
               rows={6}
-              disabled={isSending}
+              disabled={isSending || isReadOnly}
               className="w-full resize-none bg-transparent text-sm leading-7 text-slate-100 outline-none placeholder:text-slate-500 disabled:cursor-wait disabled:opacity-70"
               placeholder={
                 isChinese
